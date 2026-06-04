@@ -38,6 +38,17 @@ class I18n {
         el.placeholder = this.locales[this.lang][key];
       }
     });
+
+    // Translate Document Title
+    if (this.lang === 'vi') {
+      if (document.title.includes('Smart Shopping')) {
+        document.title = document.title.replace('Smart Shopping', 'Mua sắm thông minh');
+      }
+    } else {
+      if (document.title.includes('Mua sắm thông minh')) {
+        document.title = document.title.replace('Mua sắm thông minh', 'Smart Shopping');
+      }
+    }
   }
 
   init() {
