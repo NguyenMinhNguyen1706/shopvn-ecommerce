@@ -23,7 +23,19 @@ const User = sequelize.define('User', {
   },
   password: {
     type:      DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true,
+  },
+  provider: {
+    type:         DataTypes.ENUM('local', 'google', 'facebook'),
+    defaultValue: 'local',
+  },
+  providerId: {
+    type:      DataTypes.STRING(150),
+    allowNull: true,
+  },
+  avatar: {
+    type:      DataTypes.TEXT,
+    allowNull: true,
   },
   role: {
     type:         DataTypes.ENUM('user', 'admin'),

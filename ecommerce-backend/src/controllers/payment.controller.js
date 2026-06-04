@@ -114,4 +114,320 @@ const vnpayIpn = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { createVnpayUrl, vnpayReturn, vnpayIpn };
+// ═══════════════════════════════════════════════════════════════════════════════
+// ✨ NEW 2026 PAYMENT METHODS: ZaloPay, MoMo, PayOS (Bank Transfer)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const { zalopayService, momoService } = require('../services/payment.service');
+const { payosService } = require('../services/payos.service');
+const logger = console;
+
+/**
+ * ZaloPay - Create payment URL
+ */
+const createZaloPayment = asyncHandler(async (req, res) => {
+  const { orderId, amount, returnUrl } = req.body;
+
+  if (!orderId || !amount) {
+    return res.status(400).json({
+      success: false,
+      message: 'Thiếu required fields: orderId, amount'
+    });
+  }
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy đơn hàng'
+      });
+    }
+
+    const paymentResult = await zalopayService.createPaymentUrl({
+      orderId: orderId,
+      amount: amount,
+      userId: order.userId,
+      returnUrl: returnUrl || `${process.env.FRONTEND_URL}/checkout/return`,
+      description: `Thanh toán đơn hàng #${orderId}`
+    });
+
+    res.json({
+      success: true,
+      data: {
+        paymentUrl: paymentResult.paymentUrl,
+        appTransId: paymentResult.appTransId,
+        amount: paymentResult.amount
+      }
+    });
+  } catch (error) {
+    logger.error('ZaloPay payment creation failed:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Tạo yêu cầu thanh toán thất bại',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * MoMo - Create payment URL
+ */
+const createMomoPayment = asyncHandler(async (req, res) => {
+  const { orderId, amount, returnUrl } = req.body;
+
+  if (!orderId || !amount) {
+    return res.status(400).json({
+      success: false,
+      message: 'Thiếu required fields: orderId, amount'
+    });
+  }
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy đơn hàng'
+      });
+    }
+
+    const paymentResult = await momoService.createPaymentUrl({
+      orderId: orderId,
+      amount: amount,
+      userId: order.userId,
+      returnUrl: returnUrl || `${process.env.FRONTEND_URL}/checkout/return`,
+      description: `Thanh toán đơn hàng #${orderId}`
+    });
+
+    res.json({
+      success: true,
+      data: {
+        paymentUrl: paymentResult.paymentUrl,
+        requestId: paymentResult.requestId,
+        amount: paymentResult.amount
+      }
+    });
+  } catch (error) {
+    logger.error('MoMo payment creation failed:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Tạo yêu cầu thanh toán thất bại'
+    });
+  }
+});
+
+/**
+ * PayOS - Create VietQR payment request (Bank Transfer)
+ * AUTO-RECONCILIATION: Zero-touch payment confirmation via webhook
+ */
+const createBankTransferPayment = asyncHandler(async (req, res) => {
+  const { orderId, returnUrl } = req.body;
+
+  try {
+    const order = await Order.findById(orderId).populate('userId');
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy đơn hàng'
+      });
+    }
+
+    const paymentResult = await payosService.createPaymentRequest({
+      orderId: orderId,
+      amount: Math.round(order.totalAmount || order.total),
+      description: `Thanh toán đơn hàng #${orderId}`,
+      returnUrl: returnUrl || `${process.env.FRONTEND_URL}/orders/${orderId}`,
+      buyerName: order.shippingInfo?.name || 'Customer',
+      buyerEmail: order.userId.email,
+      buyerPhone: order.shippingInfo?.phone
+    });
+
+    // Save payment reference to order
+    order.paymentMethod = 'bank_transfer';
+    order.paymentReference = paymentResult.paymentId;
+    await order.save();
+
+    res.json({
+      success: true,
+      data: {
+        paymentId: paymentResult.paymentId,
+        qrCode: paymentResult.qrCode,
+        checkoutUrl: paymentResult.checkoutUrl,
+        amount: paymentResult.amount,
+        orderId: orderId
+      }
+    });
+  } catch (error) {
+    logger.error('PayOS payment creation failed:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Tạo mã QR thất bại'
+    });
+  }
+});
+
+/**
+ * ZaloPay Webhook Callback
+ */
+const zalopayWebhook = asyncHandler(async (req, res) => {
+  try {
+    const webhookData = req.body;
+    const verification = zalopayService.verifyWebhook(webhookData);
+
+    if (!verification.valid) {
+      logger.warn('Invalid ZaloPay webhook signature');
+      return res.status(400).json({ success: false });
+    }
+
+    const { appTransId } = verification;
+    const orderId = appTransId.split('_')[1];
+
+    const order = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        paymentStatus: 'paid',
+        paymentMethod: 'zalopay',
+        paymentDate: new Date(),
+        status: 'paid'
+      },
+      { new: true }
+    );
+
+    if (order) {
+      logger.info(`✓ ZaloPay payment completed for order ${orderId}`);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('ZaloPay webhook error:', error.message);
+    res.status(500).json({ success: false });
+  }
+});
+
+/**
+ * MoMo Webhook Callback
+ */
+const momoWebhook = asyncHandler(async (req, res) => {
+  try {
+    const webhookData = req.body;
+    const verification = momoService.verifyWebhook(webhookData);
+
+    if (!verification.valid) {
+      logger.warn('Invalid MoMo webhook signature');
+      return res.status(400).json({ success: false });
+    }
+
+    const { orderId, success } = verification;
+
+    if (success) {
+      const order = await Order.findByIdAndUpdate(
+        orderId,
+        {
+          paymentStatus: 'completed',
+          paymentMethod: 'momo',
+          paymentDate: new Date(),
+          status: 'paid'
+        },
+        { new: true }
+      );
+
+      if (order) {
+        logger.info(`✓ MoMo payment completed for order ${orderId}`);
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('MoMo webhook error:', error.message);
+    res.status(500).json({ success: false });
+  }
+});
+
+/**
+ * PayOS Webhook Callback - AUTO-RECONCILIATION
+ * CRITICAL: Verify checksum to prevent spoofing attacks
+ * This is the zero-touch automation that replaces manual reconciliation
+ */
+const payosWebhook = asyncHandler(async (req, res) => {
+  try {
+    const webhookData = req.body;
+    const verification = payosService.verifyWebhookSignature(webhookData);
+
+    if (!verification.valid) {
+      logger.warn('Invalid PayOS webhook signature - POTENTIAL ATTACK');
+      return res.status(401).json({ success: false });
+    }
+
+    const notification = payosService.parseWebhookNotification(verification);
+    const { orderId, amount, status, transactionId, paidAt } = notification;
+
+    if (status === 'PAID') {
+      // AUTO-RECONCILIATION: Zero-touch payment confirmation
+      const order = await Order.findByIdAndUpdate(
+        orderId,
+        {
+          paymentStatus: 'completed',
+          paymentMethod: 'bank_transfer',
+          paymentDate: new Date(paidAt),
+          paymentReference: transactionId,
+          status: 'paid'
+        },
+        { new: true }
+      );
+
+      if (order) {
+        logger.info(`✓ PayOS auto-reconciled for order ${orderId} (1-3 seconds)`);
+        // TODO: Trigger warehouse notification immediately
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('PayOS webhook error:', error.message);
+    res.status(500).json({ success: true }); // Still respond with success
+  }
+});
+
+/**
+ * Get payment status
+ */
+const getPaymentStatus = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      message: 'Không tìm thấy đơn hàng'
+    });
+  }
+
+  res.json({
+    success: true,
+    data: {
+      orderId: order._id,
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+      amount: order.totalAmount || order.total,
+      paymentDate: order.paymentDate
+    }
+  });
+});
+
+module.exports = {
+  // VNPay (existing)
+  createVnpayUrl,
+  vnpayReturn,
+  vnpayIpn,
+
+  // New payment methods 2026
+  createZaloPayment,
+  createMomoPayment,
+  createBankTransferPayment,
+  zalopayWebhook,
+  momoWebhook,
+  payosWebhook,
+  getPaymentStatus
+};
+

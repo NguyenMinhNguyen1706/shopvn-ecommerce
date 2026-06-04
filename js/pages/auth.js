@@ -203,6 +203,70 @@ async function handleRegister(e) {
   }
 }
 
+// ── SOCIAL LOGIN handler ──────────────────────────────────────────────────────
+
+function handleGoogleLogin() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    return showToast('Google SDK đang tải, vui lòng chờ...', 'info');
+  }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: '366101913636-tudfqfeegifh0gftgv4oeok1v340kcqo.apps.googleusercontent.com',
+    scope: 'email profile',
+    callback: async (response) => {
+      if (response && response.access_token) {
+        processSocialLogin('google', response.access_token);
+      }
+    },
+  });
+  client.requestAccessToken();
+}
+
+function handleFacebookLogin() {
+  if (typeof FB === 'undefined') {
+    return showToast('Facebook SDK đang tải, vui lòng chờ...', 'info');
+  }
+  
+  // FB.init chỉ nên gọi 1 lần, nếu đã gọi rồi thì bỏ qua
+  if (!window.fbInitialized) {
+    FB.init({
+      appId      : 'YOUR_FACEBOOK_APP_ID',
+      cookie     : true,
+      xfbml      : true,
+      version    : 'v18.0'
+    });
+    window.fbInitialized = true;
+  }
+  
+  FB.login(function(response) {
+    if (response.authResponse) {
+      processSocialLogin('facebook', response.authResponse.accessToken);
+    } else {
+      showToast('Bạn đã hủy đăng nhập Facebook.', 'info');
+    }
+  }, {scope: 'public_profile,email'});
+}
+
+async function processSocialLogin(provider, token) {
+  try {
+    const btn = document.getElementById('submit-btn');
+    if (btn) setButtonLoading(btn, true);
+    
+    const data = await AuthAPI.socialLogin({ provider, token });
+    Auth.saveSession(data);
+    
+    showToast(`Đăng nhập bằng ${provider} thành công!`, 'success');
+    setTimeout(() => window.location.href = 'index.html', 900);
+  } catch (err) {
+    showToast(err.message || `Đăng nhập ${provider} thất bại.`, 'error');
+  } finally {
+    const btn = document.getElementById('submit-btn');
+    if (btn) setButtonLoading(btn, false);
+  }
+}
+
+window.handleGoogleLogin = handleGoogleLogin;
+window.handleFacebookLogin = handleFacebookLogin;
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {

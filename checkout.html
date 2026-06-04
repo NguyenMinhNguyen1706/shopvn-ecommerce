@@ -45,9 +45,9 @@
 
       <!-- ========================================== -->
       <div class="navbar__actions">
-        <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:#F57C00; border-color:#FFE0B2; background:#FFF3E0; cursor:default" title="ShopVN Xu">
+        <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
           ✨
-          <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:#F57C00; border-color:#F57C00; color:white">0</span>
+          <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
         </div>
         <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -370,10 +370,10 @@
         <!-- ========================================== -->
         <div id="loyalty-points-wrap" class="voucher-wrap" style="margin-top: 12px; display: none; align-items: center; justify-content: space-between; background: #FFF8E1; padding: 12px; border: 1px solid #FFECB3; border-radius: var(--r-md);">
           <div>
-            <span style="font-weight: 600; color: #F57C00;">ShopVN Xu</span><br>
+            <span style="font-weight: 600; color: var(--c-warning);">ShopVN Xu</span><br>
             <span style="font-size: 0.8rem; color: var(--c-muted);">Bạn có <strong id="loyalty-points-balance">0</strong> xu (giảm <strong id="loyalty-points-vnd">0đ</strong>)</span>
           </div>
-          <button id="loyalty-points-btn" class="btn btn-outline btn-sm" onclick="toggleXu()" style="border-color: #F57C00; color: #F57C00; background: white">
+          <button id="loyalty-points-btn" class="btn btn-outline btn-sm" onclick="toggleXu()" style="border-color: var(--c-warning); color: var(--c-warning); background: white">
             <span data-i18n="checkout.use">Sử dụng</span>
           </button>
         </div>
@@ -473,3 +473,4 @@
 </body></html>
 
 
+

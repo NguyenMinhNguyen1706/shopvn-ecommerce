@@ -428,7 +428,7 @@ function buyNow() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-function injectSchemaMarkup(product) {
+function injectSchemaMarkup(product, reviews = []) {
   let script = document.getElementById('schema-product');
   if (!script) {
     script = document.createElement('script');
@@ -461,7 +461,6 @@ function injectSchemaMarkup(product) {
     }
   };
   
-  const reviews = JSON.parse(localStorage.getItem(`reviews_${product.id}`) || '[]');
   if (reviews.length > 0) {
     const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
     const avgRating = (totalRating / reviews.length).toFixed(1);
@@ -480,10 +479,10 @@ function injectSchemaMarkup(product) {
       },
       "author": {
         "@type": "Person",
-        "name": r.user
+        "name": r.user ? r.user.name : 'Ẩn danh'
       },
-      "datePublished": r.date,
-      "reviewBody": r.content
+      "datePublished": (r.createdAt || new Date()).toString().split('T')[0],
+      "reviewBody": r.comment
     }));
   }
 
@@ -524,43 +523,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Reviews Logic ─────────────────────────────────────────────────────────────
 
-const MOCK_REVIEWS = {
-  1: [
-    { user: 'Nguyễn Văn H.', rating: 5, date: '2024-05-10', content: 'Máy dùng cực kỳ mượt, dựng video 4K phà phà. Rất đáng đồng tiền bát gạo!' },
-    { user: 'Trần Minh T.', rating: 4, date: '2024-05-08', content: 'Thiết kế đẹp, mỏng nhẹ. Mỗi tội quạt tản nhiệt chạy hơi ồn khi chơi game nặng.' }
-  ],
-  2: [
-    { user: 'Lê Thị L.', rating: 5, date: '2024-05-14', content: 'Camera chụp ảnh siêu nét, đặc biệt là chế độ chụp đêm. Giao hàng cực nhanh.' },
-    { user: 'Phạm Văn D.', rating: 4, date: '2024-05-11', content: 'Pin dùng trâu, sạc nhanh. Màn hình 120Hz vuốt mượt cực kỳ.' }
-  ],
-  3: [
-    { user: 'Hoàng Minh Quân', rating: 5, date: '2024-05-12', content: 'Âm bass đầm, chống ồn tốt. Đeo lâu không bị đau tai. Rất hài lòng.' }
-  ]
-};
+// State for review inputs
+state.reviewRating = 5;
+
+async function initReviews() {
+  await renderReviews();
+}
 
 // State for review inputs
 state.reviewRating = 5;
 
-function initReviews() {
+async function renderReviews() {
   const productId = state.product.id;
-  const storageKey = `reviews_${productId}`;
   
-  if (!localStorage.getItem(storageKey)) {
-    localStorage.setItem(storageKey, JSON.stringify(MOCK_REVIEWS[productId] || []));
+  let reviews = [];
+  try {
+    const res = await ReviewAPI.getByProduct(productId);
+    if (res.success) reviews = res.reviews;
+  } catch (err) {
+    console.error('Failed to fetch reviews:', err);
   }
-  
-  renderReviews();
-}
-
-function renderReviews() {
-  const productId = state.product.id;
-  const reviews = JSON.parse(localStorage.getItem(`reviews_${productId}`) || '[]');
   
   // 1. Update overall rating stars at top of page
   updateRatingUI(reviews);
   
   // Update schema structured data with new review stats
-  injectSchemaMarkup(state.product);
+  injectSchemaMarkup(state.product, reviews);
 
   // 2. Render reviews list
   const listContainer = document.getElementById('reviews-list');
@@ -576,11 +564,11 @@ function renderReviews() {
     listContainer.innerHTML = reviews.map(rev => `
       <div class="review-item">
         <div class="review-header">
-          <span class="review-user">${rev.user}</span>
-          <span class="review-date">${formatDate(rev.date)}</span>
+          <span class="review-user">${rev.user ? rev.user.name : 'Ẩn danh'}</span>
+          <span class="review-date">${formatDate(rev.createdAt || new Date())}</span>
         </div>
         <div class="review-stars">${'★'.repeat(rev.rating)}${'☆'.repeat(5 - rev.rating)}</div>
-        <p class="review-content">${rev.content}</p>
+        <p class="review-content">${rev.comment}</p>
       </div>
     `).join('');
   }
@@ -645,7 +633,7 @@ function setReviewRating(rating) {
   });
 }
 
-function submitReview() {
+async function submitReview() {
   const contentInput = document.getElementById('review-content-input');
   if (!contentInput) return;
 
@@ -655,25 +643,21 @@ function submitReview() {
     return;
   }
 
-  const user = Auth.getUser();
-  const newReview = {
-    user: user ? user.name : 'Ẩn danh',
-    rating: state.reviewRating,
-    date: new Date().toISOString().split('T')[0],
-    content: content
-  };
-
   const productId = state.product.id;
-  const storageKey = `reviews_${productId}`;
-  const reviews = JSON.parse(localStorage.getItem(storageKey) || '[]');
-  reviews.unshift(newReview);
-  localStorage.setItem(storageKey, JSON.stringify(reviews));
-
-  showToast('Đã gửi đánh giá thành công! Cảm ơn bạn 🎉', 'success');
-  
-  // Reset form inputs & re-render
-  state.reviewRating = 5;
-  renderReviews();
+  try {
+    const res = await ReviewAPI.create(productId, {
+      rating: state.reviewRating,
+      comment: content
+    });
+    
+    if (res.success) {
+      showToast('Đã gửi đánh giá thành công! Cảm ơn bạn 🎉', 'success');
+      state.reviewRating = 5;
+      await renderReviews();
+    }
+  } catch (err) {
+    showToast(err.message || 'Lỗi khi gửi đánh giá.', 'error');
+  }
 }
 
 // ── Urgency Indicators ────────────────────────────────────────────────────────

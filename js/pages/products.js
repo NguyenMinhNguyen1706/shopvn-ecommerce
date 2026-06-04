@@ -18,6 +18,7 @@ const state = {
   sort:     'popular',// sort order
   minPrice: '',       // giá từ
   maxPrice: '',       // giá đến
+  rating:   0,        // đánh giá từ (số sao)
   inStock:  false,    // còn hàng
   isNew:    false,    // hàng mới
   onSale:   false,    // đang giảm giá
@@ -43,6 +44,7 @@ function readParamsFromURL() {
   state.sort     = p.get('sort')     || 'popular';
   state.minPrice = p.get('minPrice') || '';
   state.maxPrice = p.get('maxPrice') || '';
+  state.rating   = parseInt(p.get('rating') || '0', 10);
   state.page     = parseInt(p.get('page') || '1', 10);
 }
 
@@ -53,6 +55,7 @@ function writeParamsToURL() {
   if (state.sort && state.sort !== 'popular') p.set('sort', state.sort);
   if (state.minPrice) p.set('minPrice', state.minPrice);
   if (state.maxPrice) p.set('maxPrice', state.maxPrice);
+  if (state.rating > 0) p.set('rating', state.rating);
   if (state.page > 1) p.set('page',     state.page);
 
   const newURL = p.toString()
@@ -142,6 +145,7 @@ async function fetchProductsFromAPI() {
       sort:     state.sort     || undefined,
       minPrice: state.minPrice || undefined,
       maxPrice: state.maxPrice || undefined,
+      rating:   state.rating > 0 ? state.rating : undefined,
       page:     state.page,
       limit:    state.perPage,
     };
@@ -181,6 +185,17 @@ function renderSidebar() {
            onclick="setCategory('${cat.name}')">
         <span class="filter-option__name">${cat.name}</span>
         <span class="filter-option__count">${cat.count}</span>
+      </div>
+    `).join('');
+  }
+
+  // Ratings
+  const ratingList = document.getElementById('rating-list');
+  if (ratingList) {
+    ratingList.innerHTML = [5, 4, 3].map(stars => `
+      <div class="filter-option ${state.rating === stars ? 'active' : ''}"
+           onclick="setRating(${stars})">
+        <span class="filter-option__name">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)} & up</span>
       </div>
     `).join('');
   }
@@ -267,6 +282,9 @@ function renderActiveTags() {
     tags.push({ label: 'Hàng mới', onRemove: () => { state.isNew = false; applyFilters(); } });
   if (state.onSale)
     tags.push({ label: 'Đang giảm giá', onRemove: () => { state.onSale = false; applyFilters(); } });
+
+  if (state.rating > 0)
+    tags.push({ label: `Từ ${state.rating} sao`, onRemove: () => { state.rating = 0; applyFilters(); } });
 
   // Render tags — dùng onclick string vì innerHTML không giữ closure
   // Mỗi tag có index để gọi removeTag(index)
@@ -452,6 +470,11 @@ function setCategory(name) {
   applyFilters();
 }
 
+function setRating(stars) {
+  state.rating = state.rating === stars ? 0 : stars;
+  applyFilters();
+}
+
 function goToPage(page) {
   state.page = page;
   writeParamsToURL();
@@ -466,6 +489,7 @@ function clearAllFilters() {
   state.category = '';
   state.minPrice = '';
   state.maxPrice = '';
+  state.rating = 0;
   state.sort = 'popular';
   state.inStock = false;
   state.isNew = false;

@@ -20,7 +20,7 @@
   font-family: var(--f-display);
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
   margin-bottom: var(--sp-xs);
 }
 
@@ -106,7 +106,7 @@
 .order-card__id {
   font-size: .95rem;
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
 }
 
 .order-card__date {
@@ -230,7 +230,7 @@
   font-family: var(--f-display);
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
   margin-bottom: var(--sp-sm);
 }
 
@@ -259,3 +259,5 @@
     justify-content: flex-end;
   }
 }
+
+

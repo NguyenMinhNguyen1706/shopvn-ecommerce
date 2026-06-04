@@ -1,14 +1,35 @@
 const router            = require('express').Router();
 const paymentController = require('../controllers/payment.controller');
-const { authenticate }  = require('../middlewares/auth.middleware');
+const { authenticate, authenticateToken }  = require('../middlewares/auth.middleware');
 
-// Tạo URL thanh toán — cần login
+// ══════════════════════════════════════════════════════════════════════
+// ✓ EXISTING: VNPay
+// ══════════════════════════════════════════════════════════════════════
 router.post('/vnpay/create', authenticate, paymentController.createVnpayUrl);
-
-// Return URL — VNPay redirect user về (không cần auth — VNPay gọi)
 router.get('/vnpay/return', paymentController.vnpayReturn);
-
-// IPN URL — VNPay gọi server-to-server (không cần auth)
 router.get('/vnpay/ipn', paymentController.vnpayIpn);
+
+// ══════════════════════════════════════════════════════════════════════
+// ✨ NEW 2026: ZaloPay
+// ══════════════════════════════════════════════════════════════════════
+router.post('/zalopay/create', authenticateToken || authenticate, paymentController.createZaloPayment);
+router.post('/webhooks/zalopay/callback', paymentController.zalopayWebhook);
+
+// ══════════════════════════════════════════════════════════════════════
+// ✨ NEW 2026: MoMo
+// ══════════════════════════════════════════════════════════════════════
+router.post('/momo/create', authenticateToken || authenticate, paymentController.createMomoPayment);
+router.post('/webhooks/momo/callback', paymentController.momoWebhook);
+
+// ══════════════════════════════════════════════════════════════════════
+// ✨ NEW 2026: PayOS - VietQR Bank Transfer (AUTO-RECONCILIATION)
+// ══════════════════════════════════════════════════════════════════════
+router.post('/bank-transfer/create', authenticateToken || authenticate, paymentController.createBankTransferPayment);
+router.post('/webhooks/payos/callback', paymentController.payosWebhook);
+
+// ══════════════════════════════════════════════════════════════════════
+// Shared Endpoints
+// ══════════════════════════════════════════════════════════════════════
+router.get('/status/:orderId', authenticateToken || authenticate, paymentController.getPaymentStatus);
 
 module.exports = router;

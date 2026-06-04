@@ -65,4 +65,20 @@ const getMe = asyncHandler(async (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
-module.exports = { register, login, refresh, logout, getMe };
+// ── Social Login ──────────────────────────────────────────────────────────────
+
+const socialLogin = asyncHandler(async (req, res) => {
+  const { provider, token } = req.body;
+
+  if (!provider || !token) {
+    return res.status(400).json({
+      success: false,
+      message: 'Vui lòng cung cấp provider và token mạng xã hội.',
+    });
+  }
+
+  const data = await authService.socialLogin({ provider, token });
+  res.json({ success: true, ...data });
+});
+
+module.exports = { register, login, refresh, logout, getMe, socialLogin };

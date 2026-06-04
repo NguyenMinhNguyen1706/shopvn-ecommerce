@@ -1,9 +1,10 @@
-const { Op } = require('sequelize');
+const { Op, fn, col, literal } = require('sequelize');
 const Product = require('../models/Product');
+const Review = require('../models/Review');
 
 // ── Get all (filter + sort + pagination) ──────────────────────────────────────
 
-async function getAll({ q, category, sort, minPrice, maxPrice, page, limit }) {
+async function getAll({ q, category, sort, minPrice, maxPrice, rating, page, limit }) {
   const where = {};
 
   // Search theo tên
@@ -25,27 +26,64 @@ async function getAll({ q, category, sort, minPrice, maxPrice, page, limit }) {
 
   // Sort
   let order = [['createdAt', 'DESC']]; // mặc định mới nhất
+  let subQuery = true;
   switch (sort) {
     case 'price-asc':  order = [['price', 'ASC']];       break;
     case 'price-desc': order = [['price', 'DESC']];      break;
     case 'newest':     order = [['createdAt', 'DESC']];  break;
     case 'popular':    order = [['featured', 'DESC'], ['id', 'ASC']]; break;
+    case 'rating-desc':
+      // Since we compute rating manually below for simplicity, we will handle sort in-memory for MVP
+      break;
   }
 
-  // Pagination
-  const pageNum  = Math.max(1, parseInt(page)  || 1);
-  const pageSize = Math.min(50, parseInt(limit) || 9); // tối đa 50/trang
-  const offset   = (pageNum - 1) * pageSize;
-
-  const { count, rows } = await Product.findAndCountAll({
+  let { count, rows } = await Product.findAndCountAll({
     where,
-    order,
-    limit:  pageSize,
-    offset,
+    include: [{ model: Review, as: 'reviews', attributes: ['rating'] }],
+    distinct: true,
   });
 
+  // Tính rating trung bình
+  let products = rows.map(p => {
+    const pJson = p.toJSON();
+    const totalReviews = pJson.reviews.length;
+    const avgRating = totalReviews > 0 
+      ? pJson.reviews.reduce((s, r) => s + r.rating, 0) / totalReviews 
+      : 5; // Default 5 cho sản phẩm chưa có đánh giá
+    pJson.avgRating = avgRating;
+    pJson.totalReviews = totalReviews;
+    return pJson;
+  });
+
+  // Filter by rating (từ X sao trở lên)
+  if (rating) {
+    products = products.filter(p => p.avgRating >= parseInt(rating));
+  }
+
+  // Handle rating-desc sort in memory (vì sequelize GROUP BY AVG phức tạp với findAndCountAll)
+  if (sort === 'rating-desc') {
+    products.sort((a, b) => b.avgRating - a.avgRating);
+  } else {
+    // Other sorts are already applied by DB, but we need to re-apply if we filtered in memory?
+    // Actually we skipped limit/offset in DB query so we must do it in memory.
+  }
+
+  // Handle memory sort if needed for price/newest etc when rating filter is on
+  if (sort === 'price-asc') products.sort((a,b) => a.price - b.price);
+  if (sort === 'price-desc') products.sort((a,b) => b.price - a.price);
+  if (sort === 'newest') products.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  if (sort === 'popular') products.sort((a,b) => (b.featured?1:0) - (a.featured?1:0));
+
+  // Memory Pagination
+  count = products.length;
+  const pageNum  = Math.max(1, parseInt(page)  || 1);
+  const pageSize = Math.min(50, parseInt(limit) || 9);
+  const offset   = (pageNum - 1) * pageSize;
+  
+  products = products.slice(offset, offset + pageSize);
+
   return {
-    items:      rows,
+    items:      products,
     total:      count,
     page:       pageNum,
     totalPages: Math.ceil(count / pageSize),

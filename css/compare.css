@@ -42,7 +42,7 @@
   width: 180px;
   background: var(--c-off);
   font-weight: 600;
-  color: var(--c-navy);
+  color:var(--c-title);
   font-size: 0.95rem;
   vertical-align: middle;
 }
@@ -77,9 +77,9 @@
   z-index: 10;
 }
 .compare-product-header__remove:hover {
-  background: #ffebee;
-  color: #e53935;
-  border-color: #ffcdd2;
+  background: color-mix(in srgb, var(--c-error) 10%, transparent);
+  color: var(--c-error);
+  border-color: color-mix(in srgb, var(--c-error) 20%, transparent);
 }
 
 .compare-product-header__icon {
@@ -90,7 +90,7 @@
 
 .compare-product-header__name {
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
   font-size: 1.05rem;
   margin-bottom: 8px;
   display: -webkit-box;
@@ -129,10 +129,13 @@
 .compare-empty__title {
   font-family: var(--f-display);
   font-size: 1.5rem;
-  color: var(--c-navy);
+  color:var(--c-title);
   margin-bottom: 12px;
 }
 .compare-empty__desc {
   color: var(--c-muted);
   margin-bottom: 24px;
 }
+
+
+

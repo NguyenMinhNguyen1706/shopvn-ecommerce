@@ -35,7 +35,7 @@
   font-family: var(--f-display);
   font-size: 1rem;
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
 }
 
 .filter-clear {
@@ -92,7 +92,7 @@
   border-radius: 20px;
 }
 .filter-option.active .filter-option__count {
-  background: rgba(21,101,192,.15);
+  background: color-mix(in srgb, var(--c-blue) $10%, transparent);
   color: var(--c-blue);
 }
 
@@ -145,7 +145,7 @@
 }
 .toolbar-search:focus-within {
   border-color: var(--c-blue);
-  box-shadow: 0 0 0 3px rgba(21,101,192,.08);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-blue) $10%, transparent);
 }
 .toolbar-search input {
   border: none; background: none;
@@ -201,7 +201,7 @@
   font-weight: 500;
   color: var(--c-blue);
   background: var(--c-blue-light);
-  border: 1px solid rgba(21,101,192,.2);
+  border: 1px solid color-mix(in srgb, var(--c-blue) $10%, transparent);
   padding: 4px 10px;
   border-radius: 20px;
 }
@@ -236,7 +236,7 @@
   font-family: var(--f-display);
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
   margin-bottom: var(--sp-sm);
 }
 .empty-state__desc {
@@ -305,3 +305,4 @@
 @media (max-width: 480px) {
   .products-grid { grid-template-columns: 1fr; }
 }
+

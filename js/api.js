@@ -52,7 +52,8 @@ async function request(method, path, body = null) {
 
 const AuthAPI = {
   register: (data) => request('POST', '/auth/register', data),
-  login:    (data) => request('POST', '/auth/login', data),
+  login: (data) => request('POST', '/auth/login', data),
+  socialLogin: (data) => request('POST', '/auth/social', data),
 
   async refresh() {
     const rToken = localStorage.getItem('refreshToken');
@@ -93,59 +94,68 @@ const ProductAPI = {
     const qs = new URLSearchParams(params).toString();
     return request('GET', `/products${qs ? '?' + qs : ''}`);
   },
-  getById:  (id)   => request('GET',  `/products/${id}`),
-  getFeatured: ()  => request('GET',  '/products?featured=true&limit=8'),
+  getById: (id) => request('GET', `/products/${id}`),
+  getFeatured: () => request('GET', '/products?featured=true&limit=8'),
   getNewArrivals: () => request('GET', '/products?sort=newest&limit=4'),
 };
 
 // ── Cart API ──────────────────────────────────────────────────────────────────
 
 const CartAPI = {
-  get:    ()           => request('GET',    '/cart'),
-  add:    (productId, quantity) => request('POST', '/cart', { productId, quantity }),
-  update: (itemId, quantity)    => request('PUT',  `/cart/${itemId}`, { quantity }),
-  remove: (itemId)     => request('DELETE', `/cart/${itemId}`),
+  get: () => request('GET', '/cart'),
+  add: (productId, quantity) => request('POST', '/cart', { productId, quantity }),
+  update: (itemId, quantity) => request('PUT', `/cart/${itemId}`, { quantity }),
+  remove: (itemId) => request('DELETE', `/cart/${itemId}`),
 };
 
 // ── Orders API ────────────────────────────────────────────────────────────────
 
 const OrderAPI = {
   create: (data) => request('POST', '/orders', data),
-  getAll: ()     => request('GET',  '/orders'),
-  getById: (id)  => request('GET',  `/orders/${id}`),
+  getAll: () => request('GET', '/orders'),
+  getById: (id) => request('GET', `/orders/${id}`),
 };
 
 // ── Admin API ─────────────────────────────────────────────────────────────────
 
 const AdminAPI = {
-  getProducts:  ()     => request('GET',    '/admin/products'),
-  createProduct:(data) => request('POST',   '/admin/products', data),
-  updateProduct:(id, data) => request('PUT',`/admin/products/${id}`, data),
-  deleteProduct:(id)   => request('DELETE', `/admin/products/${id}`),
-  getOrders:    ()     => request('GET',    '/admin/orders'),
-  updateOrder:  (id, data) => request('PUT',`/admin/orders/${id}`, data),
+  getProducts: () => request('GET', '/admin/products'),
+  createProduct: (data) => request('POST', '/admin/products', data),
+  updateProduct: (id, data) => request('PUT', `/admin/products/${id}`, data),
+  deleteProduct: (id) => request('DELETE', `/admin/products/${id}`),
+  getOrders: () => request('GET', '/admin/orders'),
+  updateOrder: (id, data) => request('PUT', `/admin/orders/${id}`, data),
+};
+
+// ==========================================
+// Review API
+// ==========================================
+
+const ReviewAPI = {
+  getByProduct: (productId) => request('GET', `/reviews/product/${productId}`),
+  create: (productId, data) => request('POST', `/reviews/product/${productId}`, data),
 };
 
 // ── Mock Data (dùng trước khi backend sẵn sàng) ───────────────────────────────
 
 const MOCK = {
   products: [
-    { id: 1, name: 'Laptop ABC Pro 2024', price: 15990000, oldPrice: 18500000, category: 'Laptop',     stock: 12, featured: true,  isNew: false, icon: '💻' },
-    { id: 2, name: 'Phone XYZ 15 Pro',   price: 8490000,  oldPrice: null,      category: 'Điện thoại', stock: 8,  featured: true,  isNew: true,  icon: '📱' },
-    { id: 3, name: 'Tai nghe K Pro Max', price: 1290000,  oldPrice: 1590000,   category: 'Phụ kiện',  stock: 25, featured: true,  isNew: false, icon: '🎧' },
-    { id: 4, name: 'Bàn phím Mech TKL',  price: 890000,   oldPrice: null,      category: 'Phụ kiện',  stock: 30, featured: true,  isNew: true,  icon: '⌨️' },
-    { id: 5, name: 'Màn hình 4K 27"',    price: 6490000,  oldPrice: 7200000,   category: 'Màn hình',  stock: 6,  featured: true,  isNew: false, icon: '🖥️' },
-    { id: 6, name: 'Chuột G Pro X',      price: 690000,   oldPrice: null,      category: 'Phụ kiện',  stock: 45, featured: true,  isNew: true,  icon: '🖱️' },
-    { id: 7, name: 'Tablet S8 Ultra',    price: 12900000, oldPrice: 14500000,  category: 'Tablet',    stock: 4,  featured: false, isNew: true,  icon: '📟' },
-    { id: 8, name: 'Đồng hồ Watch 4',   price: 3290000,  oldPrice: null,      category: 'Wearable',  stock: 15, featured: false, isNew: true,  icon: '⌚' },
+    { id: 1, name: 'Laptop ABC Pro 2024', price: 15990000, oldPrice: 18500000, category: 'Laptop', stock: 12, featured: true, isNew: false, icon: '💻' },
+    { id: 2, name: 'Phone XYZ 15 Pro', price: 8490000, oldPrice: null, category: 'Điện thoại', stock: 8, featured: true, isNew: true, icon: '📱' },
+    { id: 3, name: 'Tai nghe K Pro Max', price: 1290000, oldPrice: 1590000, category: 'Phụ kiện', stock: 25, featured: true, isNew: false, icon: '🎧' },
+    { id: 4, name: 'Bàn phím Mech TKL', price: 890000, oldPrice: null, category: 'Phụ kiện', stock: 30, featured: true, isNew: true, icon: '⌨️' },
+    { id: 5, name: 'Màn hình 4K 27"', price: 6490000, oldPrice: 7200000, category: 'Màn hình', stock: 6, featured: true, isNew: false, icon: '🖥️' },
+    { id: 6, name: 'Chuột G Pro X', price: 690000, oldPrice: null, category: 'Phụ kiện', stock: 45, featured: true, isNew: true, icon: '🖱️' },
+    { id: 7, name: 'Tablet S8 Ultra', price: 12900000, oldPrice: 14500000, category: 'Tablet', stock: 4, featured: false, isNew: true, icon: '📟' },
+    { id: 8, name: 'Đồng hồ Watch 4', price: 3290000, oldPrice: null, category: 'Wearable', stock: 15, featured: false, isNew: true, icon: '⌚' },
   ],
 
   categories: [
-    { name: 'Laptop',      icon: '💻', count: 48 },
-    { name: 'Điện thoại',  icon: '📱', count: 126 },
-    { name: 'Phụ kiện',    icon: '🎧', count: 312 },
-    { name: 'Màn hình',    icon: '🖥️', count: 54 },
-    { name: 'Wearable',    icon: '⌚', count: 33 },
+    { name: 'Laptop', icon: '💻', count: 48 },
+    { name: 'Điện thoại', icon: '📱', count: 126 },
+    { name: 'Phụ kiện', icon: '🎧', count: 312 },
+    { name: 'Màn hình', icon: '🖥️', count: 54 },
+    { name: 'Wearable', icon: '⌚', count: 33 },
   ],
 };
 

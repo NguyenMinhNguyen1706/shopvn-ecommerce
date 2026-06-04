@@ -1,6 +1,10 @@
 const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+const axios  = require('axios');
 const User   = require('../models/User');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // ── Token helpers ─────────────────────────────────────────────────────────────
 
@@ -133,4 +137,84 @@ async function logout(userId) {
   );
 }
 
-module.exports = { register, login, refresh, logout };
+// ── Social Login ──────────────────────────────────────────────────────────────
+
+async function socialLogin({ provider, token }) {
+  let payload = null;
+
+  // 1. Xác thực token với Provider
+  if (provider === 'google') {
+    const { data } = await axios.get(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`
+    );
+    payload = {
+      providerId: data.sub,
+      email: data.email,
+      name: data.name,
+      avatar: data.picture,
+    };
+  } else if (provider === 'facebook') {
+    const { data } = await axios.get(
+      `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${token}`
+    );
+    payload = {
+      providerId: data.id,
+      email: data.email,
+      name: data.name,
+      avatar: data.picture?.data?.url,
+    };
+  } else {
+    const err = new Error('Provider không hợp lệ.');
+    err.status = 400;
+    throw err;
+  }
+
+  if (!payload.email) {
+    const err = new Error('Không lấy được email từ tài khoản mạng xã hội.');
+    err.status = 400;
+    throw err;
+  }
+
+  // 2. Tìm hoặc Tạo User
+  let user = await User.findOne({ where: { email: payload.email } });
+
+  if (!user) {
+    // Tạo mới nếu chưa có
+    user = await User.create({
+      email: payload.email,
+      name: payload.name,
+      provider: provider,
+      providerId: payload.providerId,
+      avatar: payload.avatar,
+      password: null, // Không cần password
+    });
+  } else {
+    // Nếu đã có user (đăng ký bằng email thường trước đó), cập nhật thêm provider info (tuỳ chọn)
+    if (!user.providerId) {
+      await user.update({
+        provider: provider,
+        providerId: payload.providerId,
+        avatar: user.avatar || payload.avatar,
+      });
+    }
+  }
+
+  // 3. Tạo tokens
+  const tokenPayload = buildTokenPayload(user);
+  const accessToken  = generateAccessToken(tokenPayload);
+  const refreshToken = generateRefreshToken(tokenPayload);
+
+  // 4. Cập nhật refreshToken mới vào DB
+  await User.update(
+    { refreshToken },
+    { where: { id: user.id } }
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar },
+  };
+}
+
+module.exports = { register, login, refresh, logout, socialLogin };

@@ -27,7 +27,7 @@
   font-family: var(--f-display);
   font-size: 1rem;
   font-weight: 800;
-  color: var(--c-navy);
+  color:var(--c-title);
   margin-bottom: var(--sp-lg);
   padding-bottom: var(--sp-sm);
   border-bottom: 1px solid var(--c-border);
@@ -96,7 +96,7 @@
   font-family: var(--f-display);
   font-size: 1.6rem;
   font-weight: 800;
-  color: var(--c-navy);
+  color:var(--c-title);
 }
 
 .stat-card__desc {
@@ -124,7 +124,7 @@
   font-family: var(--f-display);
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
 }
 
 /* Tables */
@@ -208,22 +208,22 @@
 }
 
 .admin-btn-delete {
-  background: #ffebee;
-  color: #c62828;
+  background: color-mix(in srgb, var(--c-error) 10%, transparent);
+  color: var(--c-error);
 }
 
 .admin-btn-delete:hover {
-  background: #c62828;
+  background: var(--c-error);
   color: var(--c-white);
 }
 
 .admin-btn-success {
-  background: #E8F5E9;
-  color: #2E7D32;
+  background: color-mix(in srgb, var(--c-success) 10%, transparent);
+  color: var(--c-success);
 }
 
 .admin-btn-success:hover {
-  background: #2E7D32;
+  background: var(--c-success);
   color: var(--c-white);
 }
 
@@ -274,7 +274,7 @@
   font-family: var(--f-display);
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
 }
 
 .admin-modal__close {
@@ -317,3 +317,6 @@
     padding-bottom: 4px;
   }
 }
+
+
+

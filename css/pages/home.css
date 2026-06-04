@@ -9,7 +9,7 @@
   content: '';
   position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse 60% 80% at 70% 50%, rgba(21,101,192,.25) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 70% 50%, color-mix(in srgb, var(--c-blue) $10%, transparent) 0%, transparent 70%),
     radial-gradient(ellipse 40% 60% at 20% 80%, rgba(255,107,53,.10) 0%, transparent 60%);
   pointer-events: none;
 }
@@ -21,7 +21,7 @@
   display: inline-flex; align-items: center; gap: var(--sp-sm);
   font-size: .78rem; font-weight: 600; letter-spacing: .1em;
   text-transform: uppercase; color: var(--c-blue-mid);
-  background: rgba(21,101,192,.15); border: 1px solid rgba(21,101,192,.25);
+  background: color-mix(in srgb, var(--c-blue) $10%, transparent); border: 1px solid color-mix(in srgb, var(--c-blue) $10%, transparent);
   padding: 5px 12px; border-radius: 20px; margin-bottom: var(--sp-lg);
 }
 .hero__title {
@@ -67,7 +67,7 @@
 }
 .hero__mini-card:hover {
   background: rgba(255,255,255,.12);
-  border-color: rgba(21,101,192,.5);
+  border-color: color-mix(in srgb, var(--c-blue) $10%, transparent);
   transform: translateY(-2px);
 }
 .hero__mini-icon {
@@ -217,7 +217,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #FFE0B2;
+  color: color-mix(in srgb, var(--c-warning) 20%, transparent);
   margin-bottom: 2px;
 }
 .bento-promo__title {
@@ -228,7 +228,7 @@
 }
 .bento-promo__title span {
   font-size: 1.7rem;
-  color: #FFF0EB;
+  color: color-mix(in srgb, var(--c-warning) 10%, transparent);
   text-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
@@ -288,7 +288,7 @@
   content: '';
   position: absolute; right: -60px; top: -60px;
   width: 320px; height: 320px; border-radius: 50%;
-  background: rgba(21,101,192,.2);
+  background: color-mix(in srgb, var(--c-blue) $10%, transparent);
 }
 .promo-banner__label {
   font-size: .78rem; font-weight: 600; letter-spacing: .1em;
@@ -419,7 +419,7 @@
 .bento-checkin__day--checked {
   background: rgba(255, 167, 38, 0.25) !important;
   border-color: rgba(255, 167, 38, 0.6) !important;
-  color: #FFA726 !important;
+  color: var(--c-warning) !important;
   font-weight: 700;
 }
 .bento-checkin__day-label {
@@ -429,3 +429,5 @@
 .bento-checkin__day-coin {
   font-size: 0.7rem;
 }
+
+

@@ -70,7 +70,7 @@
   font-family: var(--f-display);
   font-size: 1.7rem;
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
   line-height: 1.25;
   margin-bottom: var(--sp-md);
 }
@@ -84,7 +84,7 @@
 .detail-stars {
   display: flex;
   gap: 2px;
-  color: #F59E0B;
+  color: var(--c-warning);
   font-size: 1rem;
 }
 .detail-rating-text {
@@ -133,11 +133,11 @@
 .detail-stock-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: #43a047;
+  background: var(--c-success);
   flex-shrink: 0;
 }
-.detail-stock-dot.low { background: #fb8c00; }
-.detail-stock-dot.out { background: #e53935; }
+.detail-stock-dot.low { background: var(--c-warning); }
+.detail-stock-dot.out { background: var(--c-error); }
 
 /* Quantity selector */
 .detail-qty-row {
@@ -203,14 +203,14 @@
   transition: all var(--dur) var(--ease);
 }
 .btn-wishlist:hover {
-  border-color: #e53935;
-  color: #e53935;
-  background: #ffebee;
+  border-color: var(--c-error);
+  color: var(--c-error);
+  background: color-mix(in srgb, var(--c-error) 10%, transparent);
 }
 .btn-wishlist.active {
-  border-color: #e53935;
-  color: #e53935;
-  background: #ffebee;
+  border-color: var(--c-error);
+  color: var(--c-error);
+  background: color-mix(in srgb, var(--c-error) 10%, transparent);
 }
 
 /* Meta info */
@@ -346,7 +346,7 @@
 .review-stars {
   display: flex;
   gap: 2px;
-  color: #F59E0B;
+  color: var(--c-warning);
   font-size: .78rem;
   margin-bottom: var(--sp-xs);
 }
@@ -370,7 +370,7 @@
   font-family: var(--f-display);
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--c-navy);
+  color:var(--c-title);
   margin-bottom: var(--sp-md);
 }
 
@@ -388,5 +388,7 @@
 }
 
 .star-rating-selector__btn.active {
-  color: #F59E0B;
+  color: var(--c-warning);
 }
+
+

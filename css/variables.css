@@ -3,22 +3,28 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Brand */
-  --c-navy:       #0D1B2A;
-  --c-navy-soft:  #1A2E42;
-  --c-blue:       #1565C0;
-  --c-blue-mid:   #1976D2;
-  --c-blue-light: #E3F0FF;
-  --c-accent:     #FF6B35;
-  --c-accent-dim: #FFF0EB;
+  /* Brand - Modern Indigo & Rose Palette */
+  --c-navy:       #0F172A; /* Slate 900 - Darker, richer navy */
+  --c-navy-soft:  #1E293B; /* Slate 800 */
+  --c-blue:       #4F46E5; /* Indigo 600 - Vibrant primary */
+  --c-blue-mid:   #6366F1; /* Indigo 500 */
+  --c-blue-light: #EEF2FF; /* Indigo 50 - Subtle background */
+  --c-accent:     #F43F5E; /* Rose 500 - Eye-catching accent */
+  --c-accent-dim: #FFF1F2; /* Rose 50 */
 
   /* Neutral */
   --c-white:   #FFFFFF;
-  --c-off:     #F7F8FA;
-  --c-surface: #EEF1F5;
-  --c-border:  #DDE2EA;
-  --c-muted:   #8492A6;
-  --c-text:    #1A2332;
+  --c-off:     #F8FAFC; /* Slate 50 */
+  --c-surface: #F1F5F9; /* Slate 100 */
+  --c-border:  #E2E8F0; /* Slate 200 */
+  --c-muted:   #64748B; /* Slate 500 */
+  --c-text:    #0F172A; /* Slate 900 */
+
+  /* Status */
+  --c-success: #10B981; /* Emerald 500 */
+  --c-error:   #EF4444; /* Red 500 */
+  --c-warning: var(--c-warning); /* Amber 500 */
+  --c-border-hover: #94A3B8; /* Slate 400 */
 
   /* Headings & Text Semantics */
   --c-title:   #0D1B2A;
@@ -50,24 +56,30 @@
 
 [data-theme="dark"] {
   /* Brand override */
-  --c-navy:       #090D16; /* Deep dark slate navy */
-  --c-navy-soft:  #151E2E; /* Dark slate grey */
-  --c-blue:       #60A5FA;
-  --c-blue-mid:   #93C5FD;
-  --c-blue-light: #1E293B;
-  --c-accent:     #FF7A45;
-  --c-accent-dim: #2C1B14;
+  --c-navy:       #020617; /* Slate 950 */
+  --c-navy-soft:  #0F172A; /* Slate 900 */
+  --c-blue:       #818CF8; /* Indigo 400 */
+  --c-blue-mid:   #6366F1; /* Indigo 500 */
+  --c-blue-light: #312E81; /* Indigo 900 */
+  --c-accent:     #FB7185; /* Rose 400 */
+  --c-accent-dim: #4C0519; /* Rose 950 */
 
   /* Neutral override */
-  --c-white:   #121212;
-  --c-off:     #1E1E1E;
-  --c-surface: #272727;
-  --c-border:  #333333;
-  --c-text:    #E2E8F0;
-  --c-muted:   #94A3B8;
+  --c-white:   #09090B; /* Zinc 950 */
+  --c-off:     #18181B; /* Zinc 900 */
+  --c-surface: #27272A; /* Zinc 800 */
+  --c-border:  #3F3F46; /* Zinc 700 */
+  --c-text:    #F8FAFC; /* Slate 50 */
+  --c-muted:   #94A3B8; /* Slate 400 */
+
+  /* Status override */
+  --c-success: #059669; /* Emerald 600 */
+  --c-error:   #DC2626; /* Red 600 */
+  --c-warning: #D97706; /* Amber 600 */
+  --c-border-hover: #64748B; /* Slate 500 */
 
   /* Headings & Text Semantics */
-  --c-title:   #F1F5F9;
+  --c-title:   #FFFFFF;
 
   /* Shadow override for dark backgrounds */
   --shadow-sm: 0 1px 3px rgba(0,0,0,.5);
@@ -100,5 +112,6 @@ button { font-family: var(--f-body), sans-serif; cursor: pointer; border: none; 
 @media (max-width: 768px) {
   .container { padding: 0 var(--sp-md); }
 }
+
 
 

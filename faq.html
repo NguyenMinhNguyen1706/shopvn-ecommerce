@@ -63,7 +63,7 @@
     .faq-group { margin-bottom: var(--sp-xl); }
     .faq-group__title {
       font-family: var(--f-display); font-size: 1.2rem; font-weight: 700;
-      color: var(--c-navy); margin-bottom: var(--sp-md);
+      color:var(--c-title); margin-bottom: var(--sp-md);
       display: flex; align-items: center; gap: var(--sp-sm);
     }
 
@@ -117,7 +117,7 @@
     .faq-cta__icon { font-size: 2.5rem; margin-bottom: var(--sp-md); }
     .faq-cta__title {
       font-family: var(--f-display); font-size: 1.3rem;
-      font-weight: 700; color: var(--c-navy); margin-bottom: var(--sp-sm);
+      font-weight: 700; color:var(--c-title); margin-bottom: var(--sp-sm);
     }
     .faq-cta__text { font-size: .9rem; color: var(--c-muted); margin-bottom: var(--sp-lg); }
 
@@ -153,9 +153,9 @@
                onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
       </div>
       <div class="navbar__actions">
-        <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:#F57C00; border-color:#FFE0B2; background:#FFF3E0; cursor:default" title="ShopVN Xu">
+        <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
           ✨
-          <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:#F57C00; border-color:#F57C00; color:white">0</span>
+          <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
         </div>
         <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -413,3 +413,5 @@
 </html>
 
 
+
+
