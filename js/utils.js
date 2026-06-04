@@ -1,0 +1,1505 @@
+/**
+ * utils.js — Tiện ích dùng chung
+ * Wishlist, Cart Drawer, Search Autocomplete, ScrollTop, BottomTabBar, FlashSale
+ */
+
+// ── Format ────────────────────────────────────────────────────────────────────
+
+/** Format số tiền VND: 15990000 → "15.990.000đ" */
+function formatPrice(amount) {
+  return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+}
+
+/** Format % giảm giá */
+function calcDiscount(price, oldPrice) {
+  if (!oldPrice || oldPrice <= price) return null;
+  return Math.round((1 - price / oldPrice) * 100);
+}
+
+/** Format ngày: "2024-05-15" → "15/05/2024" */
+function formatDate(isoStr) {
+  return new Date(isoStr).toLocaleDateString('vi-VN');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+
+function showToast(message, type = 'success') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+  const colors = {
+    success: 'var(--c-navy)',
+    error:   '#C62828',
+    info:    'var(--c-blue)',
+    warning: '#E65100',
+  };
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.background = colors[type] || colors.success;
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[type] || icons.success}</span>
+    <span>${message}</span>
+  `;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('removing');
+    toast.addEventListener('animationend', () => toast.remove());
+  }, 3000);
+}
+
+// ── Cart Badge ────────────────────────────────────────────────────────────────
+
+function getCartCount() {
+  try {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    return cart.reduce((sum, item) => sum + item.quantity, 0);
+  } catch { return 0; }
+}
+
+function updateCartBadge() {
+  // Only update cart badges, NOT wishlist badges
+  const badges = document.querySelectorAll('.navbar__cart-count:not(.navbar__wish-count)');
+  const count = getCartCount();
+  badges.forEach(badge => {
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  });
+  // Also update bottom tab bar badge
+  const mobileCartBadge = document.querySelector('.btab__badge');
+  if (mobileCartBadge) {
+    mobileCartBadge.textContent = count;
+    mobileCartBadge.style.display = count > 0 ? 'flex' : 'none';
+  }
+}
+
+// ── Local Cart ────────────────────────────────────────────────────────────────
+
+const LocalCart = {
+  get() {
+    try { return JSON.parse(localStorage.getItem('cart') || '[]'); }
+    catch { return []; }
+  },
+
+  save(items) {
+    localStorage.setItem('cart', JSON.stringify(items));
+    updateCartBadge();
+  },
+
+  add(product, quantity = 1) {
+    const items = this.get();
+    const existing = items.find(i => i.id === product.id);
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      items.push({ ...product, quantity });
+    }
+    this.save(items);
+    showToast(`Đã thêm "${product.name}" vào giỏ hàng`);
+    // Open cart drawer
+    openCartDrawer();
+  },
+
+  remove(productId) {
+    const items = this.get().filter(i => i.id !== productId);
+    this.save(items);
+    renderCartDrawer();
+  },
+
+  update(productId, quantity) {
+    const items = this.get();
+    const item = items.find(i => i.id === productId);
+    if (item) {
+      item.quantity = Math.max(1, quantity);
+      this.save(items);
+      renderCartDrawer();
+    }
+  },
+
+  clear() { this.save([]); },
+
+  total() {
+    return this.get().reduce((sum, i) => sum + i.price * i.quantity, 0);
+  },
+};
+
+// ── Wishlist ──────────────────────────────────────────────────────────────────
+
+const LocalWishlist = {
+  get() {
+    try { return JSON.parse(localStorage.getItem('wishlist') || '[]'); }
+    catch { return []; }
+  },
+
+  save(items) {
+    localStorage.setItem('wishlist', JSON.stringify(items));
+    this.updateBadge();
+  },
+
+  has(productId) {
+    return this.get().some(i => i.id === productId);
+  },
+
+  toggle(product) {
+    const items = this.get();
+    const idx = items.findIndex(i => i.id === product.id);
+    if (idx >= 0) {
+      items.splice(idx, 1);
+      this.save(items);
+      showToast(`Đã xóa "${product.name}" khỏi yêu thích`, 'info');
+      return false;
+    } else {
+      items.push({ ...product, addedAt: Date.now() });
+      this.save(items);
+      showToast(`Đã thêm "${product.name}" vào yêu thích`);
+      return true;
+    }
+  },
+
+  remove(productId) {
+    const items = this.get().filter(i => i.id !== productId);
+    this.save(items);
+  },
+
+  count() { return this.get().length; },
+
+  updateBadge() {
+    const badges = document.querySelectorAll('.navbar__wish-count');
+    const count = this.count();
+    badges.forEach(b => {
+      b.textContent = count;
+      b.style.display = count > 0 ? 'flex' : 'none';
+    });
+  },
+};
+
+// ── Cart Drawer ───────────────────────────────────────────────────────────────
+
+function ensureCartDrawer() {
+  if (document.getElementById('cart-drawer')) return;
+  const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'cart-drawer-overlay';
+  overlay.id = 'cart-drawer-overlay';
+  overlay.addEventListener('click', closeCartDrawer);
+  document.body.appendChild(overlay);
+
+  const drawer = document.createElement('div');
+  drawer.className = 'cart-drawer';
+  drawer.id = 'cart-drawer';
+  drawer.innerHTML = `
+    <div class="cart-drawer__header">
+      <h3 class="cart-drawer__title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Giỏ hàng
+      </h3>
+      <button class="cart-drawer__close" onclick="closeCartDrawer()" aria-label="Đóng giỏ hàng">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="cart-drawer__body" id="cart-drawer-body"></div>
+    <div class="cart-drawer__footer" id="cart-drawer-footer">
+      <div id="cart-drawer-freeship"></div>
+      <div class="cart-drawer__total">
+        <span>Tạm tính:</span>
+        <span id="cart-drawer-total" class="cart-drawer__total-price">0đ</span>
+      </div>
+      <a href="${prefix}cart.html" class="btn btn-outline btn-full" style="justify-content:center">Xem giỏ hàng</a>
+      <a href="${prefix}checkout.html" class="btn btn-primary btn-full" style="justify-content:center">Thanh toán ngay</a>
+    </div>
+  `;
+  document.body.appendChild(drawer);
+}
+
+function renderCartDrawer() {
+  ensureCartDrawer();
+  const body = document.getElementById('cart-drawer-body');
+  const totalEl = document.getElementById('cart-drawer-total');
+  const footer = document.getElementById('cart-drawer-footer');
+  if (!body) return;
+
+  const items = LocalCart.get();
+
+  if (items.length === 0) {
+    body.innerHTML = `
+      <div class="cart-drawer__empty">
+        <div class="cart-drawer__empty-icon">🛒</div>
+        <p class="cart-drawer__empty-text">Giỏ hàng trống</p>
+        <p class="cart-drawer__empty-sub">Hãy thêm sản phẩm yêu thích vào giỏ hàng</p>
+      </div>
+    `;
+    if (footer) footer.style.display = 'none';
+    return;
+  }
+
+  if (footer) footer.style.display = 'flex';
+
+  body.innerHTML = items.map(item => `
+    <div class="cart-drawer__item">
+      <div class="cart-drawer__item-img">
+        <span>${item.icon || '📦'}</span>
+      </div>
+      <div class="cart-drawer__item-info">
+        <p class="cart-drawer__item-name">${item.name}</p>
+        <p class="cart-drawer__item-price">${formatPrice(item.price)}</p>
+        <div class="cart-drawer__item-qty">
+          <button onclick="LocalCart.update(${item.id}, ${item.quantity - 1})" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
+          <span>${item.quantity}</span>
+          <button onclick="LocalCart.update(${item.id}, ${item.quantity + 1})">+</button>
+        </div>
+      </div>
+      <button class="cart-drawer__item-remove" onclick="LocalCart.remove(${item.id})" aria-label="Xóa sản phẩm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  `).join('');
+
+  if (totalEl) totalEl.textContent = formatPrice(LocalCart.total());
+
+  // Render free shipping progress
+  const freeshipEl = document.getElementById('cart-drawer-freeship');
+  renderFreeShipProgress(freeshipEl, LocalCart.total());
+}
+
+function openCartDrawer() {
+  ensureCartDrawer();
+  renderCartDrawer();
+  requestAnimationFrame(() => {
+    document.body.classList.add('cart-drawer-open');
+  });
+}
+
+function closeCartDrawer() {
+  document.body.classList.remove('cart-drawer-open');
+}
+
+// ── Search Autocomplete ───────────────────────────────────────────────────────
+
+function initSearchAutocomplete() {
+  const searchInputs = document.querySelectorAll('.navbar__search input, #search-input');
+  searchInputs.forEach(input => {
+    if (input.dataset.acInit) return;
+    input.dataset.acInit = 'true';
+
+    // Create dropdown
+    const dropdown = document.createElement('div');
+    dropdown.className = 'search-ac-dropdown';
+    input.closest('.navbar__search, .toolbar-search')?.appendChild(dropdown);
+
+    const doSearch = debounce((query) => {
+      if (query.length < 2) { dropdown.classList.remove('open'); return; }
+      const allProducts = getProductsFromStorage();
+      const q = query.toLowerCase();
+      const matches = allProducts.filter(p =>
+        p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+      ).slice(0, 6);
+
+      if (matches.length === 0) {
+        dropdown.innerHTML = `<div class="search-ac__empty">Không tìm thấy sản phẩm nào</div>`;
+      } else {
+        const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
+        dropdown.innerHTML = matches.map(p => `
+          <a href="${prefix}product-detail.html?id=${p.id}" class="search-ac__item">
+            <span class="search-ac__icon">${p.icon || '📦'}</span>
+            <div class="search-ac__info">
+              <span class="search-ac__name">${highlightMatch(p.name, query)}</span>
+              <span class="search-ac__price">${formatPrice(p.price)}</span>
+            </div>
+          </a>
+        `).join('');
+      }
+      dropdown.classList.add('open');
+    }, 200);
+
+    const showSuggestions = () => {
+      const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
+      dropdown.innerHTML = `
+        <div class="search-ac-suggestions">
+          <p class="search-ac-suggestions__title">🔥 Xu hướng tìm kiếm</p>
+          <div class="search-ac-suggestions__tags">
+            <a href="${prefix}products.html?q=Laptop" class="search-tag">Laptop Pro</a>
+            <a href="${prefix}products.html?q=Phone" class="search-tag">iPhone 15</a>
+            <a href="${prefix}products.html?q=Bàn%20phím" class="search-tag">Bàn phím cơ</a>
+            <a href="${prefix}products.html?q=Tai%20nghe" class="search-tag">Tai nghe chụp tai</a>
+          </div>
+          <p class="search-ac-suggestions__title" style="margin-top:12px">📁 Danh mục phổ biến</p>
+          <div class="search-ac-suggestions__cats">
+            <a href="${prefix}products.html?category=Laptop" class="search-cat-item">💻 Laptop</a>
+            <a href="${prefix}products.html?category=Điện%20thoại" class="search-cat-item">📱 Điện thoại</a>
+            <a href="${prefix}products.html?category=Phụ%20kiện" class="search-cat-item">🎧 Phụ kiện</a>
+          </div>
+        </div>
+      `;
+      dropdown.classList.add('open');
+    };
+
+    input.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      if (val.length === 0) {
+        showSuggestions();
+      } else {
+        doSearch(val);
+      }
+    });
+    
+    input.addEventListener('focus', (e) => {
+      const val = e.target.value.trim();
+      if (val.length < 2) {
+        showSuggestions();
+      } else {
+        doSearch(val);
+      }
+    });
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+      }
+    });
+  });
+}
+
+function highlightMatch(text, query) {
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(regex, '<mark>$1</mark>');
+}
+
+function getProductsFromStorage() {
+  try {
+    const stored = localStorage.getItem('admin_products');
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return MOCK.products;
+}
+
+// ── Scroll-to-Top Button ──────────────────────────────────────────────────────
+
+function initScrollToTop() {
+  if (document.getElementById('scroll-top-btn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'scroll-top-btn';
+  btn.className = 'scroll-top-btn';
+  btn.setAttribute('aria-label', 'Cuộn lên đầu trang');
+  btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>`;
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  document.body.appendChild(btn);
+
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 300);
+  }, { passive: true });
+}
+
+// ── Bottom Tab Bar (Mobile) ───────────────────────────────────────────────────
+
+function initBottomTabBar() {
+  if (document.getElementById('bottom-tab-bar')) return;
+  if (window.location.pathname.includes('/admin/')) return;
+
+  const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
+  const path = window.location.pathname;
+  const cartCount = getCartCount();
+
+  const tabs = [
+    { href: `${prefix}index.html`, icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`, label: 'Trang chủ', active: path.endsWith('/') || path.includes('index.html') },
+    { href: `${prefix}products.html`, icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`, label: 'Tìm kiếm', active: path.includes('products.html') },
+    { href: `${prefix}cart.html`, icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`, label: 'Giỏ hàng', active: path.includes('cart.html'), badge: cartCount },
+    { href: `${prefix}wishlist.html`, icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`, label: 'Yêu thích', active: path.includes('wishlist.html') },
+  ];
+
+  const bar = document.createElement('nav');
+  bar.className = 'bottom-tab-bar';
+  bar.id = 'bottom-tab-bar';
+  bar.setAttribute('aria-label', 'Điều hướng nhanh');
+  bar.innerHTML = tabs.map(t => `
+    <a href="${t.href}" class="btab ${t.active ? 'btab--active' : ''}">
+      <span class="btab__icon">
+        ${t.icon}
+        ${t.badge ? `<span class="btab__badge" style="${t.badge > 0 ? '' : 'display:none'}">${t.badge}</span>` : ''}
+      </span>
+      <span class="btab__label">${t.label}</span>
+    </a>
+  `).join('');
+  document.body.appendChild(bar);
+}
+
+// ── Flash Sale Countdown ──────────────────────────────────────────────────────
+
+function initFlashSaleCountdown() {
+  const el = document.getElementById('flash-countdown');
+  if (!el) return;
+
+  // Sale ends at midnight tonight
+  function getEndTime() {
+    const stored = localStorage.getItem('flash_sale_end');
+    if (stored && new Date(stored) > new Date()) return new Date(stored);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    localStorage.setItem('flash_sale_end', end.toISOString());
+    return end;
+  }
+
+  const endTime = getEndTime();
+
+  function update() {
+    const now = new Date();
+    const diff = endTime - now;
+    if (diff <= 0) {
+      el.innerHTML = '<span class="countdown-ended">Đã kết thúc!</span>';
+      return;
+    }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    el.innerHTML = `
+      <span class="cd-block"><span class="cd-num">${String(h).padStart(2, '0')}</span><span class="cd-label">Giờ</span></span>
+      <span class="cd-sep">:</span>
+      <span class="cd-block"><span class="cd-num">${String(m).padStart(2, '0')}</span><span class="cd-label">Phút</span></span>
+      <span class="cd-sep">:</span>
+      <span class="cd-block"><span class="cd-num">${String(s).padStart(2, '0')}</span><span class="cd-label">Giây</span></span>
+    `;
+  }
+
+  update();
+  setInterval(update, 1000);
+}
+
+// ── Coupon System ─────────────────────────────────────────────────────────────
+
+const CouponSystem = {
+  coupons: {
+    'SHOPVN10':   { type: 'percent', value: 10, minOrder: 500000,    maxDiscount: 200000,  desc: 'Giảm 10% (tối đa 200k)' },
+    'WELCOME50':  { type: 'fixed',   value: 50000,  minOrder: 300000, desc: 'Giảm 50.000đ cho đơn từ 300k' },
+    'FREESHIP':   { type: 'fixed',   value: 30000,  minOrder: 0,      desc: 'Miễn phí vận chuyển (trị giá 30k)' },
+    'SUMMER20':   { type: 'percent', value: 20, minOrder: 1000000,   maxDiscount: 500000,  desc: 'Giảm 20% (tối đa 500k)' },
+    'FLASH30':    { type: 'percent', value: 30, minOrder: 2000000,   maxDiscount: 1000000, desc: 'Flash Sale giảm 30% (tối đa 1tr)' },
+  },
+
+  validate(code, orderTotal) {
+    const coupon = this.coupons[code.toUpperCase()];
+    if (!coupon) return { valid: false, message: 'Mã giảm giá không hợp lệ' };
+    if (orderTotal < coupon.minOrder) return { valid: false, message: `Đơn hàng tối thiểu ${formatPrice(coupon.minOrder)}` };
+
+    let discount = 0;
+    if (coupon.type === 'percent') {
+      discount = Math.round(orderTotal * coupon.value / 100);
+      if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount);
+    } else {
+      discount = coupon.value;
+    }
+
+    return { valid: true, discount, desc: coupon.desc, code: code.toUpperCase() };
+  },
+
+  getApplied() {
+    try { return JSON.parse(sessionStorage.getItem('applied_coupon')); }
+    catch { return null; }
+  },
+
+  apply(code, orderTotal) {
+    const result = this.validate(code, orderTotal);
+    if (result.valid) sessionStorage.setItem('applied_coupon', JSON.stringify(result));
+    return result;
+  },
+
+  clear() { sessionStorage.removeItem('applied_coupon'); },
+};
+
+// ── Misc ──────────────────────────────────────────────────────────────────────
+
+function debounce(fn, delay = 300) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function initScrollAnimations() {
+  const elements = document.querySelectorAll('.scroll-fade-up');
+  if (elements.length === 0) return;
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.08,
+    rootMargin: '0px 0px -40px 0px'
+  });
+
+  elements.forEach(el => observer.observe(el));
+}
+
+// ── Live Purchase Notifications (Social Proof) ───────────────────────────────
+
+const VIET_NAMES = [
+  'Nguyễn V.A', 'Trần T.B', 'Lê M.C', 'Phạm V.D', 'Hoàng T.E',
+  'Vũ Đ.F', 'Đặng H.G', 'Bùi T.H', 'Đỗ V.I', 'Hồ T.K',
+  'Ngô M.L', 'Dương T.M', 'Lý V.N', 'Phan T.O', 'Mai V.P',
+  'Trịnh M.Q', 'Đinh T.R', 'Huỳnh V.S', 'Võ T.T', 'Tô M.U',
+];
+const VIET_CITIES = [
+  'Hà Nội', 'TP.HCM', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
+  'Nha Trang', 'Huế', 'Vũng Tàu', 'Biên Hòa', 'Đà Lạt',
+];
+
+function initLivePurchaseNotifications() {
+  if (window.location.pathname.includes('/admin/')) return;
+
+  let container = document.getElementById('live-notif-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'live-notif-container';
+    container.className = 'live-notif-container';
+    document.body.appendChild(container);
+  }
+
+  function showNotification() {
+    const products = getProductsFromStorage();
+    if (!products || products.length === 0) return;
+
+    const product = products[Math.floor(Math.random() * products.length)];
+    const name    = VIET_NAMES[Math.floor(Math.random() * VIET_NAMES.length)];
+    const city    = VIET_CITIES[Math.floor(Math.random() * VIET_CITIES.length)];
+    const mins    = Math.floor(Math.random() * 15) + 1;
+
+    const notif = document.createElement('div');
+    notif.className = 'live-notif';
+    notif.innerHTML = `
+      <div class="live-notif__icon">${product.icon || '📦'}</div>
+      <div class="live-notif__body">
+        <div class="live-notif__text">
+          <strong>${name}</strong> (${city}) vừa mua
+          <span class="live-notif__product">${product.name}</span>
+        </div>
+        <div class="live-notif__time">${mins} phút trước</div>
+      </div>
+      <button class="live-notif__close" onclick="this.parentElement.classList.add('removing')" aria-label="Đóng">×</button>
+    `;
+
+    container.appendChild(notif);
+
+    // Auto remove after 6s
+    setTimeout(() => {
+      notif.classList.add('removing');
+      notif.addEventListener('animationend', () => notif.remove());
+    }, 6000);
+  }
+
+  // First notification after 8s, then every 20-40s
+  setTimeout(() => {
+    showNotification();
+    setInterval(showNotification, (Math.random() * 20000) + 20000);
+  }, 8000);
+}
+
+// ── Recently Viewed Products ──────────────────────────────────────────────────
+
+const RecentlyViewed = {
+  MAX: 10,
+  KEY: 'recently_viewed',
+
+  get() {
+    try { return JSON.parse(localStorage.getItem(this.KEY) || '[]'); }
+    catch { return []; }
+  },
+
+  add(product) {
+    if (!product || !product.id) return;
+    let items = this.get().filter(p => p.id !== product.id);
+    items.unshift({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      oldPrice: product.oldPrice,
+      category: product.category,
+      icon: product.icon,
+      viewedAt: Date.now(),
+    });
+    if (items.length > this.MAX) items = items.slice(0, this.MAX);
+    localStorage.setItem(this.KEY, JSON.stringify(items));
+  },
+
+  clear() { localStorage.removeItem(this.KEY); },
+};
+
+// ── Free Shipping Progress Bar ────────────────────────────────────────────────
+
+const FREE_SHIP_THRESHOLD = 500000; // 500.000đ
+
+function renderFreeShipProgress(containerEl, currentTotal) {
+  if (!containerEl) return;
+  const remaining = FREE_SHIP_THRESHOLD - currentTotal;
+  const percent = Math.min((currentTotal / FREE_SHIP_THRESHOLD) * 100, 100);
+
+  if (remaining <= 0) {
+    containerEl.innerHTML = `
+      <div class="free-ship-bar">
+        <div class="free-ship-bar__header">
+          <span class="free-ship-bar__icon">🚚</span>
+          <span class="free-ship-bar__text free-ship-bar__text--done">
+            🎉 Bạn được <strong>MIỄN PHÍ VẬN CHUYỂN!</strong>
+          </span>
+        </div>
+        <div class="free-ship-bar__track">
+          <div class="free-ship-bar__fill free-ship-bar__fill--done" style="width:100%"></div>
+        </div>
+      </div>
+    `;
+  } else {
+    containerEl.innerHTML = `
+      <div class="free-ship-bar">
+        <div class="free-ship-bar__header">
+          <span class="free-ship-bar__icon">🚚</span>
+          <span class="free-ship-bar__text">
+            Mua thêm <strong>${formatPrice(remaining)}</strong> để được <strong>MIỄN PHÍ VẬN CHUYỂN</strong>
+          </span>
+        </div>
+        <div class="free-ship-bar__track">
+          <div class="free-ship-bar__fill" style="width:${percent}%"></div>
+        </div>
+        <div class="free-ship-bar__labels">
+          <span>0đ</span>
+          <span>${formatPrice(FREE_SHIP_THRESHOLD)}</span>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// ── Loyalty Points System (ShopVN Xu) ─────────────────────────────────────────
+
+const LoyaltyPoints = {
+  KEY: 'shopvn_xu',
+  RATE: 1000, // 1.000đ = 1 xu
+  XU_VALUE: 100, // 1 xu = 100đ khi quy đổi
+
+  getBalance() {
+    return parseInt(localStorage.getItem(this.KEY) || '0', 10);
+  },
+
+  earn(orderTotal) {
+    const xuEarned = Math.floor(orderTotal / this.RATE);
+    const current = this.getBalance();
+    localStorage.setItem(this.KEY, String(current + xuEarned));
+    return xuEarned;
+  },
+
+  spend(xuAmount) {
+    const current = this.getBalance();
+    if (xuAmount > current) return false;
+    localStorage.setItem(this.KEY, String(current - xuAmount));
+    return true;
+  },
+
+  xuToVnd(xu) {
+    return xu * this.XU_VALUE;
+  },
+
+  vndToXu(vnd) {
+    return Math.floor(vnd / this.XU_VALUE);
+  },
+
+  updateNavbarBadge() {
+    const badge = document.getElementById('xu-badge');
+    const balance = this.getBalance();
+    if (badge) {
+      badge.textContent = balance > 999 ? '999+' : balance;
+      badge.style.display = balance > 0 ? 'inline-flex' : 'none';
+    }
+  },
+};
+
+// ── Product Compare List ──────────────────────────────────────────────────────
+
+const CompareList = {
+  MAX: 3,
+  KEY: 'compare_list',
+
+  get() {
+    try { return JSON.parse(localStorage.getItem(this.KEY) || '[]'); }
+    catch { return []; }
+  },
+
+  save(items) {
+    localStorage.setItem(this.KEY, JSON.stringify(items));
+    this.updateBadge();
+  },
+
+  has(productId) {
+    return this.get().some(p => p.id === productId);
+  },
+
+  add(product) {
+    if (!product || !product.id) return false;
+    const items = this.get();
+    if (items.some(p => p.id === product.id)) {
+      showToast('Sản phẩm đã có trong danh sách so sánh', 'info');
+      return false;
+    }
+    if (items.length >= this.MAX) {
+      showToast(`Tối đa ${this.MAX} sản phẩm so sánh. Hãy xóa bớt!`, 'warning');
+      return false;
+    }
+    items.push({ ...product, addedAt: Date.now() });
+    this.save(items);
+    showToast(`Đã thêm "${product.name}" vào so sánh`);
+    this.showFloatingBar();
+    return true;
+  },
+
+  remove(productId) {
+    const items = this.get().filter(p => p.id !== productId);
+    this.save(items);
+    if (items.length === 0) this.hideFloatingBar();
+  },
+
+  clear() {
+    this.save([]);
+    this.hideFloatingBar();
+  },
+
+  count() { return this.get().length; },
+
+  updateBadge() {
+    const badges = document.querySelectorAll('.compare-badge');
+    const count = this.count();
+    badges.forEach(b => {
+      b.textContent = count;
+      b.style.display = count > 0 ? 'inline-flex' : 'none';
+    });
+  },
+
+  showFloatingBar() {
+    let bar = document.getElementById('compare-float-bar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'compare-float-bar';
+      bar.className = 'compare-float-bar';
+      document.body.appendChild(bar);
+    }
+    const items = this.get();
+    if (items.length === 0) { bar.classList.remove('visible'); return; }
+
+    bar.innerHTML = `
+      <div class="compare-float-bar__items">
+        ${items.map(p => `
+          <div class="compare-float-bar__item">
+            <span>${p.icon || '📦'}</span>
+            <button onclick="CompareList.remove(${p.id}); CompareList.showFloatingBar();" aria-label="Xóa">×</button>
+          </div>
+        `).join('')}
+        ${items.length < this.MAX ? `<div class="compare-float-bar__placeholder">+ Thêm SP</div>` : ''}
+      </div>
+      <a href="compare.html" class="btn btn-primary btn-sm" style="white-space:nowrap">
+        So sánh (${items.length})
+      </a>
+      <button class="compare-float-bar__close" onclick="CompareList.hideFloatingBar()" aria-label="Ẩn">×</button>
+    `;
+    bar.classList.add('visible');
+  },
+
+  hideFloatingBar() {
+    const bar = document.getElementById('compare-float-bar');
+    if (bar) bar.classList.remove('visible');
+  },
+};
+
+// ── Theme Manager (Dark Mode) ───────────────────────────────────────────────
+
+const ThemeManager = {
+  KEY: 'shopvn_theme',
+
+  init() {
+    const saved = localStorage.getItem(this.KEY);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'light');
+    this.setTheme(theme);
+  },
+
+  setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(this.KEY, theme);
+    
+    // Update theme toggle buttons globally on the page
+    const icons = document.querySelectorAll('.theme-toggle-icon');
+    icons.forEach(icon => {
+      icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    });
+    
+    const btns = document.querySelectorAll('.theme-toggle-btn');
+    btns.forEach(btn => {
+      btn.setAttribute('aria-label', theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối');
+    });
+  },
+
+  toggle() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    this.setTheme(next);
+  },
+
+  injectToggle() {
+    const navbarActions = document.querySelector('.navbar__actions');
+    if (!navbarActions) return;
+
+    // Check if theme toggle already exists
+    if (document.getElementById('theme-toggle')) return;
+
+    const theme = document.documentElement.getAttribute('data-theme') || 'light';
+    
+    // Create button
+    const btn = document.createElement('button');
+    btn.id = 'theme-toggle';
+    btn.className = 'theme-toggle-btn';
+    btn.setAttribute('aria-label', theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối');
+    btn.innerHTML = `<span class="theme-toggle-icon">${theme === 'dark' ? '☀️' : '🌙'}</span>`;
+    
+    btn.addEventListener('click', () => this.toggle());
+
+    // Insert before cart buttons / lang switcher
+    const langSwitcher = document.getElementById('lang-switcher');
+    if (langSwitcher) {
+      navbarActions.insertBefore(btn, langSwitcher);
+    } else {
+      navbarActions.insertAdjacentElement('afterbegin', btn);
+    }
+  }
+};
+
+// Initialize theme immediately
+ThemeManager.init();
+
+// ── Quick View Modal (Global System) ─────────────────────────────────────────
+
+const QuickView = {
+  open(productId) {
+    const products = getProductsFromStorage();
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    let overlay = document.getElementById('quickview-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'quickview-overlay';
+      overlay.className = 'quickview-overlay';
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) this.close();
+      });
+    }
+
+    const disc = calcDiscount(product.price, product.oldPrice);
+
+    overlay.innerHTML = `
+      <div class="quickview-modal">
+        <button class="quickview-modal__close" onclick="QuickView.close()" aria-label="Đóng">×</button>
+        <div class="quickview-modal__img">
+          ${product.icon || '📦'}
+        </div>
+        <div class="quickview-modal__info">
+          <div class="quickview-modal__cat">${product.category}</div>
+          <h2 class="quickview-modal__name">${product.name}</h2>
+          
+          <div class="quickview-modal__price-row">
+            <span class="quickview-modal__price">${formatPrice(product.price)}</span>
+            ${product.oldPrice ? `<span class="quickview-modal__old-price">${formatPrice(product.oldPrice)}</span>` : ''}
+            ${disc ? `<span class="quickview-modal__discount">-${disc}%</span>` : ''}
+          </div>
+
+          <div class="quickview-modal__stock">
+            📦 Tình trạng: <strong>${product.stock > 0 ? `Còn ${product.stock} SP` : 'Hết hàng'}</strong>
+          </div>
+
+          <div class="quickview-modal__desc">
+            ${product.description || `Sản phẩm ${product.name} chính hãng cao cấp thuộc dòng ${product.category} của ShopVN. Thiết kế tinh xảo, độ bền cao và hiệu năng vượt trội.`}
+          </div>
+
+          <div class="quickview-modal__actions">
+            <button class="btn btn-outline" style="flex:1; justify-content:center" onclick="window.location.href='product-detail.html?id=${product.id}'">
+              Xem chi tiết
+            </button>
+            <button class="btn btn-primary" style="flex:1; justify-content:center" onclick="LocalCart.add(getProductsFromStorage().find(p=>p.id===${product.id}), 1); QuickView.close()">
+              🛒 Thêm giỏ hàng
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => overlay.classList.add('open'));
+    if (window.i18n) window.i18n.translatePage();
+  },
+
+  close() {
+    const overlay = document.getElementById('quickview-overlay');
+    if (overlay) {
+      overlay.classList.remove('open');
+      setTimeout(() => overlay.remove(), 300);
+    }
+    document.body.style.overflow = '';
+  }
+};
+
+// ── Flying Cart Icon Micro-Animation ─────────────────────────────────────────
+
+const CartAnimator = {
+  animate(emoji, startX, startY) {
+    const cartBtn = document.getElementById('theme-toggle')?.parentElement?.querySelector('.navbar__cart-btn') || 
+                    document.querySelector('.navbar__cart-btn') || 
+                    document.querySelector('.btab[href*="cart.html"]');
+    if (!cartBtn) return;
+
+    const rect = cartBtn.getBoundingClientRect();
+    const targetX = rect.left + rect.width / 2;
+    const targetY = rect.top + rect.height / 2;
+
+    const el = document.createElement('div');
+    el.className = 'flying-cart-icon';
+    el.textContent = emoji || '📦';
+    el.style.left = startX + 'px';
+    el.style.top = startY + 'px';
+    document.body.appendChild(el);
+
+    // Force reflow
+    el.offsetWidth;
+
+    // Animate to cart position
+    el.style.transform = `translate(${targetX - startX}px, ${targetY - startY}px) scale(0.3) rotate(360deg)`;
+    el.style.opacity = '0';
+
+    el.addEventListener('transitionend', () => {
+      el.remove();
+      // Cart button bounce animation
+      cartBtn.classList.add('cart-bounce');
+      setTimeout(() => cartBtn.classList.remove('cart-bounce'), 400);
+    });
+  }
+};
+
+// Global click event observer for cart flying emoji animation
+document.addEventListener('click', (e) => {
+  const addBtn = e.target.closest('.product-card__add, .quickview-modal__actions .btn-primary, .detail-actions .btn-primary, #bundle-grid .btn-accent');
+  if (!addBtn) return;
+
+  if (addBtn.disabled) return;
+
+  let emoji = '📦';
+  const card = addBtn.closest('.product-card');
+  if (card) {
+    emoji = card.querySelector('.product-card__img-icon')?.textContent || '📦';
+  } else {
+    const detailIcon = document.getElementById('product-icon');
+    if (detailIcon) {
+      emoji = detailIcon.textContent;
+    } else {
+      const qvOverlay = addBtn.closest('.quickview-overlay');
+      if (qvOverlay) {
+        emoji = qvOverlay.querySelector('.quickview-modal__img')?.textContent?.trim() || '📦';
+      }
+    }
+  }
+
+  const rect = addBtn.getBoundingClientRect();
+  const startX = rect.left + rect.width / 2 + window.scrollX;
+  const startY = rect.top + rect.height / 2 + window.scrollY;
+
+  CartAnimator.animate(emoji, startX, startY);
+});
+
+// ── AI Shopping Assistant (Chatbot System) ───────────────────────────────────
+
+const AIShoppingAssistant = {
+  isOpen: false,
+  hasNotification: true, // Show badge at first
+
+  init() {
+    if (window.location.pathname.includes('/admin/')) return;
+    this.injectFab();
+  },
+
+  injectFab() {
+    if (document.getElementById('chatbot-fab')) return;
+
+    const fab = document.createElement('div');
+    fab.id = 'chatbot-fab';
+    fab.className = 'chatbot-fab';
+    fab.innerHTML = '🤖';
+    if (this.hasNotification) {
+      fab.innerHTML += '<span class="chatbot-fab__badge" id="chatbot-badge"></span>';
+    }
+    fab.addEventListener('click', () => this.toggle());
+    document.body.appendChild(fab);
+  },
+
+  toggle() {
+    const win = document.getElementById('chatbot-window');
+    if (win) {
+      win.classList.add('closing');
+      win.addEventListener('animationend', () => {
+        win.remove();
+        this.isOpen = false;
+      }, { once: true });
+    } else {
+      this.openChat();
+      // Remove badge when opened
+      const badge = document.getElementById('chatbot-badge');
+      if (badge) {
+        badge.remove();
+        this.hasNotification = false;
+      }
+    }
+  },
+
+  openChat() {
+    this.isOpen = true;
+    const win = document.createElement('div');
+    win.id = 'chatbot-window';
+    win.className = 'chatbot-window';
+    
+    win.innerHTML = `
+      <div class="chatbot-header">
+        <div class="chatbot-header__title">
+          <span class="chatbot-header__status"></span>
+          <span>ShopVN Assistant</span>
+        </div>
+        <button class="chatbot-header__close" onclick="AIShoppingAssistant.toggle()">×</button>
+      </div>
+      <div class="chatbot-messages" id="chatbot-messages-box"></div>
+      <div class="chatbot-footer">
+        <input type="text" class="chatbot-input" id="chatbot-user-input" placeholder="..." data-i18n-placeholder="bot.placeholder">
+        <button class="chatbot-send-btn" id="chatbot-send-btn">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(win);
+
+    // Bind event listeners
+    const input = win.querySelector('#chatbot-user-input');
+    const sendBtn = win.querySelector('#chatbot-send-btn');
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.send();
+    });
+    sendBtn.addEventListener('click', () => this.send());
+
+    // Translate page to apply placeholder translation
+    if (window.i18n) window.i18n.translatePage();
+
+    // Render welcome message
+    this.addMessage(window.i18n.t('bot.welcome'), 'bot');
+    this.showQuickReplies();
+  },
+
+  addMessage(text, sender = 'bot', isHtml = false) {
+    const box = document.getElementById('chatbot-messages-box');
+    if (!box) return;
+
+    const msg = document.createElement('div');
+    msg.className = `chat-msg chat-msg--${sender}`;
+    if (isHtml) {
+      msg.innerHTML = text;
+    } else {
+      msg.textContent = text;
+    }
+    box.appendChild(msg);
+    box.scrollTop = box.scrollHeight;
+  },
+
+  showTyping(callback) {
+    const box = document.getElementById('chatbot-messages-box');
+    if (!box) return;
+
+    const typing = document.createElement('div');
+    typing.className = 'chat-typing';
+    typing.id = 'chat-typing-indicator';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    box.appendChild(typing);
+    box.scrollTop = box.scrollHeight;
+
+    setTimeout(() => {
+      typing.remove();
+      callback();
+    }, 800 + Math.random() * 500);
+  },
+
+  showQuickReplies() {
+    const box = document.getElementById('chatbot-messages-box');
+    if (!box) return;
+
+    // Remove existing replies
+    const existing = box.querySelector('.chat-quick-replies');
+    if (existing) existing.remove();
+
+    const repliesDiv = document.createElement('div');
+    repliesDiv.className = 'chat-quick-replies';
+
+    const replies = [
+      { key: 'bot.quick_search_laptop', query: 'laptop' },
+      { key: 'bot.quick_search_phone', query: 'điện thoại' },
+      { key: 'bot.quick_search_promo', query: 'mã giảm giá' },
+      { key: 'bot.quick_search_shipping', query: 'vận chuyển' }
+    ];
+
+    replies.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'chat-quick-reply';
+      btn.textContent = window.i18n.t(r.key);
+      btn.addEventListener('click', () => {
+        this.addMessage(btn.textContent, 'user');
+        this.processQuery(r.query);
+      });
+      repliesDiv.appendChild(btn);
+    });
+
+    box.appendChild(repliesDiv);
+    box.scrollTop = box.scrollHeight;
+  },
+
+  send() {
+    const input = document.getElementById('chatbot-user-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    this.addMessage(text, 'user');
+    this.processQuery(text);
+  },
+
+  processQuery(rawText) {
+    const text = rawText.toLowerCase();
+    this.showTyping(() => {
+      // 1. Promo keyword
+      if (text.includes('mã') || text.includes('voucher') || text.includes('khuyến mãi') || text.includes('giảm giá') || text.includes('promo') || text.includes('sale') || text.includes('vòng quay') || text.includes('quà')) {
+        this.addMessage(window.i18n.t('bot.promo_suggest'), 'bot', true);
+        this.showQuickReplies();
+        return;
+      }
+
+      // 2. Shipping keyword
+      if (text.includes('vận chuyển') || text.includes('ship') || text.includes('giao hàng') || text.includes('phí ship')) {
+        this.addMessage(window.i18n.t('bot.shipping_suggest'), 'bot');
+        this.showQuickReplies();
+        return;
+      }
+
+      // 3. Product searches (match categories or names)
+      const allProducts = getProductsFromStorage();
+      const matched = allProducts.filter(p => {
+        return p.name.toLowerCase().includes(text) || p.category.toLowerCase().includes(text);
+      });
+
+      if (matched.length > 0) {
+        const isVi = window.i18n.getLang() === 'vi';
+        this.addMessage(isVi ? 'Tôi tìm thấy các sản phẩm phù hợp dưới đây:' : 'I found matching products below:', 'bot');
+        matched.slice(0, 3).forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'chat-product-card';
+          card.innerHTML = `
+            <div class="chat-product-card__img">${p.icon || '📦'}</div>
+            <div class="chat-product-card__info">
+              <div class="chat-product-card__name" title="${p.name}">${p.name}</div>
+              <div class="chat-product-card__price">${formatPrice(p.price)}</div>
+            </div>
+            <div class="chat-product-card__actions">
+              <button class="chat-product-card__btn" onclick="QuickView.open(${p.id})">🔍</button>
+              <button class="chat-product-card__btn chat-product-card__btn--primary" onclick="LocalCart.add(getProductsFromStorage().find(prod => prod.id === ${p.id}), 1)">🛒</button>
+            </div>
+          `;
+          document.getElementById('chatbot-messages-box').appendChild(card);
+        });
+        const box = document.getElementById('chatbot-messages-box');
+        if (box) box.scrollTop = box.scrollHeight;
+        this.showQuickReplies();
+        return;
+      }
+
+      // 4. Default fallback
+      this.addMessage(window.i18n.t('bot.not_found'), 'bot');
+      this.showQuickReplies();
+    });
+  }
+};
+
+// ── Dynamic Layout Injection (Blog, Footer, Legal) ──────────────────────────
+
+function injectNavbarBlogLink() {
+  const nav = document.querySelector('.navbar__nav');
+  if (nav && !nav.querySelector('a[href*="blog.html"]')) {
+    const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
+    const active = window.location.pathname.includes('blog.html') ? 'active' : '';
+    const li = document.createElement('li');
+    li.innerHTML = `<a href="${prefix}blog.html" class="navbar__link ${active}"><span data-i18n="nav.blog">Tin tức</span></a>`;
+    nav.appendChild(li);
+    if (window.i18n) window.i18n.translatePage();
+  }
+}
+
+function injectFooterContent() {
+  const footer = document.querySelector('.footer');
+  if (!footer) return;
+
+  const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
+  
+  footer.innerHTML = `
+    <div class="container">
+      <div class="footer__grid">
+        <!-- Column 1: About Brand & Hotline -->
+        <div class="footer-col-brand">
+          <div class="footer__brand-name">Shop<span>VN</span></div>
+          <p class="footer__desc" data-i18n="footer.about_us_desc">
+            ShopVN là hệ thống bán lẻ thiết bị công nghệ chính hãng hàng đầu Việt Nam, cam kết chất lượng sản phẩm và dịch vụ chăm sóc khách hàng tốt nhất.
+          </p>
+          <div class="footer__hotline-box">
+            <p class="footer__heading" data-i18n="footer.hotline">Hotline hỗ trợ</p>
+            <a href="tel:19006789" class="footer__hotline-num" data-i18n="footer.hotline_num">1900 6789 (8:00 - 22:00)</a>
+          </div>
+        </div>
+
+        <!-- Column 2: Shop Links -->
+        <div>
+          <h3 class="footer__heading" data-i18n="footer.shop">Mua sắm</h3>
+          <ul class="footer__links">
+            <li><a href="${prefix}products.html" class="footer__link" data-i18n="footer.all_products">Tất cả sản phẩm</a></li>
+            <li><a href="${prefix}products.html?sort=sale" class="footer__link" data-i18n="footer.sale">Khuyến mãi</a></li>
+            <li><a href="${prefix}products.html?sort=newest" class="footer__link" data-i18n="footer.new">Hàng mới về</a></li>
+            <li><a href="${prefix}products.html?sort=popular" class="footer__link" data-i18n="footer.popular">Bán chạy nhất</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Account & Aux Links -->
+        <div>
+          <h3 class="footer__heading" data-i18n="footer.account">Tài khoản</h3>
+          <ul class="footer__links">
+            <li><a href="${prefix}login.html" class="footer__link" data-i18n="auth.login">Đăng nhập</a></li>
+            <li><a href="${prefix}register.html" class="footer__link" data-i18n="auth.register">Đăng ký</a></li>
+            <li><a href="${prefix}orders.html" class="footer__link" data-i18n="nav.orders">Đơn hàng</a></li>
+            <li><a href="${prefix}cart.html" class="footer__link" data-i18n="nav.cart">Giỏ hàng</a></li>
+            <li><a href="${prefix}faq.html" class="footer__link">Tuyển dụng</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 4: Support & Partners -->
+        <div>
+          <h3 class="footer__heading" data-i18n="footer.support">Hỗ trợ</h3>
+          <ul class="footer__links">
+            <li><a href="${prefix}faq.html" class="footer__link" data-i18n="footer.faq">Câu hỏi thường gặp</a></li>
+            <li><a href="${prefix}contact.html" class="footer__link" data-i18n="footer.contact">Liên hệ</a></li>
+            <li><a href="${prefix}faq.html#doi-tra" class="footer__link" data-i18n="footer.returns">Đổi trả hàng</a></li>
+            <li><a href="${prefix}faq.html#van-chuyen" class="footer__link" data-i18n="footer.shipping">Chính sách vận chuyển</a></li>
+            <li><a href="${prefix}contact.html" class="footer__link">Đối tác phát triển</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 5: Newsletter & Socials & Payments -->
+        <div class="footer-col-news">
+          <div>
+            <h3 class="footer__heading" data-i18n="footer.newsletter_title">Đăng ký nhận tin</h3>
+            <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 10px; line-height: 1.4;" data-i18n="footer.newsletter_desc">Nhận thông báo về các ưu đãi mới nhất và tin công nghệ từ ShopVN.</p>
+            <form onsubmit="event.preventDefault(); showToast('Đăng ký nhận bản tin thành công!', 'success'); this.reset();" class="footer__newsletter-form">
+              <input type="email" required placeholder="Nhập email của bạn..." data-i18n-placeholder="footer.newsletter_placeholder" class="footer__newsletter-input" />
+              <button type="submit" class="btn btn-primary btn-sm" style="padding: 8px 12px; font-size: 0.85rem;" data-i18n="footer.newsletter_btn">Đăng ký</button>
+            </form>
+          </div>
+
+          <div style="margin-top: 5px;">
+            <p class="footer__heading" style="margin-bottom: 8px; font-size: 0.75rem;" data-i18n="footer.socials">Kết nối với chúng tôi</p>
+            <div class="footer__social-links">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="footer__social-icon" onmouseover="this.style.color='#1877F2'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="Facebook">📘</a>
+              <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" class="footer__social-icon" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="TikTok">🎵</a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="footer__social-icon" onmouseover="this.style.color='#E1306C'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="Instagram">📸</a>
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="footer__social-icon" onmouseover="this.style.color='#FF0000'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="YouTube">📺</a>
+            </div>
+          </div>
+
+          <div style="margin-top: 5px;">
+            <p class="footer__heading" style="margin-bottom: 8px; font-size: 0.75rem;" data-i18n="footer.payment_methods">Phương thức thanh toán</p>
+            <div class="footer__payments">
+              <span class="footer__payment-badge">VISA</span>
+              <span class="footer__payment-badge footer__payment-badge--vnpay">VNPAY</span>
+              <span class="footer__payment-badge footer__payment-badge--momo">MOMO</span>
+              <span class="footer__payment-badge footer__payment-badge--cod">COD</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Bottom with Copyright and Legal popups -->
+      <div class="footer__bottom">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span data-i18n="footer.copy">© 2024 ShopVN. Bảo lưu mọi quyền.</span>
+          <span style="color: rgba(255,255,255,0.4);" data-i18n="footer.made_in">Made with ♥ in Đà Nẵng, Việt Nam</span>
+        </div>
+        <div class="footer__legal-links">
+          <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="footer__legal-link" data-i18n="footer.terms">Điều khoản dịch vụ</a>
+          <a href="javascript:void(0)" onclick="openLegalModal('privacy')" class="footer__legal-link" data-i18n="footer.privacy">Chính sách bảo mật</a>
+          <a href="javascript:void(0)" onclick="openLegalModal('sitemap')" class="footer__legal-link" data-i18n="footer.sitemap">Sơ đồ trang web</a>
+        </div>
+      </div>
+    </div>
+  `;
+  if (window.i18n) window.i18n.translatePage();
+}
+
+function openLegalModal(type) {
+  const lang = window.i18n ? window.i18n.getLang() : 'vi';
+  const isVi = lang === 'vi';
+  
+  let title = '';
+  let content = '';
+  
+  if (type === 'terms') {
+    title = isVi ? 'Điều khoản dịch vụ — ShopVN' : 'Terms of Service — ShopVN';
+    content = isVi ? `
+      <div style="font-size:0.9rem; line-height:1.6;">
+        <h4 style="margin-bottom:10px; color:var(--c-title);">1. Giới thiệu</h4>
+        <p style="margin-bottom:15px;">Chào mừng bạn đến với ShopVN. Khi truy cập và mua hàng trên hệ thống của chúng tôi, bạn đồng ý tuân thủ các điều khoản dịch vụ này. Vui lòng đọc kỹ.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">2. Tài khoản của bạn</h4>
+        <p style="margin-bottom:15px;">Bạn có trách nhiệm bảo mật tài khoản và mật khẩu của mình. ShopVN không chịu trách nhiệm cho bất kỳ tổn thất nào phát sinh từ việc bạn không tuân thủ quy định bảo mật này.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">3. Quy định thanh toán & Đơn hàng</h4>
+        <p style="margin-bottom:15px;">ShopVN chấp nhận thanh toán qua VISA, VNPAY, MOMO và COD (Giao hàng thu tiền). Giá trị đơn hàng đã bao gồm thuế GTGT. Chúng tôi có quyền hủy đơn hàng trong trường hợp phát hiện sai lệch về giá hoặc lỗi kỹ thuật hệ thống.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">4. Chính sách bảo hành & Đổi trả</h4>
+        <p style="margin-bottom:15px;">Tất cả sản phẩm công nghệ được bảo hành chính hãng từ 12 đến 24 tháng. Khách hàng có quyền đổi trả sản phẩm lỗi do nhà sản xuất miễn phí trong vòng 7 ngày kể từ khi nhận hàng.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">5. Luật áp dụng</h4>
+        <p style="margin-bottom:15px;">Các điều khoản này tuân thủ và được diễn giải theo luật pháp nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.</p>
+      </div>
+    ` : `
+      <div style="font-size:0.9rem; line-height:1.6;">
+        <h4 style="margin-bottom:10px; color:var(--c-title);">1. Introduction</h4>
+        <p style="margin-bottom:15px;">Welcome to ShopVN. By accessing and purchasing from our platform, you agree to comply with these terms of service. Please read them carefully.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">2. Your Account</h4>
+        <p style="margin-bottom:15px;">You are responsible for maintaining the confidentiality of your account credentials. ShopVN will not be liable for any loss arising from your failure to protect your security details.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">3. Payments & Orders</h4>
+        <p style="margin-bottom:15px;">ShopVN accepts payment via VISA, VNPAY, MOMO, and COD (Cash on Delivery). Prices include VAT. We reserve the right to cancel orders in case of pricing errors or system faults.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">4. Return & Warranty Policy</h4>
+        <p style="margin-bottom:15px;">All tech products carry a 12-to-24-month manufacturer warranty. Customers can return defective products for free within 7 days of delivery.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">5. Governing Law</h4>
+        <p style="margin-bottom:15px;">These terms are governed and construed in accordance with the laws of the Socialist Republic of Vietnam.</p>
+      </div>
+    `;
+  } else if (type === 'privacy') {
+    title = isVi ? 'Chính sách bảo mật — ShopVN' : 'Privacy Policy — ShopVN';
+    content = isVi ? `
+      <div style="font-size:0.9rem; line-height:1.6;">
+        <h4 style="margin-bottom:10px; color:var(--c-title);">1. Thu thập thông tin cá nhân</h4>
+        <p style="margin-bottom:15px;">Chúng tôi thu thập các thông tin bao gồm: Họ tên, Số điện thoại, Email, Địa chỉ giao hàng khi bạn tạo tài khoản hoặc thực hiện giao dịch thanh toán.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">2. Mục đích sử dụng dữ liệu</h4>
+        <p style="margin-bottom:15px;">Dữ liệu thu thập được dùng để xử lý đơn hàng, cung cấp dịch vụ giao vận, gửi email marketing (nếu khách hàng đồng ý), tích lũy ShopVN Xu và hỗ trợ giải quyết khiếu nại.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">3. Bảo mật dữ liệu</h4>
+        <p style="margin-bottom:15px;">Chúng tôi sử dụng chứng chỉ bảo mật mã hóa giao dịch trực tuyến SSL/HTTPS cùng hệ thống tường lửa đa cấp để ngăn chặn hacker đánh cắp dữ liệu khách hàng.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">4. Quyền của người dùng</h4>
+        <p style="margin-bottom:15px;">Bạn có quyền chỉnh sửa, cập nhật thông tin cá nhân hoặc yêu cầu xóa bỏ tài khoản bất kỳ lúc nào bằng cách liên hệ với tổng đài hỗ trợ.</p>
+      </div>
+    ` : `
+      <div style="font-size:0.9rem; line-height:1.6;">
+        <h4 style="margin-bottom:10px; color:var(--c-title);">1. Personal Data Collection</h4>
+        <p style="margin-bottom:15px;">We collect information such as: Full Name, Phone Number, Email, and Delivery Address when you create an account or perform checkout transactions.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">2. How We Use Your Data</h4>
+        <p style="margin-bottom:15px;">Your data is used to process orders, facilitate shipping, send newsletters (with consent), credit Loyalty Points (ShopVN Xu), and handle requests.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">3. Data Security</h4>
+        <p style="margin-bottom:15px;">We secure transactions using SSL/HTTPS encryption protocols and a multi-level firewall system to prevent unauthorized access and leaks.</p>
+        
+        <h4 style="margin-bottom:10px; color:var(--c-title);">4. User Rights</h4>
+        <p style="margin-bottom:15px;">You have the right to access, edit, update, or request deletion of your personal data at any time by contacting our support team.</p>
+      </div>
+    `;
+  } else if (type === 'sitemap') {
+    title = isVi ? 'Sơ đồ trang web (Sitemap)' : 'Sitemap';
+    const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
+    content = `
+      <div style="font-size:0.95rem; line-height:1.8;">
+        <p style="margin-bottom:15px; font-weight:600;">Sơ đồ liên kết nhanh các trang chính thức trên ShopVN:</p>
+        <ul style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding-left:15px; list-style-type:square;">
+          <li><a href="${prefix}index.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Trang chủ (Home)</a></li>
+          <li><a href="${prefix}products.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Danh mục sản phẩm (Products)</a></li>
+          <li><a href="${prefix}product-detail.html?id=1" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Chi tiết sản phẩm (Product Detail)</a></li>
+          <li><a href="${prefix}blog.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Tin tức & Bài viết (Blog)</a></li>
+          <li><a href="${prefix}cart.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Giỏ hàng (Cart)</a></li>
+          <li><a href="${prefix}checkout.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Thanh toán (Checkout)</a></li>
+          <li><a href="${prefix}wishlist.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Yêu thích (Wishlist)</a></li>
+          <li><a href="${prefix}compare.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">So sánh sản phẩm (Compare)</a></li>
+          <li><a href="${prefix}orders.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Lịch sử đơn hàng (Orders)</a></li>
+          <li><a href="${prefix}faq.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">FAQ & Hỗ trợ</a></li>
+          <li><a href="${prefix}contact.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Liên hệ (Contact)</a></li>
+          <li><a href="${prefix}login.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Đăng nhập (Login)</a></li>
+          <li><a href="${prefix}register.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Đăng ký (Register)</a></li>
+          <li><a href="${prefix}admin/index.html" style="color:var(--c-blue); font-weight:500; text-decoration:underline;">Trang quản trị (Admin Dashboard)</a></li>
+        </ul>
+      </div>
+    `;
+  }
+
+  const modalId = 'legal-modal-overlay';
+  let modal = document.getElementById(modalId);
+  if (modal) modal.remove();
+
+  modal = document.createElement('div');
+  modal.id = modalId;
+  modal.className = 'quickview-overlay open';
+  modal.style.zIndex = '100000';
+  modal.innerHTML = `
+    <div class="quickview-modal" style="max-width: 600px; padding: var(--sp-lg); display:block;">
+      <button class="quickview-modal__close" onclick="document.getElementById('${modalId}').remove()" aria-label="Đóng" style="font-size:1.5rem; position:absolute; right:15px; top:15px;">×</button>
+      <h3 style="font-family:var(--f-display); font-size:1.3rem; font-weight:700; color:var(--c-title); margin-bottom:var(--sp-md); border-bottom:2px solid var(--c-border); padding-bottom:10px;">${title}</h3>
+      <div class="legal-modal-content" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+        ${content}
+      </div>
+      <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="document.getElementById('${modalId}').remove()">${isVi ? 'Đã hiểu & Đóng' : 'Understood & Close'}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+window.openLegalModal = openLegalModal;
+
+// ── Global Init (chạy trên mọi trang) ────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectNavbarBlogLink();
+  injectFooterContent();
+  ThemeManager.injectToggle();
+  initScrollToTop();
+  initBottomTabBar();
+  initSearchAutocomplete();
+  initFlashSaleCountdown();
+  LocalWishlist.updateBadge();
+  initScrollAnimations();
+  initLivePurchaseNotifications();
+  LoyaltyPoints.updateNavbarBadge();
+  if (CompareList.count() > 0) CompareList.showFloatingBar();
+  AIShoppingAssistant.init();
+});

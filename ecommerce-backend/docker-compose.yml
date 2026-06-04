@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: shopvn_db
+    environment:
+      POSTGRES_DB:       ecommerce_db
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: your_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+
+  # Node.js App
+  app:
+    build: .
+    container_name: shopvn_app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV:               production
+      PORT:                   3000
+      DB_HOST:                db
+      DB_PORT:                5432
+      DB_NAME:                ecommerce_db
+      DB_USER:                postgres
+      DB_PASSWORD:            your_password
+      JWT_SECRET:             shopvn_super_secret_change_this
+      JWT_EXPIRES_IN:         15m
+      JWT_REFRESH_SECRET:     shopvn_refresh_secret_change_this
+      JWT_REFRESH_EXPIRES_IN: 7d
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

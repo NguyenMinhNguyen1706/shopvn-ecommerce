@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đơn hàng — ShopVN</title>
+  <meta name="description" content="Xem và theo dõi đơn hàng của bạn tại ShopVN." />
+
+  <!-- ========================================== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- ========================================== -->
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages/orders.css" />
+  <link rel="stylesheet" href="css/lucky-wheel.css" />
+</head>
+<body>
+
+<!-- ========================================== -->
+<header class="navbar" role="banner">
+  <div class="container">
+    <nav class="navbar__inner" aria-label="Điều hướng chính">
+
+      <!-- ========================================== -->
+      <a href="index.html" class="navbar__logo" aria-label="ShopVN - Trang chủ">
+        Shop<span>VN</span>
+      </a>
+
+      <!-- ========================================== -->
+      <ul class="navbar__nav" role="list">
+        <li><a href="index.html"    class="navbar__link"><span data-i18n="nav.home">Trang chủ</span></a></li>
+        <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sản phẩm</span></a></li>
+        <li><a href="products.html?category=Laptop"      class="navbar__link"><span data-i18n="nav.laptop">Laptop</span></a></li>
+        <li><a href="products.html?category=Điện thoại"  class="navbar__link"><span data-i18n="nav.phone">Điện thoại</span></a></li>
+        <li><a href="products.html?category=Phụ kiện"    class="navbar__link"><span data-i18n="nav.accessories">Phụ kiện</span></a></li>
+      </ul>
+
+      <!-- ========================================== -->
+      <div class="navbar__search" role="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" aria-hidden="true"
+             style="color:var(--c-muted);flex-shrink:0">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm"
+               onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
+      </div>
+
+      <!-- ========================================== -->
+      <div class="navbar__actions">
+        <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:#F57C00; border-color:#FFE0B2; background:#FFF3E0; cursor:default" title="ShopVN Xu">
+          ✨
+          <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:#F57C00; border-color:#F57C00; color:white">0</span>
+        </div>
+        <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <span class="navbar__wish-count navbar__cart-count" aria-live="polite" style="display:none">0</span>
+        </a>
+        <!-- ========================================== -->
+        <a href="cart.html" class="navbar__cart-btn" aria-label="Giỏ hàng">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="navbar__cart-count" aria-live="polite">0</span>
+        </a>
+
+        <!-- ========================================== -->
+        <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
+          <a href="login.html"    class="btn btn-ghost btn-sm"><span data-i18n="auth.login">Đăng nhập</span></a>
+          <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">Đăng ký</span></a>
+        </div>
+      </div>
+
+    </nav>
+  </div>
+</header>
+
+<!-- ========================================== -->
+<div class="orders-page">
+  <div class="container">
+
+    <!-- ========================================== -->
+    <nav aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
+      <ol style="display:flex;align-items:center;gap:6px;
+                 font-size:.82rem;color:var(--c-muted);list-style:none">
+        <li>
+          <a href="index.html"
+             style="color:var(--c-muted);transition:color var(--dur)"
+             onmouseover="this.style.color='var(--c-blue)'"
+             onmouseout="this.style.color='var(--c-muted)'"><span data-i18n="nav.home">Trang chủ</span></a>
+        </li>
+        <li aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </li>
+        <li aria-current="page" style="color:var(--c-text);font-weight:500">
+          <span data-i18n="nav.orders">Đơn hàng</span> của tôi
+        </li>
+      </ol>
+    </nav>
+
+    <!-- ========================================== -->
+    <div class="orders-layout">
+      
+      <!-- ========================================== -->
+      <header class="orders-header">
+        <h1 class="orders-title">Quản lý đơn hàng</h1>
+        <p class="orders-subtitle">Theo dõi hành trình đơn hàng của bạn từ khi đặt đến khi giao nhận.</p>
+      </header>
+
+      <!-- ========================================== -->
+      <nav class="orders-tabs" aria-label="Lọc trạng thái đơn hàng">
+        <button class="orders-tab active" data-status="all">Tất cả</button>
+        <button class="orders-tab" data-status="Chủ xác nhận">Chủ xác nhận</button>
+        <button class="orders-tab" data-status="Đang xử lý">Đang xử lý</button>
+        <button class="orders-tab" data-status="Đang giao">Đang giao</button>
+        <button class="orders-tab" data-status="Đã giao">Đã giao</button>
+        <button class="orders-tab" data-status="Đã hủy">Đã hủy</button>
+      </nav>
+
+      <!-- ========================================== -->
+      <main id="orders-list-container">
+        <!-- ========================================== -->
+        <div style="text-align:center; padding: var(--sp-2xl)">
+          <div class="skeleton" style="height: 100px; border-radius: var(--r-lg); margin-bottom: 20px;"></div>
+          <div class="skeleton" style="height: 100px; border-radius: var(--r-lg); margin-bottom: 20px;"></div>
+          <div class="skeleton" style="height: 100px; border-radius: var(--r-lg);"></div>
+        </div>
+      </main>
+
+    </div><!-- ========================================== -->
+
+  </div><!-- ========================================== -->
+</div><!-- ========================================== -->
+
+<!-- ========================================== -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <div class="footer__brand-name">Shop<span>VN</span></div>
+        <p class="footer__desc">
+          Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị
+          điện tử, phụ kiện công nghệ chính hãng toàn quốc.
+        </p>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sắm</span></h3>
+        <ul class="footer__links">
+          <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
+          <li><a href="products.html?sort=sale"    class="footer__link"><span data-i18n="footer.sale">Khuyến mãi</span></a></li>
+          <li><a href="products.html?sort=newest"  class="footer__link">Hàng mới về</a></li>
+          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy nhất</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.account">Tài khoản</span></h3>
+        <ul class="footer__links">
+          <li><a href="login.html"    class="footer__link"><span data-i18n="auth.login">Đăng nhập</span></a></li>
+          <li><a href="register.html" class="footer__link"><span data-i18n="auth.register">Đăng ký</span></a></li>
+          <li><a href="orders.html"   class="footer__link"><span data-i18n="nav.orders">Đơn hàng</span></a></li>
+          <li><a href="cart.html"     class="footer__link"><span data-i18n="nav.cart">Giỏ hàng</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.support">Hỗ trợ</span></h3>
+        <ul class="footer__links">
+          <li><a href="faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
+          <li><a href="contact.html" class="footer__link"><span data-i18n="footer.contact">Liên hệ</span></a></li>
+          <li><a href="faq.html#doi-tra" class="footer__link"><span data-i18n="footer.returns">Đổi trả hàng</span></a></li>
+          <li><a href="faq.html#van-chuyen" class="footer__link"><span data-i18n="footer.shipping">Chính sách vận chuyển</span></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
+      <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ========================================== -->
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/lucky-wheel.js"></script>
+<script src="js/pages/orders.js"></script>
+
+<script src="js/locales/vi.js"></script>
+<script src="js/locales/en.js"></script>
+<script src="js/i18n.js"></script>
+</body>
+</html>
+
+
+

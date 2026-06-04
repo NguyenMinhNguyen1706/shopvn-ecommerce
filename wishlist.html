@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yêu thích — ShopVN</title>
+  <meta name="description" content="Danh sách sản phẩm yêu thích của bạn tại ShopVN." />
+
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages/products.css" />
+  <link rel="stylesheet" href="css/lucky-wheel.css" />
+</head>
+<body>
+
+<!-- ========================================== -->
+<header class="navbar" role="banner">
+  <div class="container">
+    <nav class="navbar__inner" aria-label="Điều hướng chính">
+      <a href="index.html" class="navbar__logo">Shop<span>VN</span></a>
+      <ul class="navbar__nav" role="list">
+        <li><a href="index.html"    class="navbar__link"><span data-i18n="nav.home">Trang chủ</span></a></li>
+        <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sản phẩm</span></a></li>
+        <li><a href="products.html?category=Laptop"     class="navbar__link"><span data-i18n="nav.laptop">Laptop</span></a></li>
+        <li><a href="products.html?category=Điện thoại" class="navbar__link"><span data-i18n="nav.phone">Điện thoại</span></a></li>
+        <li><a href="products.html?category=Phụ kiện"   class="navbar__link"><span data-i18n="nav.accessories">Phụ kiện</span></a></li>
+      </ul>
+      <div class="navbar__search" role="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--c-muted);flex-shrink:0">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm"
+               onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
+      </div>
+      <div class="navbar__actions">
+        <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:#F57C00; border-color:#FFE0B2; background:#FFF3E0; cursor:default" title="ShopVN Xu">
+          ✨
+          <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:#F57C00; border-color:#F57C00; color:white">0</span>
+        </div>
+        <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <span class="navbar__wish-count navbar__cart-count" aria-live="polite" style="display:none">0</span>
+        </a>
+        <a href="cart.html" class="navbar__cart-btn" aria-label="Giỏ hàng">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="navbar__cart-count" aria-live="polite">0</span>
+        </a>
+        <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
+          <a href="login.html"    class="btn btn-ghost btn-sm"><span data-i18n="auth.login">Đăng nhập</span></a>
+          <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">Đăng ký</span></a>
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>
+
+
+<!-- ========================================== -->
+<div style="padding-top:calc(var(--nav-h) + var(--sp-xl))">
+  <div class="container" style="padding-top:var(--sp-xl);padding-bottom:var(--sp-2xl)">
+
+    <!-- ========================================== -->
+    <nav aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
+      <ol style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--c-muted);list-style:none">
+        <li><a href="index.html" style="color:var(--c-muted);transition:color var(--dur)" onmouseover="this.style.color='var(--c-blue)'" onmouseout="this.style.color='var(--c-muted)'"><span data-i18n="nav.home">Trang chủ</span></a></li>
+        <li aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </li>
+        <li aria-current="page" style="color:var(--c-text);font-weight:500"><span data-i18n="nav.wishlist">Yêu thích</span></li>
+      </ol>
+    </nav>
+
+    <!-- ========================================== -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-xl);flex-wrap:wrap;gap:var(--sp-md)">
+      <div>
+        <h1 style="font-family:var(--f-display);font-size:1.8rem;font-weight:700;color:var(--c-navy);margin-bottom:4px">
+          💖 <span data-i18n="nav.products">Sản phẩm</span> yêu thích
+        </h1>
+        <p id="wish-count-text" style="font-size:.9rem;color:var(--c-muted)">0 sản phẩm</p>
+      </div>
+      <button class="btn btn-outline btn-sm" id="wish-add-all-cart" style="display:none" onclick="addAllWishToCart()">
+        🛒 Thêm tất cả vào giá
+      </button>
+    </div>
+
+    <!-- ========================================== -->
+    <div id="wishlist-grid" class="wishlist-grid">
+      <!-- ========================================== -->
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ========================================== -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <div class="footer__brand-name">Shop<span>VN</span></div>
+        <p class="footer__desc">Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị điện tử, phụ kiện công nghệ chính hãng toàn quốc.</p>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sắm</span></h3>
+        <ul class="footer__links">
+          <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
+          <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến mãi</span></a></li>
+          <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
+          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy nhất</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.account">Tài khoản</span></h3>
+        <ul class="footer__links">
+          <li><a href="login.html"    class="footer__link"><span data-i18n="auth.login">Đăng nhập</span></a></li>
+          <li><a href="register.html" class="footer__link"><span data-i18n="auth.register">Đăng ký</span></a></li>
+          <li><a href="orders.html"   class="footer__link"><span data-i18n="nav.orders">Đơn hàng</span></a></li>
+          <li><a href="cart.html"     class="footer__link"><span data-i18n="nav.cart">Giỏ hàng</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.support">Hỗ trợ</span></h3>
+        <ul class="footer__links">
+          <li><a href="faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
+          <li><a href="contact.html" class="footer__link"><span data-i18n="footer.contact">Liên hệ</span></a></li>
+          <li><a href="faq.html#doi-tra" class="footer__link"><span data-i18n="footer.returns">Đổi trả hàng</span></a></li>
+          <li><a href="faq.html#van-chuyen" class="footer__link"><span data-i18n="footer.shipping">Chính sách vận chuyển</span></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
+      <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+    </div>
+  </div>
+</footer>
+
+
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/lucky-wheel.js"></script>
+<script>
+  const getProducts = () => {
+    if (!localStorage.getItem('admin_products')) {
+      localStorage.setItem('admin_products', JSON.stringify(MOCK.products));
+    }
+    return JSON.parse(localStorage.getItem('admin_products'));
+  };
+
+  // Navbar scroll
+  window.addEventListener('scroll', () => {
+    document.querySelector('.navbar')?.classList.toggle('scrolled', window.scrollY > 10);
+  });
+
+  function renderWishlist() {
+    const grid = document.getElementById('wishlist-grid');
+    const countText = document.getElementById('wish-count-text');
+    const addAllBtn = document.getElementById('wish-add-all-cart');
+    const items = LocalWishlist.get();
+
+    countText.textContent = `${items.length} sản phẩm`;
+    addAllBtn.style.display = items.length > 0 - 'inline-flex' : 'none';
+
+    if (items.length === 0) {
+      grid.innerHTML = `
+        <div class="wishlist-empty" style="grid-column:1/-1">
+          <div class="wishlist-empty__icon">✨</div>
+          <p class="wishlist-empty__text">Chưa có sản phẩm yêu thích</p>
+          <p class="wishlist-empty__sub">Hãy duyệt sản phẩm và nhấn ✨ để lưu vào đây</p>
+          <a href="products.html" class="btn btn-primary">Khám phá sản phẩm</a>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = items.map((p, i) => {
+      const disc = calcDiscount(p.price, p.oldPrice);
+      return `
+        <article class="product-card fade-up" style="animation-delay:${i * 0.05}s">
+          <div class="product-card__img" onclick="window.location.href='product-detail.html?id=${p.id}'">
+            <span class="product-card__img-icon">${p.icon || '📦'}</span>
+            ${disc - `<span class="badge badge-accent product-card__badge">-${disc}%</span>` : ''}
+            <button class="product-card__wish active"
+                    onclick="event.stopPropagation(); removeFromWishlist(${p.id})"
+                    aria-label="Xóa khỏi yêu thích">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card__body">
+            <p class="product-card__cat">${p.category}</p>
+            <h3 class="product-card__name">${p.name}</h3>
+            <div class="product-card__price-row">
+              <div>
+                <span class="product-card__price">${formatPrice(p.price)}</span>
+                ${p.oldPrice - `<span class="product-card__price-old">${formatPrice(p.oldPrice)}</span>` : ''}
+              </div>
+              <button class="product-card__add"
+                      onclick="event.stopPropagation(); addToCartFromWish(${p.id})"
+                      aria-label="Thêm vào giỏ hàng">+</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  function removeFromWishlist(productId) {
+    LocalWishlist.remove(productId);
+    showToast('Đã xóa khỏi yêu thích', 'info');
+    renderWishlist();
+  }
+
+  function addToCartFromWish(productId) {
+    const product = getProducts().find(p => p.id === productId);
+    if (product) LocalCart.add(product, 1);
+  }
+
+  function addAllWishToCart() {
+    const wishItems = LocalWishlist.get();
+    const allProducts = getProducts();
+    wishItems.forEach(w => {
+      const p = allProducts.find(pp => pp.id === w.id);
+      if (p) {
+        const cartItems = LocalCart.get();
+        const existing = cartItems.find(i => i.id === p.id);
+        if (!existing) {
+          cartItems.push({ ...p, quantity: 1 });
+          LocalCart.save(cartItems);
+        }
+      }
+    });
+    showToast(`Đã thêm ${wishItems.length} sản phẩm vào giỏ hàng`);
+    openCartDrawer();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateNavbarAuth();
+    updateCartBadge();
+    renderWishlist();
+  });
+</script>
+
+<script src="js/locales/vi.js"></script>
+<script src="js/locales/en.js"></script>
+<script src="js/i18n.js"></script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,475 @@
+<!DOCTYPE html><html lang="vi"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanh toán — ShopVN</title>
+  <meta name="description" content="Thanh toán đơn hàng nhanh chóng, an toàn tại ShopVN.">
+
+  <!-- ========================================== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+
+  <!-- ========================================== -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages/checkout.css">
+  <link rel="stylesheet" href="css/lucky-wheel.css">
+</head>
+<body>
+
+<!-- ========================================== -->
+<header class="navbar" role="banner">
+  <div class="container">
+    <nav class="navbar__inner" aria-label="Điều hướng chính">
+
+      <!-- ========================================== -->
+      <a href="index.html" class="navbar__logo" aria-label="ShopVN - Trang chủ">
+        Shop<span>VN</span>
+      </a>
+
+      <!-- ========================================== -->
+      <ul class="navbar__nav" role="list">
+        <li><a href="index.html" class="navbar__link"><span data-i18n="nav.home">Trang chủ</span></a></li>
+        <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sản phẩm</span></a></li>
+        <li><a href="products.html?category=Laptop" class="navbar__link"><span data-i18n="nav.laptop">Laptop</span></a></li>
+        <li><a href="products.html?category=Điện thoại" class="navbar__link"><span data-i18n="nav.phone">Điện thoại</span></a></li>
+        <li><a href="products.html?category=Phụ kiện" class="navbar__link"><span data-i18n="nav.accessories">Phụ kiện</span></a></li>
+      </ul>
+
+      <!-- ========================================== -->
+      <div class="navbar__search" role="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--c-muted);flex-shrink:0">
+          <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm" onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value">
+      </div>
+
+      <!-- ========================================== -->
+      <div class="navbar__actions">
+        <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:#F57C00; border-color:#FFE0B2; background:#FFF3E0; cursor:default" title="ShopVN Xu">
+          ✨
+          <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:#F57C00; border-color:#F57C00; color:white">0</span>
+        </div>
+        <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span class="navbar__wish-count navbar__cart-count" aria-live="polite" style="display:none">0</span>
+        </a>
+        <!-- ========================================== -->
+        <a href="cart.html" class="navbar__cart-btn" aria-label="Giỏ hàng">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          <span class="navbar__cart-count" aria-live="polite">0</span>
+        </a>
+
+        <!-- ========================================== -->
+        <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
+          <a href="login.html" class="btn btn-ghost btn-sm"><span data-i18n="auth.login">Đăng nhập</span></a>
+          <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">Đăng ký</span></a>
+        </div>
+      </div>
+
+    </nav>
+  </div>
+</header>
+
+<!-- ========================================== -->
+<div class="checkout-page">
+  <div class="container">
+
+    <!-- ========================================== -->
+    <nav aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
+      <ol style="display:flex;align-items:center;gap:6px;
+                 font-size:.82rem;color:var(--c-muted);list-style:none">
+        <li>
+          <a href="index.html" style="color:var(--c-muted);transition:color var(--dur)" onmouseover="this.style.color='var(--c-blue)'" onmouseout="this.style.color='var(--c-muted)'"><span data-i18n="nav.home">Trang chủ</span></a>
+        </li>
+        <li aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </li>
+        <li>
+          <a href="cart.html" style="color:var(--c-muted);transition:color var(--dur)" onmouseover="this.style.color='var(--c-blue)'" onmouseout="this.style.color='var(--c-muted)'"><span data-i18n="nav.cart">Giỏ hàng</span></a>
+        </li>
+        <li aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </li>
+        <li aria-current="page" style="color:var(--c-text);font-weight:500">
+          <span data-i18n="checkout.title">Thanh toán</span>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- ========================================== -->
+    <div class="checkout-layout">
+
+      <!-- ========================================== -->
+      <main>
+        
+        <!-- ========================================== -->
+        <section class="checkout-card" aria-labelledby="shipping-title">
+          <h2 class="checkout-card__title" id="shipping-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="3" width="15" height="13" rx="2"></rect>
+              <path d="M16 8h4l3 5v3h-7V8z"></path>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+            <span data-i18n="checkout.shipping_info">Thông tin giao hàng</span>
+          </h2>
+
+          <div class="form-grid">
+            <!-- ========================================== -->
+            <div class="form-group form-grid__full">
+              <label class="form-label" for="customer-name">Họ và tên <span>*</span></label>
+              <input class="form-control" type="text" id="customer-name" placeholder="Ví dụ: Nguyễn Văn A">
+              <span class="form-error">Vui lòng nhập họ và tên</span>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="form-group">
+              <label class="form-label" for="customer-phone"><span data-i18n="checkout.phone">Số điện thoại</span> <span>*</span></label>
+              <input class="form-control" type="tel" id="customer-phone" placeholder="Ví dụ: 0905123456">
+              <span class="form-error">Vui lòng nhập số điện thoại hợp lệ</span>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="form-group">
+              <label class="form-label" for="customer-email">Email <span>*</span></label>
+              <input class="form-control" type="email" id="customer-email" placeholder="Ví dụ: nva@gmail.com">
+              <span class="form-error">Vui lòng nhập email hợp lệ</span>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="form-group">
+              <label class="form-label" for="customer-province"><span data-i18n="checkout.province">Tỉnh / Thành phố</span> <span>*</span></label>
+              <input class="form-control" type="text" id="customer-province" placeholder="Ví dụ: Đà Nẵng">
+              <span class="form-error">Vui lòng nhập tỉnh/thành phố</span>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="form-group">
+              <label class="form-label" for="customer-district"><span data-i18n="checkout.district">Quận / Huyện</span> <span>*</span></label>
+              <input class="form-control" type="text" id="customer-district" placeholder="Ví dụ: Hải Châu">
+              <span class="form-error">Vui lòng nhập quận/huyện</span>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="form-group">
+              <label class="form-label" for="customer-ward">Phường / Xã <span>*</span></label>
+              <input class="form-control" type="text" id="customer-ward" placeholder="Ví dụ: Hòa Cường Bắc">
+              <span class="form-error">Vui lòng nhập phường/xã</span>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="form-group">
+              <label class="form-label" for="customer-address">Địa chỉ chi tiết (Số nhà, tên đường...) <span>*</span></label>
+              <input class="form-control" type="text" id="customer-address" placeholder="Ví dụ: 123 Nguyễn Tri Phương">
+              <span class="form-error">Vui lòng nhập địa chỉ chi tiết</span>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="form-group form-grid__full">
+              <label class="form-label" for="customer-note">Ghi chú giao hàng (Tùy chọn)</label>
+              <textarea class="form-control" id="customer-note" placeholder="Ghi chú thêm cho shipper (ví dụ: giao giờ hành chính, gọi trước khi đến...)"></textarea>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="form-group form-grid__full" style="margin-top: 10px;">
+              <label class="form-label">Đơn vị vận chuyển <span style="color:var(--c-accent)">*</span></label>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 8px;">
+                <label style="border: 1px solid var(--c-border); padding: 12px; border-radius: var(--r-md); cursor: pointer; display: flex; align-items: center; gap: 8px; background: var(--c-white); transition: border-color 0.2s;" id="carrier-ghtk">
+                  <input type="radio" name="shipping-carrier" value="ghtk" checked style="accent-color: var(--c-blue);" />
+                  <div>
+                    <span style="font-weight: 600; font-size: 0.88rem; color: var(--c-title);">Giao Hàng Tiết Kiệm (GHTK)</span><br>
+                    <span style="font-size: 0.78rem; color: var(--c-muted);">30.000đ — 2-3 ngày</span>
+                  </div>
+                </label>
+                <label style="border: 1px solid var(--c-border); padding: 12px; border-radius: var(--r-md); cursor: pointer; display: flex; align-items: center; gap: 8px; background: var(--c-white); transition: border-color 0.2s;" id="carrier-ghn">
+                  <input type="radio" name="shipping-carrier" value="ghn" style="accent-color: var(--c-blue);" />
+                  <div>
+                    <span style="font-weight: 600; font-size: 0.88rem; color: var(--c-title);">Giao Hàng Nhanh (GHN)</span><br>
+                    <span style="font-size: 0.78rem; color: var(--c-muted);">35.000đ — 1-2 ngày</span>
+                  </div>
+                </label>
+                <label style="border: 1px solid var(--c-border); padding: 12px; border-radius: var(--r-md); cursor: pointer; display: flex; align-items: center; gap: 8px; background: var(--c-white); transition: border-color 0.2s;" id="carrier-viettel">
+                  <input type="radio" name="shipping-carrier" value="viettel" style="accent-color: var(--c-blue);" />
+                  <div>
+                    <span style="font-weight: 600; font-size: 0.88rem; color: var(--c-title);">Viettel Post</span><br>
+                    <span style="font-size: 0.78rem; color: var(--c-muted);">25.000đ — 3-4 ngày</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <section class="checkout-card" aria-labelledby="payment-title">
+          <h2 class="checkout-card__title" id="payment-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <line x1="2" y1="10" x2="22" y2="10"></line>
+            </svg>
+            Phương thức thanh toán
+          </h2>
+
+          <div class="payment-methods">
+            <!-- ========================================== -->
+            <div class="payment-method active">
+              <input class="payment-method__radio" type="radio" name="payment-method" id="pay-cod" value="cod" checked="">
+              <div class="payment-method__info">
+                <label class="payment-method__name" for="pay-cod"><span data-i18n="checkout.title">Thanh toán</span> khi nhận hàng (COD)</label>
+                <div class="payment-method__desc"><span data-i18n="checkout.title">Thanh toán</span> bằng tiền mặt khi shipper giao hàng tận nơi.</div>
+              </div>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="payment-method">
+              <input class="payment-method__radio" type="radio" name="payment-method" id="pay-bank" value="bank">
+              <div class="payment-method__info">
+                <label class="payment-method__name" for="pay-bank">Chuyển khoản ngân hàng</label>
+                <div class="payment-method__desc">Chuyển khoản qua Internet Banking hoặc quét mã QR.</div>
+              </div>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="payment-details" id="details-bank">
+              <div class="payment-details__qr">
+                <p style="font-weight:600; color:var(--c-blue)">Thông tin chuyển khoản ngân hàng</p>
+                <div class="qr-box">?</div>
+                <p style="color:var(--c-muted); max-width:300px; line-height:1.4">Quét mã hoặc chuyển khoản đúng số tiền theo thông tin dưới đây:</p>
+                
+                <div class="bank-info">
+                  <div class="bank-info-row">
+                    <span class="bank-info-label">Ngân hàng:</span>
+                    <span class="bank-info-value">Vietcombank (VCB)</span>
+                  </div>
+                  <div class="bank-info-row">
+                    <span class="bank-info-label">Số tài khoản:</span>
+                    <span class="bank-info-value" style="color:var(--c-blue)">1029384756</span>
+                  </div>
+                  <div class="bank-info-row">
+                    <span class="bank-info-label">Chủ tài khoản:</span>
+                    <span class="bank-info-value">CÔNG TY TNHH SHOPVN</span>
+                  </div>
+                  <div class="bank-info-row">
+                    <span class="bank-info-label">Nội dung CK:</span>
+                    <span class="bank-info-value" style="color:var(--c-accent); text-transform:uppercase">Mã đơn hàng của bạn</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="payment-method">
+              <input class="payment-method__radio" type="radio" name="payment-method" id="pay-momo" value="momo">
+              <div class="payment-method__info">
+                <label class="payment-method__name" for="pay-momo">Ví điện tử MoMo</label>
+                <div class="payment-method__desc"><span data-i18n="checkout.title">Thanh toán</span> nhanh chóng bằng ví điện tử MoMo của bạn.</div>
+              </div>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="payment-details" id="details-momo">
+              <div class="payment-details__qr">
+                <p style="font-weight:600; color:#d21f3c">Chuyển khoản qua Ví MoMo</p>
+                <div class="qr-box" style="color:#d21f3c">📱</div>
+                <p style="color:var(--c-muted); max-width:300px; line-height:1.4">Mở app MoMo quét mã QR hoặc chuyển tiền đến số điện thoại ví:</p>
+                
+                <div class="bank-info">
+                  <div class="bank-info-row">
+                    <span class="bank-info-label">Số điện thoại:</span>
+                    <span class="bank-info-value" style="color:#d21f3c">0999888777</span>
+                  </div>
+                  <div class="bank-info-row">
+                    <span class="bank-info-label">Tên người nhận:</span>
+                    <span class="bank-info-value">NGUYỄN VĂN A</span>
+                  </div>
+                  <div class="bank-info-row">
+                    <span class="bank-info-label">Nội dung:</span>
+                    <span class="bank-info-value" style="color:var(--c-accent)">Mã đơn hàng của bạn</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="payment-method">
+              <input class="payment-method__radio" type="radio" name="payment-method" id="pay-vnpay" value="vnpay">
+              <div class="payment-method__info">
+                <label class="payment-method__name" for="pay-vnpay"><span data-i18n="checkout.title">Thanh toán</span> qua cổng VNPay</label>
+                <div class="payment-method__desc"><span data-i18n="checkout.title">Thanh toán</span> trực tuyến bằng Thẻ ATM, Thẻ quốc tế, Ví điện tử hoặc quét mã QR.</div>
+              </div>
+            </div>
+
+            <!-- ========================================== -->
+            <div class="payment-details" id="details-vnpay">
+              <div class="payment-details__qr">
+                <p style="font-weight:600; color:var(--c-blue)">Cổng thanh toán VNPay</p>
+                <div class="qr-box" style="color:var(--c-blue)">💳</div>
+                <p style="color:var(--c-muted); max-width:300px; line-height:1.4">Bạn sẽ được chuyển hướng sang cổng thanh toán bảo mật VNPay sau khi nhấn nút đặt hàng.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ========================================== -->
+      <aside class="checkout-summary" aria-label="Tóm tắt đơn hàng">
+        <h2 class="checkout-summary__title"><span data-i18n="nav.orders">Đơn hàng</span> của bạn</h2>
+
+        <!-- ========================================== -->
+        <div class="summary-items" id="summary-items-list">
+          <!-- ========================================== -->
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <!-- ========================================== -->
+        <div class="summary-row">
+          <span class="summary-row__label"><span data-i18n="checkout.subtotal">Tạm tính</span></span>
+          <span class="summary-row__value" id="summary-subtotal">0đ</span>
+        </div>
+
+        <!-- ========================================== -->
+        <div class="summary-row">
+          <span class="summary-row__label"><span data-i18n="checkout.shipping_fee">Phí vận chuyển</span></span>
+          <span class="summary-row__value" id="summary-shipping">30.000đ</span>
+        </div>
+
+        <!-- ========================================== -->
+        <div class="summary-row" id="summary-discount-row" style="display:none">
+          <span class="summary-row__label"><span data-i18n="checkout.discount">Giảm giá (Voucher)</span></span>
+          <span class="summary-row__value" style="color:#e53935; font-weight:600" id="summary-discount">-0đ</span>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <!-- ========================================== -->
+        <div class="summary-total">
+          <span class="summary-total__label"><span data-i18n="checkout.total">Tổng cộng</span></span>
+          <span class="summary-total__value" id="summary-total">0đ</span>
+        </div>
+
+        <!-- ========================================== -->
+        <div class="voucher-wrap">
+          <input class="voucher-input" type="text" id="voucher-input" placeholder="Mã giảm giá (ví dụ: SHOPVN50)" aria-label="Mã voucher">
+          <button class="btn btn-outline btn-sm" onclick="applyCheckoutVoucher()">
+            Áp dụng
+          </button>
+        </div>
+
+        <!-- ========================================== -->
+        <div id="loyalty-points-wrap" class="voucher-wrap" style="margin-top: 12px; display: none; align-items: center; justify-content: space-between; background: #FFF8E1; padding: 12px; border: 1px solid #FFECB3; border-radius: var(--r-md);">
+          <div>
+            <span style="font-weight: 600; color: #F57C00;">ShopVN Xu</span><br>
+            <span style="font-size: 0.8rem; color: var(--c-muted);">Bạn có <strong id="loyalty-points-balance">0</strong> xu (giảm <strong id="loyalty-points-vnd">0đ</strong>)</span>
+          </div>
+          <button id="loyalty-points-btn" class="btn btn-outline btn-sm" onclick="toggleXu()" style="border-color: #F57C00; color: #F57C00; background: white">
+            <span data-i18n="checkout.use">Sử dụng</span>
+          </button>
+        </div>
+
+        <!-- ========================================== -->
+        <button id="place-order-btn" class="btn btn-primary btn-full" onclick="submitOrder()" style="padding:14px;font-size:1rem;font-weight:700">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Đặt hàng ngay
+        </button>
+
+        <!-- ========================================== -->
+        <div class="summary-trust">
+          <div class="summary-trust-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span><span data-i18n="checkout.title">Thanh toán</span> an toàn, bảo mật</span>
+          </div>
+          <div class="summary-trust-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span><span data-i18n="footer.support">Hỗ trợ</span> khách hàng 24/7 (1800 9999)</span>
+          </div>
+        </div>
+
+      </aside>
+
+    </div><!-- ========================================== -->
+
+  </div><!-- ========================================== -->
+</div><!-- ========================================== -->
+
+<!-- ========================================== -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <div class="footer__brand-name">Shop<span>VN</span></div>
+        <p class="footer__desc">
+          Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị
+          điện tử, phụ kiện công nghệ chính hãng toàn quốc.
+        </p>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sắm</span></h3>
+        <ul class="footer__links">
+          <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
+          <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến mãi</span></a></li>
+          <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
+          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy nhất</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.account">Tài khoản</span></h3>
+        <ul class="footer__links">
+          <li><a href="login.html" class="footer__link"><span data-i18n="auth.login">Đăng nhập</span></a></li>
+          <li><a href="register.html" class="footer__link"><span data-i18n="auth.register">Đăng ký</span></a></li>
+          <li><a href="orders.html" class="footer__link"><span data-i18n="nav.orders">Đơn hàng</span></a></li>
+          <li><a href="cart.html" class="footer__link"><span data-i18n="nav.cart">Giỏ hàng</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.support">Hỗ trợ</span></h3>
+        <ul class="footer__links">
+          <li><a href="faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
+          <li><a href="contact.html" class="footer__link"><span data-i18n="footer.contact">Liên hệ</span></a></li>
+          <li><a href="faq.html#doi-tra" class="footer__link"><span data-i18n="footer.returns">Đổi trả hàng</span></a></li>
+          <li><a href="faq.html#van-chuyen" class="footer__link"><span data-i18n="footer.shipping">Chính sách vận chuyển</span></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
+      <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ========================================== -->
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/lucky-wheel.js"></script>
+<script src="js/pages/checkout.js"></script>
+
+
+
+
+<script src="js/locales/vi.js"></script>
+<script src="js/locales/en.js"></script>
+<script src="js/i18n.js"></script>
+</body></html>
+
+

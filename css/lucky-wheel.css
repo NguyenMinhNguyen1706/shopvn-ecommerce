@@ -1,0 +1,125 @@
+/* ── Lucky Wheel Modal ────────────────────────────── */
+.lw-overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,27,42,.6);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  z-index: 5000; opacity: 0; visibility: hidden;
+  transition: all .35s ease;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.lw-overlay.open { opacity: 1; visibility: visible; }
+
+.lw-modal {
+  background: linear-gradient(135deg, #0D1B2A 0%, #1B2838 100%);
+  border-radius: 24px; padding: 32px;
+  max-width: 400px; width: 100%;
+  text-align: center; position: relative;
+  box-shadow: 0 24px 80px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.1) inset;
+  transform: translateY(30px) scale(.9);
+  transition: transform .4s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+.lw-overlay.open .lw-modal { transform: translateY(0) scale(1); }
+
+.lw-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,.1); color: rgba(255,255,255,.7);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; cursor: pointer; z-index: 1;
+  border: 1px solid rgba(255,255,255,.15);
+  transition: all .2s;
+}
+.lw-close:hover { background: rgba(255,107,53,.3); color: white; }
+
+.lw-title {
+  font-family: var(--f-display, sans-serif);
+  font-size: 1.4rem; font-weight: 800; color: white;
+  margin-bottom: 4px;
+}
+.lw-subtitle {
+  font-size: .85rem; color: rgba(255,255,255,.5); margin-bottom: 24px;
+}
+
+.lw-canvas-wrap {
+  position: relative; display: inline-block;
+  margin-bottom: 20px;
+}
+.lw-pointer {
+  position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+  font-size: 1.6rem; color: #FF6B35;
+  filter: drop-shadow(0 2px 4px rgba(255,107,53,.5));
+  z-index: 2;
+  animation: pointerBounce 1s infinite;
+}
+@keyframes pointerBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(4px); }
+}
+
+.lw-spin-btn {
+  display: inline-block;
+  padding: 14px 40px; border-radius: 99px;
+  background: linear-gradient(135deg, #FF6B35, #C62828);
+  color: white; font-size: 1rem; font-weight: 800;
+  letter-spacing: .05em; cursor: pointer;
+  border: none; position: relative; overflow: hidden;
+  transition: all .3s;
+  box-shadow: 0 6px 20px rgba(255,107,53,.4);
+}
+.lw-spin-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(255,107,53,.5);
+}
+.lw-spin-btn:disabled {
+  opacity: .5; cursor: not-allowed;
+}
+.lw-spin-btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+  animation: lwBtnShine 2s infinite;
+}
+@keyframes lwBtnShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.lw-result {
+  margin-top: 20px; padding: 16px;
+  background: rgba(255,255,255,.08);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.1);
+  animation: fadeUp .3s ease both;
+}
+.lw-result__icon { font-size: 2rem; margin-bottom: 8px; }
+.lw-result__text { font-size: .92rem; color: white; line-height: 1.4; }
+.lw-result__sub { font-size: .8rem; color: rgba(255,255,255,.5); margin-top: 4px; }
+.lw-result__code {
+  margin-top: 10px; padding: 8px 16px;
+  background: rgba(21,101,192,.3);
+  border-radius: 8px; font-size: .85rem;
+  color: #90CAF9; letter-spacing: .1em;
+}
+
+/* Confetti */
+.lw-confetti {
+  position: absolute; top: 0;
+  width: 8px; height: 8px; border-radius: 2px;
+  animation: confettiFall 1.5s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes confettiFall {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translateY(300px) rotate(720deg) scale(0.3); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+  .lw-modal { padding: 20px; margin: 12px; }
+  #lw-canvas { width: 260px !important; height: 260px !important; }
+}

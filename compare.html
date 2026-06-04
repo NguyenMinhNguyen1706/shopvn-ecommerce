@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>So sánh sản phẩm — ShopVN</title>
+  <meta name="description" content="So sánh cấu hình về tính năng các sản phẩm tại ShopVN." />
+
+  <!-- ========================================== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- ========================================== -->
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/compare.css" />
+  <link rel="stylesheet" href="css/lucky-wheel.css" />
+</head>
+<body>
+
+<!-- ========================================== -->
+<header class="navbar" role="banner">
+  <div class="container">
+    <nav class="navbar__inner" aria-label="Điều hướng chính">
+
+      <a href="index.html" class="navbar__logo">Shop<span>VN</span></a>
+
+      <ul class="navbar__nav" role="list">
+        <li><a href="index.html"    class="navbar__link"><span data-i18n="nav.home">Trang chủ</span></a></li>
+        <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sản phẩm</span></a></li>
+        <li><a href="products.html?category=Laptop"      class="navbar__link"><span data-i18n="nav.laptop">Laptop</span></a></li>
+          <li><a href="products.html?category=Điện thoại"  class="navbar__link"><span data-i18n="nav.phone">Điện thoại</span></a></li>
+          <li><a href="products.html?category=Phụ kiện"    class="navbar__link"><span data-i18n="nav.accessories">Phụ kiện</span></a></li>
+      </ul>
+
+      <div class="navbar__search" role="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" aria-hidden="true"
+             style="color:var(--c-muted);flex-shrink:0">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="search" placeholder="Tìm sản phẩm..."
+               onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
+      </div>
+
+      <div class="navbar__actions">
+        <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:#F57C00; border-color:#FFE0B2; background:#FFF3E0; cursor:default" title="ShopVN Xu">
+          ✨
+          <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:#F57C00; border-color:#F57C00; color:white">0</span>
+        </div>
+        <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <span class="navbar__wish-count navbar__cart-count" aria-live="polite" style="display:none">0</span>
+        </a>
+        <a href="cart.html" class="navbar__cart-btn" aria-label="Giỏ hàng">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="navbar__cart-count" aria-live="polite">0</span>
+        </a>
+
+        <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
+          <a href="login.html"    class="btn btn-ghost btn-sm"><span data-i18n="auth.login">Đăng nhập</span></a>
+          <a href="register.html" class="btn btn-primary btn-sm">Đăng ký</a>
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- ========================================== -->
+<div class="compare-page">
+  <div class="container">
+    
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom: 24px">
+      <div>
+        <h1 style="font-family:var(--f-display); font-size:1.8rem; font-weight:800; color:var(--c-navy); margin-bottom: 8px">
+          So sánh sản phẩm
+        </h1>
+        <p style="color:var(--c-muted); font-size: 0.95rem;">
+          Đánh giá chi tiết các tính năng, thông số kỹ thuật để chọn ra sản phẩm phù hợp nhất với bạn.
+        </p>
+      </div>
+      <button class="btn btn-outline" onclick="CompareList.clear(); window.location.href='products.html'">
+        Xóa tất cả
+      </button>
+    </div>
+
+    <!-- ========================================== -->
+    <div class="compare-table-wrapper" id="compare-table-wrapper">
+      <!-- ========================================== -->
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================== -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <div class="footer__brand-name">Shop<span>VN</span></div>
+        <p class="footer__desc">
+          Nền tảng thương mại điện tử uy tín chuyên cung cấp thiết bị
+          Điện tử, phụ kiện công nghệ chính hãng toàn quốc.
+        </p>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sắm</span></h3>
+        <ul class="footer__links">
+          <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
+          <li><a href="products.html?sort=sale"    class="footer__link">Khuyến mãi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer__heading">Tài khoản</h3>
+        <ul class="footer__links">
+          <li><a href="login.html"    class="footer__link"><span data-i18n="auth.login">Đăng nhập</span></a></li>
+          <li><a href="register.html" class="footer__link">Đăng ký</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer__heading"><span data-i18n="footer.support">Hỗ trợ</span></h3>
+        <ul class="footer__links">
+          <li><a href="faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
+          <li><a href="contact.html" class="footer__link">Liên hệ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span> 2024 ShopVN. Bảo lưu mọi quyền.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/lucky-wheel.js"></script>
+<script src="js/compare.js"></script>
+
+<script src="js/locales/vi.js"></script>
+<script src="js/locales/en.js"></script>
+<script src="js/i18n.js"></script>
+</body>
+</html>
+
+
