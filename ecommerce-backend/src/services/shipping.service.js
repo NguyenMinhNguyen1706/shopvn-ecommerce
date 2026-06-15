@@ -1,5 +1,6 @@
 const axios = require('axios');
 const logger = console;
+const { cacheUtils } = require('../config/redis');
 
 /**
  * Shipping Service
@@ -22,11 +23,23 @@ const shippingService = {
    */
   getProvinces: async () => {
     try {
-      // Return cache if exists
+      // 1. Try Redis cache
+      try {
+        const cached = await cacheUtils.get('shipping:provinces');
+        if (cached) {
+          logger.info('✓ Loaded provinces from Redis Cache');
+          return cached;
+        }
+      } catch (redisErr) {
+        logger.warn('Redis error while getting provinces, falling back to local memory:', redisErr.message);
+      }
+
+      // 2. Try in-memory fallback
       if (shippingService.provincesCache) {
         return shippingService.provincesCache;
       }
 
+      // 3. Fetch from API
       const response = await axios.get(`${shippingService.GHN_API_BASE_URL}/master/province`, {
         headers: {
           'token': shippingService.GHN_TOKEN
@@ -34,10 +47,19 @@ const shippingService = {
       });
 
       if (response.data.code === 200) {
-        // Cache for 24 hours
-        shippingService.provincesCache = response.data.data;
-        logger.info(`✓ Loaded ${response.data.data.length} provinces from GHN`);
-        return response.data.data;
+        const provinces = response.data.data;
+        
+        // Save to Redis cache for 24 hours
+        try {
+          await cacheUtils.set('shipping:provinces', provinces, 86400);
+        } catch (redisErr) {
+          logger.warn('Failed to cache provinces to Redis:', redisErr.message);
+        }
+
+        // Save to in-memory cache
+        shippingService.provincesCache = provinces;
+        logger.info(`✓ Loaded ${provinces.length} provinces from GHN`);
+        return provinces;
       } else {
         throw new Error(`GHN error: ${response.data.message}`);
       }
@@ -52,11 +74,25 @@ const shippingService = {
    */
   getDistricts: async (provinceId) => {
     try {
-      // Check cache
+      const cacheKey = `shipping:districts:${provinceId}`;
+      
+      // 1. Try Redis cache
+      try {
+        const cached = await cacheUtils.get(cacheKey);
+        if (cached) {
+          logger.info(`✓ Loaded districts for province ${provinceId} from Redis Cache`);
+          return cached;
+        }
+      } catch (redisErr) {
+        logger.warn(`Redis error while getting districts for ${provinceId}:`, redisErr.message);
+      }
+
+      // 2. Try in-memory fallback
       if (shippingService.districtsCache[provinceId]) {
         return shippingService.districtsCache[provinceId];
       }
 
+      // 3. Fetch from API
       const response = await axios.get(
         `${shippingService.GHN_API_BASE_URL}/master/district`,
         {
@@ -66,10 +102,19 @@ const shippingService = {
       );
 
       if (response.data.code === 200) {
-        // Cache districts for this province
-        shippingService.districtsCache[provinceId] = response.data.data;
-        logger.info(`✓ Loaded ${response.data.data.length} districts for province ${provinceId}`);
-        return response.data.data;
+        const districts = response.data.data;
+
+        // Save to Redis cache for 24 hours
+        try {
+          await cacheUtils.set(cacheKey, districts, 86400);
+        } catch (redisErr) {
+          logger.warn(`Failed to cache districts for ${provinceId} to Redis:`, redisErr.message);
+        }
+
+        // Save to in-memory cache
+        shippingService.districtsCache[provinceId] = districts;
+        logger.info(`✓ Loaded ${districts.length} districts for province ${provinceId}`);
+        return districts;
       } else {
         throw new Error(`GHN error: ${response.data.message}`);
       }
@@ -84,11 +129,25 @@ const shippingService = {
    */
   getWards: async (districtId) => {
     try {
-      // Check cache
+      const cacheKey = `shipping:wards:${districtId}`;
+      
+      // 1. Try Redis cache
+      try {
+        const cached = await cacheUtils.get(cacheKey);
+        if (cached) {
+          logger.info(`✓ Loaded wards for district ${districtId} from Redis Cache`);
+          return cached;
+        }
+      } catch (redisErr) {
+        logger.warn(`Redis error while getting wards for ${districtId}:`, redisErr.message);
+      }
+
+      // 2. Try in-memory fallback
       if (shippingService.wardsCache[districtId]) {
         return shippingService.wardsCache[districtId];
       }
 
+      // 3. Fetch from API
       const response = await axios.get(
         `${shippingService.GHN_API_BASE_URL}/master/ward`,
         {
@@ -98,10 +157,19 @@ const shippingService = {
       );
 
       if (response.data.code === 200) {
-        // Cache wards for this district
-        shippingService.wardsCache[districtId] = response.data.data;
-        logger.info(`✓ Loaded ${response.data.data.length} wards for district ${districtId}`);
-        return response.data.data;
+        const wards = response.data.data;
+
+        // Save to Redis cache for 24 hours
+        try {
+          await cacheUtils.set(cacheKey, wards, 86400);
+        } catch (redisErr) {
+          logger.warn(`Failed to cache wards for ${districtId} to Redis:`, redisErr.message);
+        }
+
+        // Save to in-memory cache
+        shippingService.wardsCache[districtId] = wards;
+        logger.info(`✓ Loaded ${wards.length} wards for district ${districtId}`);
+        return wards;
       } else {
         throw new Error(`GHN error: ${response.data.message}`);
       }
@@ -291,11 +359,19 @@ const shippingService = {
   /**
    * Clear caches (run daily)
    */
-  clearCaches: () => {
+  clearCaches: async () => {
     shippingService.provincesCache = null;
     shippingService.districtsCache = {};
     shippingService.wardsCache = {};
-    logger.info('✓ Shipping caches cleared');
+    
+    // Clear Redis keys matching shipping:*
+    try {
+      await cacheUtils.delPattern('shipping:*');
+      logger.info('✓ Shipping Redis and local caches cleared');
+    } catch (redisErr) {
+      logger.warn('Failed to clear shipping Redis cache:', redisErr.message);
+      logger.info('✓ Shipping local caches cleared');
+    }
   }
 };
 

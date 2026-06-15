@@ -120,6 +120,11 @@ const vnpayIpn = asyncHandler(async (req, res) => {
 
 const { zalopayService, momoService } = require('../services/payment.service');
 const { payosService } = require('../services/payos.service');
+const OMSService = require('../services/oms.service');
+const LoyaltyService = require('../services/loyalty.service');
+const OrderItem = require('../models/OrderItem');
+const User = require('../models/User');
+const sequelize = require('../config/database');
 const logger = console;
 
 /**
@@ -136,7 +141,7 @@ const createZaloPayment = asyncHandler(async (req, res) => {
   }
 
   try {
-    const order = await Order.findById(orderId);
+    const order = await Order.findByPk(orderId);
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -184,7 +189,7 @@ const createMomoPayment = asyncHandler(async (req, res) => {
   }
 
   try {
-    const order = await Order.findById(orderId);
+    const order = await Order.findByPk(orderId);
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -225,7 +230,9 @@ const createBankTransferPayment = asyncHandler(async (req, res) => {
   const { orderId, returnUrl } = req.body;
 
   try {
-    const order = await Order.findById(orderId).populate('userId');
+    const order = await Order.findByPk(orderId, {
+      include: [{ model: User }]
+    });
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -235,17 +242,17 @@ const createBankTransferPayment = asyncHandler(async (req, res) => {
 
     const paymentResult = await payosService.createPaymentRequest({
       orderId: orderId,
-      amount: Math.round(order.totalAmount || order.total),
+      amount: Math.round(Number(order.total)),
       description: `Thanh toán đơn hàng #${orderId}`,
       returnUrl: returnUrl || `${process.env.FRONTEND_URL}/orders/${orderId}`,
-      buyerName: order.shippingInfo?.name || 'Customer',
-      buyerEmail: order.userId.email,
-      buyerPhone: order.shippingInfo?.phone
+      buyerName: order.shippingName || 'Customer',
+      buyerEmail: order.User ? order.User.email : 'customer@shopvn.com',
+      buyerPhone: order.shippingPhone
     });
 
     // Save payment reference to order
     order.paymentMethod = 'bank_transfer';
-    order.paymentReference = paymentResult.paymentId;
+    order.vnpayTxnRef = String(paymentResult.paymentId);
     await order.save();
 
     res.json({
@@ -271,35 +278,58 @@ const createBankTransferPayment = asyncHandler(async (req, res) => {
  * ZaloPay Webhook Callback
  */
 const zalopayWebhook = asyncHandler(async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const webhookData = req.body;
     const verification = zalopayService.verifyWebhook(webhookData);
 
     if (!verification.valid) {
       logger.warn('Invalid ZaloPay webhook signature');
+      await t.rollback();
       return res.status(400).json({ success: false });
     }
 
     const { appTransId } = verification;
     const orderId = appTransId.split('_')[1];
 
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      {
+    const order = await Order.findByPk(orderId, {
+      include: [{ model: OrderItem, as: 'items' }],
+      transaction: t
+    });
+
+    if (!order) {
+      logger.warn(`Order #${orderId} not found for ZaloPay webhook`);
+      await t.rollback();
+      return res.status(404).json({ success: false });
+    }
+
+    if (order.paymentStatus !== 'paid') {
+      // 1. Cập nhật trạng thái Order
+      await order.update({
         paymentStatus: 'paid',
         paymentMethod: 'zalopay',
-        paymentDate: new Date(),
-        status: 'paid'
-      },
-      { new: true }
-    );
+        status: 'processing',
+        vnpayTxnRef: appTransId
+      }, { transaction: t });
 
-    if (order) {
+      // 2. Commit Reserved Stock trong WMS
+      const items = order.items || [];
+      const omsItems = items.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity
+      }));
+      await OMSService.commitReservedStock(orderId, omsItems, t);
+
+      // 3. Cộng điểm Loyalty cho user
+      await LoyaltyService.addPointsFromOrder(order.userId, Number(order.total), t);
+
       logger.info(`✓ ZaloPay payment completed for order ${orderId}`);
     }
 
+    await t.commit();
     res.json({ success: true });
   } catch (error) {
+    await t.rollback();
     logger.error('ZaloPay webhook error:', error.message);
     res.status(500).json({ success: false });
   }
@@ -309,36 +339,59 @@ const zalopayWebhook = asyncHandler(async (req, res) => {
  * MoMo Webhook Callback
  */
 const momoWebhook = asyncHandler(async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const webhookData = req.body;
     const verification = momoService.verifyWebhook(webhookData);
 
     if (!verification.valid) {
       logger.warn('Invalid MoMo webhook signature');
+      await t.rollback();
       return res.status(400).json({ success: false });
     }
 
-    const { orderId, success } = verification;
+    const { orderId, success, transId } = verification;
 
     if (success) {
-      const order = await Order.findByIdAndUpdate(
-        orderId,
-        {
-          paymentStatus: 'completed',
-          paymentMethod: 'momo',
-          paymentDate: new Date(),
-          status: 'paid'
-        },
-        { new: true }
-      );
+      const order = await Order.findByPk(orderId, {
+        include: [{ model: OrderItem, as: 'items' }],
+        transaction: t
+      });
 
-      if (order) {
+      if (!order) {
+        logger.warn(`Order #${orderId} not found for MoMo webhook`);
+        await t.rollback();
+        return res.status(404).json({ success: false });
+      }
+
+      if (order.paymentStatus !== 'paid') {
+        // 1. Cập nhật trạng thái Order
+        await order.update({
+          paymentStatus: 'paid',
+          paymentMethod: 'momo',
+          status: 'processing',
+          vnpayTxnRef: transId
+        }, { transaction: t });
+
+        // 2. Commit Reserved Stock trong WMS
+        const items = order.items || [];
+        const omsItems = items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity
+        }));
+        await OMSService.commitReservedStock(orderId, omsItems, t);
+
+        // 3. Cộng điểm Loyalty cho user
+        await LoyaltyService.addPointsFromOrder(order.userId, Number(order.total), t);
+
         logger.info(`✓ MoMo payment completed for order ${orderId}`);
       }
     }
 
+    await t.commit();
     res.json({ success: true });
   } catch (error) {
+    await t.rollback();
     logger.error('MoMo webhook error:', error.message);
     res.status(500).json({ success: false });
   }
@@ -350,12 +403,14 @@ const momoWebhook = asyncHandler(async (req, res) => {
  * This is the zero-touch automation that replaces manual reconciliation
  */
 const payosWebhook = asyncHandler(async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const webhookData = req.body;
     const verification = payosService.verifyWebhookSignature(webhookData);
 
     if (!verification.valid) {
       logger.warn('Invalid PayOS webhook signature - POTENTIAL ATTACK');
+      await t.rollback();
       return res.status(401).json({ success: false });
     }
 
@@ -363,29 +418,47 @@ const payosWebhook = asyncHandler(async (req, res) => {
     const { orderId, amount, status, transactionId, paidAt } = notification;
 
     if (status === 'PAID') {
-      // AUTO-RECONCILIATION: Zero-touch payment confirmation
-      const order = await Order.findByIdAndUpdate(
-        orderId,
-        {
-          paymentStatus: 'completed',
-          paymentMethod: 'bank_transfer',
-          paymentDate: new Date(paidAt),
-          paymentReference: transactionId,
-          status: 'paid'
-        },
-        { new: true }
-      );
+      const order = await Order.findByPk(orderId, {
+        include: [{ model: OrderItem, as: 'items' }],
+        transaction: t
+      });
 
-      if (order) {
+      if (!order) {
+        logger.warn(`Order #${orderId} not found for PayOS webhook`);
+        await t.rollback();
+        return res.status(404).json({ success: false });
+      }
+
+      if (order.paymentStatus !== 'paid') {
+        // 1. Cập nhật trạng thái Order
+        await order.update({
+          paymentStatus: 'paid',
+          paymentMethod: 'bank_transfer',
+          status: 'processing',
+          vnpayTxnRef: transactionId
+        }, { transaction: t });
+
+        // 2. Commit Reserved Stock trong WMS
+        const items = order.items || [];
+        const omsItems = items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity
+        }));
+        await OMSService.commitReservedStock(orderId, omsItems, t);
+
+        // 3. Cộng điểm Loyalty cho user
+        await LoyaltyService.addPointsFromOrder(order.userId, Number(order.total), t);
+
         logger.info(`✓ PayOS auto-reconciled for order ${orderId} (1-3 seconds)`);
-        // TODO: Trigger warehouse notification immediately
       }
     }
 
+    await t.commit();
     res.json({ success: true });
   } catch (error) {
+    await t.rollback();
     logger.error('PayOS webhook error:', error.message);
-    res.status(500).json({ success: true }); // Still respond with success
+    res.status(500).json({ success: true }); // Still respond with success to prevent retries from PayOS
   }
 });
 
@@ -395,7 +468,7 @@ const payosWebhook = asyncHandler(async (req, res) => {
 const getPaymentStatus = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
 
-  const order = await Order.findById(orderId);
+  const order = await Order.findByPk(orderId);
   if (!order) {
     return res.status(404).json({
       success: false,
@@ -406,11 +479,11 @@ const getPaymentStatus = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
-      orderId: order._id,
+      orderId: order.id,
       paymentStatus: order.paymentStatus,
       paymentMethod: order.paymentMethod,
-      amount: order.totalAmount || order.total,
-      paymentDate: order.paymentDate
+      amount: Number(order.total),
+      paymentDate: order.updatedAt
     }
   });
 });

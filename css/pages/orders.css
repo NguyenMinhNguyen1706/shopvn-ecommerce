@@ -87,6 +87,43 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Order Status Badges */
+.order-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .75rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--r-pill, 9999px);
+  letter-spacing: .02em;
+}
+.order-status--pending {
+  background: color-mix(in srgb, var(--c-warning) 12%, transparent);
+  color: var(--c-warning);
+}
+.order-status--confirmed {
+  background: color-mix(in srgb, var(--c-blue) 12%, transparent);
+  color: var(--c-blue);
+}
+.order-status--shipping {
+  background: color-mix(in srgb, #8B5CF6 12%, transparent);
+  color: #8B5CF6;
+}
+.order-status--delivered {
+  background: color-mix(in srgb, var(--c-success) 12%, transparent);
+  color: var(--c-success);
+}
+.order-status--cancelled {
+  background: color-mix(in srgb, var(--c-error) 12%, transparent);
+  color: var(--c-error);
+}
+.order-status__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
 /* Order Card Header */
 .order-card__header {
   display: flex;

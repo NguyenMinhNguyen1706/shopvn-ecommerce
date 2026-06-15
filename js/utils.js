@@ -63,6 +63,18 @@ function getCartCount() {
   } catch { return 0; }
 }
 
+function ensureMobileCartBadge() {
+  const cartLink = document.querySelector('.mobile-bottom-nav__item[href*="cart.html"]');
+  if (cartLink && !cartLink.querySelector('.mobile-bottom-nav__badge')) {
+    const badge = document.createElement('span');
+    badge.className = 'mobile-bottom-nav__badge';
+    badge.id = 'mobile-cart-badge';
+    badge.style.display = 'none';
+    badge.textContent = '0';
+    cartLink.appendChild(badge);
+  }
+}
+
 function updateCartBadge() {
   // Only update cart badges, NOT wishlist badges
   const badges = document.querySelectorAll('.navbar__cart-count:not(.navbar__wish-count)');
@@ -76,6 +88,13 @@ function updateCartBadge() {
   if (mobileCartBadge) {
     mobileCartBadge.textContent = count;
     mobileCartBadge.style.display = count > 0 ? 'flex' : 'none';
+  }
+  // Ensure mobile bottom nav has the badge
+  ensureMobileCartBadge();
+  const mobileCartBadgeNew = document.getElementById('mobile-cart-badge');
+  if (mobileCartBadgeNew) {
+    mobileCartBadgeNew.textContent = count;
+    mobileCartBadgeNew.style.display = count > 0 ? 'flex' : 'none';
   }
 }
 
@@ -176,6 +195,19 @@ const LocalWishlist = {
       b.textContent = count;
       b.style.display = count > 0 ? 'flex' : 'none';
     });
+
+    // Ensure mobile bottom nav has wishlist badge
+    const wishLink = document.querySelector('.mobile-bottom-nav__item[href*="wishlist.html"]');
+    if (wishLink) {
+      let wishBadge = wishLink.querySelector('.mobile-bottom-nav__badge');
+      if (!wishBadge) {
+        wishBadge = document.createElement('span');
+        wishBadge.className = 'mobile-bottom-nav__badge';
+        wishLink.appendChild(wishBadge);
+      }
+      wishBadge.textContent = count;
+      wishBadge.style.display = count > 0 ? 'flex' : 'none';
+    }
   },
 };
 
@@ -400,34 +432,7 @@ function initScrollToTop() {
 // ── Bottom Tab Bar (Mobile) ───────────────────────────────────────────────────
 
 function initBottomTabBar() {
-  if (document.getElementById('bottom-tab-bar')) return;
-  if (window.location.pathname.includes('/admin/')) return;
-
-  const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
-  const path = window.location.pathname;
-  const cartCount = getCartCount();
-
-  const tabs = [
-    { href: `${prefix}index.html`, icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`, label: 'Trang chủ', active: path.endsWith('/') || path.includes('index.html') },
-    { href: `${prefix}products.html`, icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`, label: 'Tìm kiếm', active: path.includes('products.html') },
-    { href: `${prefix}cart.html`, icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`, label: 'Giỏ hàng', active: path.includes('cart.html'), badge: cartCount },
-    { href: `${prefix}wishlist.html`, icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`, label: 'Yêu thích', active: path.includes('wishlist.html') },
-  ];
-
-  const bar = document.createElement('nav');
-  bar.className = 'bottom-tab-bar';
-  bar.id = 'bottom-tab-bar';
-  bar.setAttribute('aria-label', 'Điều hướng nhanh');
-  bar.innerHTML = tabs.map(t => `
-    <a href="${t.href}" class="btab ${t.active ? 'btab--active' : ''}">
-      <span class="btab__icon">
-        ${t.icon}
-        ${t.badge ? `<span class="btab__badge" style="${t.badge > 0 ? '' : 'display:none'}">${t.badge}</span>` : ''}
-      </span>
-      <span class="btab__label">${t.label}</span>
-    </a>
-  `).join('');
-  document.body.appendChild(bar);
+  return; // Disabled in favor of hardcoded .mobile-bottom-nav
 }
 
 // ── Flash Sale Countdown ──────────────────────────────────────────────────────
@@ -1488,12 +1493,67 @@ window.openLegalModal = openLegalModal;
 
 // ── Global Init (chạy trên mọi trang) ────────────────────────────────────────
 
+function initMobileBottomNavActiveState() {
+  const path = window.location.pathname;
+  const pageName = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
+  const navItems = document.querySelectorAll('.mobile-bottom-nav__item');
+  
+  navItems.forEach(item => {
+    item.classList.remove('active');
+    const href = item.getAttribute('href');
+    if (!href) return;
+    
+    // Extract base filename from href
+    const hrefClean = href.replace('../', '').split('?')[0];
+    
+    if (pageName === hrefClean) {
+      item.classList.add('active');
+    } else if (hrefClean === 'products.html' && pageName === 'product-detail.html') {
+      item.classList.add('active');
+    } else if (hrefClean === 'login.html' && (pageName === 'register.html' || pageName === 'orders.html')) {
+      item.classList.add('active');
+    }
+  });
+}
+
+function updateMobileBottomNavAuth() {
+  if (typeof Auth === 'undefined') return;
+  const user = Auth.getUser();
+  const accountLinks = document.querySelectorAll('.mobile-bottom-nav__item[href*="login.html"], #mobile-account-link');
+  if (accountLinks.length === 0) return;
+  
+  const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
+  accountLinks.forEach(link => {
+    if (user) {
+      link.setAttribute('href', prefix + 'orders.html');
+    } else {
+      link.setAttribute('href', prefix + 'login.html');
+    }
+  });
+}
+
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    const isInsideAdmin = window.location.pathname.includes('/admin/');
+    const swPath = isInsideAdmin ? '../service-worker.js' : 'service-worker.js';
+    navigator.serviceWorker.register(swPath)
+      .then(reg => {
+        console.log('[ShopVN] Service Worker registered with scope:', reg.scope);
+      })
+      .catch(err => {
+        console.warn('[ShopVN] Service Worker registration failed:', err);
+      });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   injectNavbarBlogLink();
   injectFooterContent();
   ThemeManager.injectToggle();
   initScrollToTop();
   initBottomTabBar();
+  initMobileBottomNavActiveState();
+  updateMobileBottomNavAuth();
   initSearchAutocomplete();
   initFlashSaleCountdown();
   LocalWishlist.updateBadge();
@@ -1502,4 +1562,7 @@ document.addEventListener('DOMContentLoaded', () => {
   LoyaltyPoints.updateNavbarBadge();
   if (CompareList.count() > 0) CompareList.showFloatingBar();
   AIShoppingAssistant.init();
+  
+  // Register service worker on load
+  window.addEventListener('load', registerServiceWorker);
 });

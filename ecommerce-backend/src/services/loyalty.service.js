@@ -6,8 +6,8 @@ class LoyaltyService {
    * Cộng điểm cho user khi đơn hàng hoàn thành
    * Cứ 100k = 1 điểm
    */
-  static async addPointsFromOrder(userId, orderTotal) {
-    const t = await sequelize.transaction();
+  static async addPointsFromOrder(userId, orderTotal, parentTxn = null) {
+    const t = parentTxn || await sequelize.transaction();
     try {
       const pointsEarned = Math.floor(orderTotal / 100000);
       
@@ -34,10 +34,10 @@ class LoyaltyService {
         await lp.save({ transaction: t });
       }
 
-      await t.commit();
+      if (!parentTxn) await t.commit();
       return lp;
     } catch (error) {
-      await t.rollback();
+      if (!parentTxn) await t.rollback();
       console.error('[Loyalty Service Error]', error);
       throw error;
     }

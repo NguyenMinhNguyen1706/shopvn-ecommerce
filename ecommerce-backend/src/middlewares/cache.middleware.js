@@ -28,6 +28,8 @@ const cacheMiddleware = (ttl = 3600, keyGenerator = null) => {
 
       if (cachedData) {
         res.set('X-Cache', 'HIT');
+        // Set Cache-Control header for Browser Caching
+        res.set('Cache-Control', `public, max-age=${ttl}`);
         return res.json(cachedData);
       }
 
@@ -42,6 +44,8 @@ const cacheMiddleware = (ttl = 3600, keyGenerator = null) => {
           cacheUtils.set(cacheKey, data, ttl).catch(err => {
             logger.warn(`Cache set error: ${err.message}`);
           });
+          // Set Cache-Control header for Browser Caching
+          res.set('Cache-Control', `public, max-age=${ttl}`);
         }
         return originalJson(data);
       };
@@ -93,10 +97,25 @@ const promotionsCache = cacheMiddleware(300, () => {
 });
 
 /**
+ * Specific cache middleware for reviews
+ */
+const reviewsCache = cacheMiddleware(1800, (req) => {
+  return `reviews:product:${req.params.productId}`;
+});
+
+/**
  * Clear cache utility
  * Used when data is updated
  */
 const clearCache = {
+  /**
+   * Clear reviews cache for a specific product
+   */
+  productReviews: async (productId) => {
+    await cacheUtils.del(`reviews:product:${productId}`);
+    logger.info(`✓ Cleared reviews cache for product ${productId}`);
+  },
+
   /**
    * Clear product related caches
    */
@@ -154,6 +173,7 @@ module.exports = {
   categoriesCache,
   trendingProductsCache,
   promotionsCache,
+  reviewsCache,
   clearCache
 };
 

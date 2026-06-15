@@ -37,6 +37,8 @@
 .btn-sm { font-size: .8rem; padding: 7px 14px; }
 .btn-lg { font-size: 1rem; padding: 13px 28px; }
 .btn-full { width: 100%; justify-content: center; }
+.btn:active { transform: scale(0.97) !important; transition-duration: 80ms; }
+.btn-primary:active { box-shadow: 0 1px 4px color-mix(in srgb, var(--c-blue) 20%, transparent); }
 
 /* ── BADGE ───────────────────────────────────────── */
 .badge {
@@ -113,6 +115,29 @@
 }
 .product-card:hover .product-card__add {
   background: var(--c-blue); color: var(--c-white);
+  transform: translateY(-2px);
+}
+
+/* Star ratings */
+.product-card__stars {
+  display: flex; align-items: center; gap: 2px;
+  margin-bottom: 6px;
+}
+.product-card__stars svg {
+  width: 14px; height: 14px;
+}
+.product-card__stars-count {
+  font-size: .72rem; color: var(--c-muted); margin-left: 4px;
+}
+
+/* Discount badge enhancement */
+.product-card__discount {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--c-accent); color: white;
+  font-size: .7rem; font-weight: 700;
+  padding: 3px 8px; border-radius: var(--r-sm);
+  letter-spacing: .02em;
+  box-shadow: 0 2px 8px rgba(244,63,94,.3);
 }
 
 /* ── NAVBAR ──────────────────────────────────────── */
@@ -130,6 +155,14 @@
   background: rgba(255, 255, 255, 0.85);
   box-shadow: var(--shadow-md);
   border-bottom-color: rgba(13, 27, 42, 0.08);
+}
+[data-theme="dark"] .navbar {
+  background: rgba(9, 9, 11, 0.75);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .navbar.scrolled {
+  background: rgba(9, 9, 11, 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 .navbar__inner {
   display: flex; align-items: center;

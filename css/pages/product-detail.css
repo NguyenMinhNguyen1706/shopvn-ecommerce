@@ -302,6 +302,58 @@
   .detail-actions { flex-wrap: wrap; }
 }
 
+/* ── MOBILE STICKY BOTTOM CTA ──────────────────── */
+.detail-sticky-bottom {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 800;
+  background: var(--c-white);
+  border-top: 1px solid var(--c-border);
+  box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+  padding: 12px var(--sp-md) max(12px, env(safe-area-inset-bottom));
+}
+[data-theme="dark"] .detail-sticky-bottom {
+  background: rgba(9,9,11,.95);
+  box-shadow: 0 -4px 20px rgba(0,0,0,.4);
+}
+.detail-sticky-bottom__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-md);
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+.detail-sticky-bottom__price {
+  font-family: var(--f-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--c-blue);
+}
+.detail-sticky-bottom__actions {
+  display: flex;
+  gap: var(--sp-sm);
+}
+
+@media (max-width: 900px) {
+  .detail-sticky-bottom { display: block; }
+  body:has(.detail-sticky-bottom) { padding-bottom: 80px; }
+}
+
+/* ── IMAGE ZOOM HINT ───────────────────────────── */
+.detail-img-main {
+  cursor: zoom-in;
+}
+.detail-img-main img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 400ms var(--ease);
+}
+.detail-img-main:hover img {
+  transform: scale(1.03);
+}
+
 /* ── REVIEWS PANEL ────────────────────────────────── */
 .reviews-section {
   display: flex;

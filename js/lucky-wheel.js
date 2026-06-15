@@ -1,281 +1,107 @@
-/**
- * lucky-wheel.js — Vòng quay may mắn (Gamification)
- * Inspired by Shopee Lucky Wheel / Mini Games
- */
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Tạo giao diện Trigger & Modal
+    const wheelHTML = `
+      <!-- Trigger Button -->
+      <button class="lucky-wheel-trigger" id="wheel-trigger" title="Vòng quay may mắn">
+        🎁
+      </button>
 
-const LuckyWheel = (() => {
-  const SPIN_KEY = 'lucky_wheel_last_spin';
-  const DAILY_LIMIT = 1;
-
-  const PRIZES = [
-    { label: 'Giảm 10%',    color: '#1565C0', textColor: '#fff', type: 'coupon', value: 'LUCKY10',   desc: 'Mã giảm 10% (tối đa 200k)' },
-    { label: 'Free Ship',   color: '#FF6B35', textColor: '#fff', type: 'coupon', value: 'FREESHIP',  desc: 'Miễn phí vận chuyển' },
-    { label: '50 Xu',       color: '#2E7D32', textColor: '#fff', type: 'xu',     value: 50,          desc: '50 ShopVN Xu' },
-    { label: 'Giảm 50k',   color: '#7B1FA2', textColor: '#fff', type: 'coupon', value: 'WELCOME50', desc: 'Mã giảm 50.000đ' },
-    { label: 'Chúc may mắn', color: '#E0E0E0', textColor: '#666', type: 'none',  value: null,        desc: 'Chưa trúng lần này, thử lại ngày mai!' },
-    { label: '100 Xu',      color: '#C62828', textColor: '#fff', type: 'xu',     value: 100,         desc: '100 ShopVN Xu' },
-    { label: 'Giảm 20%',   color: '#00838F', textColor: '#fff', type: 'coupon', value: 'SUMMER20',  desc: 'Mã giảm 20% (tối đa 500k)' },
-    { label: '20 Xu',       color: '#EF6C00', textColor: '#fff', type: 'xu',     value: 20,          desc: '20 ShopVN Xu' },
-  ];
-
-  // Weighted probabilities (index → weight)
-  const WEIGHTS = [15, 20, 20, 10, 25, 5, 3, 20]; // "Chúc may mắn" has highest chance
-
-  let spinning = false;
-
-  function canSpin() {
-    const last = localStorage.getItem(SPIN_KEY);
-    if (!last) return true;
-    const lastDate = new Date(parseInt(last)).toDateString();
-    const today = new Date().toDateString();
-    return lastDate !== today;
-  }
-
-  function recordSpin() {
-    localStorage.setItem(SPIN_KEY, Date.now().toString());
-  }
-
-  function getRandomPrize() {
-    const totalWeight = WEIGHTS.reduce((a, b) => a + b, 0);
-    let rand = Math.random() * totalWeight;
-    for (let i = 0; i < WEIGHTS.length; i++) {
-      rand -= WEIGHTS[i];
-      if (rand <= 0) return i;
-    }
-    return WEIGHTS.length - 1;
-  }
-
-  function createModal() {
-    if (document.getElementById('lucky-wheel-modal')) return;
-
-    const overlay = document.createElement('div');
-    overlay.id = 'lucky-wheel-modal';
-    overlay.className = 'lw-overlay';
-    overlay.innerHTML = `
-      <div class="lw-modal">
-        <button class="lw-close" onclick="LuckyWheel.close()" aria-label="Đóng">×</button>
-        <h2 class="lw-title">🎰 Vòng Quay May Mắn</h2>
-        <p class="lw-subtitle">Quay mỗi ngày để nhận voucher & xu thưởng!</p>
-        <div class="lw-canvas-wrap">
-          <canvas id="lw-canvas" width="320" height="320"></canvas>
-          <div class="lw-pointer">▼</div>
+      <!-- Modal Overlay -->
+      <div class="lucky-wheel-overlay" id="wheel-overlay">
+        <div class="lucky-wheel-modal">
+          <button class="lucky-wheel-close" id="wheel-close">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          
+          <h2 class="lucky-wheel-title">Vòng Quay May Mắn</h2>
+          <p class="lucky-wheel-subtitle">Cơ hội nhận ngàn ưu đãi 2024</p>
+          
+          <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <div class="wheel" id="wheel">
+              <div class="wheel-section"><span>Voucher 50K</span></div>
+              <div class="wheel-section"><span>Freeship</span></div>
+              <div class="wheel-section"><span>Voucher 100K</span></div>
+              <div class="wheel-section"><span>Chúc may mắn</span></div>
+              <div class="wheel-section"><span>Giảm 10%</span></div>
+              <div class="wheel-section"><span>Quà Bí Mật</span></div>
+            </div>
+          </div>
+          
+          <button class="spin-btn" id="spin-btn">QUAY NGAY</button>
         </div>
-        <button class="lw-spin-btn" id="lw-spin-btn" onclick="LuckyWheel.spin()">
-          QUAY NGAY
-        </button>
-        <div class="lw-result" id="lw-result" style="display:none"></div>
       </div>
     `;
-    document.body.appendChild(overlay);
-    drawWheel(0);
-  }
+    
+    document.body.insertAdjacentHTML('beforeend', wheelHTML);
 
-  function drawWheel(rotation) {
-    const canvas = document.getElementById('lw-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    const r = cx - 8;
-    const sliceAngle = (2 * Math.PI) / PRIZES.length;
+    // 2. Logic Vòng quay
+    const trigger = document.getElementById('wheel-trigger');
+    const overlay = document.getElementById('wheel-overlay');
+    window.LuckyWheel = { open: () => overlay.classList.add('active') };
+    const closeBtn = document.getElementById('wheel-close');
+    const spinBtn = document.getElementById('spin-btn');
+    const wheel = document.getElementById('wheel');
+    
+    let isSpinning = false;
+    let currentDegree = 0;
+    
+    // Prizes array matching the 6 slices
+    const prizes = [
+      'Voucher 50K',      // 0-60
+      'Freeship',         // 60-120
+      'Voucher 100K',     // 120-180
+      'Chúc bạn may mắn', // 180-240
+      'Giảm 10%',         // 240-300
+      'Quà Bí Mật'        // 300-360
+    ];
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(rotation);
-
-    PRIZES.forEach((prize, i) => {
-      const startAngle = i * sliceAngle;
-      const endAngle = startAngle + sliceAngle;
-
-      // Draw slice
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.arc(0, 0, r, startAngle, endAngle);
-      ctx.closePath();
-      ctx.fillStyle = prize.color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Draw text
-      ctx.save();
-      ctx.rotate(startAngle + sliceAngle / 2);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = prize.textColor;
-      ctx.font = 'bold 12px Inter, sans-serif';
-      ctx.fillText(prize.label, r - 16, 4);
-      ctx.restore();
+    // Mở / Đóng modal
+    trigger.addEventListener('click', () => overlay.classList.add('active'));
+    closeBtn.addEventListener('click', () => {
+      if (!isSpinning) overlay.classList.remove('active');
     });
-
-    // Center circle
-    ctx.beginPath();
-    ctx.arc(0, 0, 24, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = '#1565C0';
-    ctx.font = 'bold 11px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('QUAY', 0, 0);
-
-    ctx.restore();
-
-    // Outer ring
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(21,101,192,0.2)';
-    ctx.lineWidth = 6;
-    ctx.stroke();
-  }
-
-  function spin() {
-    if (spinning) return;
-
-    if (!canSpin()) {
-      showToast('Bạn đã quay hôm nay rồi! Quay lại ngày mai nhé 🎁', 'warning');
-      return;
-    }
-
-    spinning = true;
-    const btn = document.getElementById('lw-spin-btn');
-    const resultEl = document.getElementById('lw-result');
-    btn.disabled = true;
-    btn.textContent = 'Đang quay...';
-    resultEl.style.display = 'none';
-
-    const prizeIndex = getRandomPrize();
-    const sliceAngle = (2 * Math.PI) / PRIZES.length;
-    // Calculate target rotation: spin multiple rounds + land on prize
-    const targetAngle = (2 * Math.PI) * (5 + Math.random() * 3) - (prizeIndex * sliceAngle + sliceAngle / 2);
-
-    let currentAngle = 0;
-    const startTime = Date.now();
-    const duration = 4000; // 4 seconds
-
-    function animate() {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const ease = 1 - Math.pow(1 - progress, 3);
-      currentAngle = targetAngle * ease;
-      drawWheel(currentAngle);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        // Done!
-        spinning = false;
-        recordSpin();
-        showPrize(prizeIndex);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay && !isSpinning) {
+        overlay.classList.remove('active');
       }
-    }
-
-    requestAnimationFrame(animate);
-  }
-
-  function showPrize(index) {
-    const prize = PRIZES[index];
-    const resultEl = document.getElementById('lw-result');
-    const btn = document.getElementById('lw-spin-btn');
-
-    btn.textContent = 'Đã quay xong!';
-    btn.disabled = true;
-
-    if (prize.type === 'none') {
-      resultEl.innerHTML = `
-        <div class="lw-result__icon">😅</div>
-        <div class="lw-result__text">${prize.desc}</div>
-      `;
-    } else if (prize.type === 'xu') {
-      // Award xu
-      const current = LoyaltyPoints.getBalance();
-      localStorage.setItem(LoyaltyPoints.KEY, String(current + prize.value));
-      LoyaltyPoints.updateNavbarBadge();
-      resultEl.innerHTML = `
-        <div class="lw-result__icon">🎉</div>
-        <div class="lw-result__text">Chúc mừng! Bạn nhận được <strong>${prize.label}</strong>!</div>
-        <div class="lw-result__sub">${prize.desc} - Đã cộng vào tài khoản</div>
-      `;
-      showConfetti();
-    } else {
-      resultEl.innerHTML = `
-        <div class="lw-result__icon">🎉</div>
-        <div class="lw-result__text">Chúc mừng! Bạn nhận được <strong>${prize.label}</strong>!</div>
-        <div class="lw-result__sub">${prize.desc}</div>
-        <div class="lw-result__code">Mã: <strong>${prize.value}</strong></div>
-      `;
-      showConfetti();
-    }
-    resultEl.style.display = 'block';
-  }
-
-  function showConfetti() {
-    const colors = ['#FF6B35', '#1565C0', '#2E7D32', '#C62828', '#FFD700', '#7B1FA2'];
-    const container = document.querySelector('.lw-modal');
-    if (!container) return;
-
-    for (let i = 0; i < 40; i++) {
-      const confetti = document.createElement('div');
-      confetti.className = 'lw-confetti';
-      confetti.style.cssText = `
-        left: ${Math.random() * 100}%;
-        background: ${colors[Math.floor(Math.random() * colors.length)]};
-        animation-delay: ${Math.random() * 0.5}s;
-        animation-duration: ${1 + Math.random()}s;
-      `;
-      container.appendChild(confetti);
-      setTimeout(() => confetti.remove(), 2000);
-    }
-  }
-
-  function open() {
-    createModal();
-    requestAnimationFrame(() => {
-      document.getElementById('lucky-wheel-modal')?.classList.add('open');
     });
-    document.body.style.overflow = 'hidden';
-    // Reset button if needed
-    const btn = document.getElementById('lw-spin-btn');
-    if (btn && canSpin()) {
-      btn.disabled = false;
-      btn.textContent = 'QUAY NGAY';
-    } else if (btn) {
-      btn.disabled = true;
-      btn.textContent = 'Đã quay hôm nay';
-    }
-    const resultEl = document.getElementById('lw-result');
-    if (resultEl) resultEl.style.display = 'none';
-  }
 
-  function close() {
-    const modal = document.getElementById('lucky-wheel-modal');
-    if (modal) {
-      modal.classList.remove('open');
-      setTimeout(() => modal.remove(), 350);
-    }
-    document.body.style.overflow = '';
-  }
+    // Quay
+    spinBtn.addEventListener('click', () => {
+      if (isSpinning) return;
+      isSpinning = true;
+      spinBtn.disabled = true;
+      spinBtn.textContent = 'ĐANG QUAY...';
+      
+      // Tính toán độ quay ngẫu nhiên (Quay ít nhất 5 vòng + độ ngẫu nhiên)
+      const randomDegree = Math.floor(Math.random() * 360);
+      const totalDegree = currentDegree + 1800 + randomDegree; // 1800 = 5 vòng
+      currentDegree = totalDegree;
+      
+      wheel.style.transform = `rotate(${totalDegree}deg)`;
+      
+      // Xử lý sau khi quay xong (Trùng khớp với transition duration 4s)
+      setTimeout(() => {
+        isSpinning = false;
+        spinBtn.disabled = false;
+        spinBtn.textContent = 'QUAY NGAY';
+        
+        // Tính toán giải thưởng (Do wheel bị quay xuôi chiều kim đồng hồ, kim chỉ nằm ở 0 độ góc trên cùng)
+        // Cần tính ngược lại để biết ô nào trúng
+        const actualDegree = totalDegree % 360;
+        const sliceIndex = Math.floor((360 - actualDegree) % 360 / 60);
+        const wonPrize = prizes[sliceIndex];
+        
+        if (wonPrize === 'Chúc bạn may mắn') {
+          alert('Rất tiếc! Chúc bạn may mắn lần sau nhé.');
+        } else {
+          alert(`🎉 CHÚC MỪNG! Bạn đã trúng: ${wonPrize} 🎉\nVui lòng kiểm tra email để nhận mã giảm giá.`);
+        }
+      }, 4000);
+    });
+});
 
-  function initFab() {
-    if (window.location.pathname.includes('/admin/')) return;
-    if (document.getElementById('lucky-wheel-fab')) return;
-
-    const fab = document.createElement('button');
-    fab.id = 'lucky-wheel-fab';
-    fab.className = 'lucky-wheel-fab';
-    fab.setAttribute('aria-label', 'Vòng quay may mắn');
-    fab.innerHTML = '🎁';
-    fab.onclick = open;
-    document.body.appendChild(fab);
-  }
-
-  // Auto-init
-  document.addEventListener('DOMContentLoaded', initFab);
-
-  return { open, close, spin };
-})();

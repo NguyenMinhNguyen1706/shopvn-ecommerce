@@ -3,6 +3,7 @@ const Order     = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
 const Product   = require('../models/Product');
 const CartItem  = require('../models/CartItem');
+const OMSService = require('./oms.service');
 
 // ── Voucher list (mock — sau này lưu DB) ──────────────────────────────────────
 const VOUCHERS = {
@@ -99,7 +100,8 @@ async function createOrder(userId, {
       paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'unpaid',
     }, { transaction: t });
 
-    // 5. Tạo OrderItems + trừ tồn kho
+    // 5. Tạo OrderItems + trừ tồn kho + giữ kho trong WMS (OMSService)
+    const omsItems = [];
     for (const item of cartItems) {
       await OrderItem.create({
         orderId:     order.id,
@@ -117,7 +119,15 @@ async function createOrder(userId, {
         where:       { id: item.productId },
         transaction: t,
       });
+
+      omsItems.push({
+        productId: item.productId,
+        quantity: item.quantity
+      });
     }
+
+    // Giữ kho trong WMS
+    await OMSService.reserveStock(omsItems, order.id, t);
 
     // 6. Xóa giỏ hàng
     await CartItem.destroy({ where: { userId }, transaction: t });
@@ -183,13 +193,22 @@ async function cancelOrder(orderId, userId) {
   const t = await sequelize.transaction();
   try {
     const items = await OrderItem.findAll({ where: { orderId }, transaction: t });
+    const omsItems = [];
     for (const item of items) {
       await Product.increment('stock', {
         by:          item.quantity,
         where:       { id: item.productId },
         transaction: t,
       });
+      omsItems.push({
+        productId: item.productId,
+        quantity: item.quantity
+      });
     }
+
+    // Giải phóng kho WMS
+    await OMSService.releaseReservedStock(orderId, omsItems, t);
+
     await order.update({ status: 'cancelled' }, { transaction: t });
     await t.commit();
     return order;

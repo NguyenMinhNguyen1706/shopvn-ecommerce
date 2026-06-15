@@ -4,6 +4,134 @@
  * Khi backend thật sẵn sàng, chỉ cần sửa BASE_URL.
  */
 
+// ── Local IndexedDB Persistence Layer (Client Hardware Storage) ───────────────
+const DB_NAME = 'ShopVNDatabase';
+const DB_VERSION = 1;
+let dbInstance = null;
+
+function getDB() {
+  if (dbInstance) return Promise.resolve(dbInstance);
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('products')) {
+        db.createObjectStore('products', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('reviews')) {
+        const reviewStore = db.createObjectStore('reviews', { keyPath: 'id' });
+        reviewStore.createIndex('productId', 'productId', { unique: false });
+      }
+    };
+    request.onsuccess = (e) => {
+      dbInstance = e.target.result;
+      resolve(dbInstance);
+    };
+    request.onerror = (e) => {
+      console.error('[IndexedDB] Database failed to open:', e.target.error);
+      reject(e.target.error);
+    };
+  });
+}
+
+const LocalDB = {
+  async put(storeName, data) {
+    try {
+      const db = await getDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        if (Array.isArray(data)) {
+          data.forEach(item => {
+            if (item && item.id) store.put(item);
+          });
+        } else {
+          if (data && data.id) store.put(data);
+        }
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (err) {
+      console.warn(`[IndexedDB] Error putting data in ${storeName}:`, err);
+      return false;
+    }
+  },
+  async get(storeName, id) {
+    try {
+      const db = await getDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const request = store.get(Number(id));
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => reject(request.error);
+      });
+    } catch (err) {
+      console.warn(`[IndexedDB] Error getting data from ${storeName}:`, err);
+      return null;
+    }
+  },
+  async getAll(storeName) {
+    try {
+      const db = await getDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+    } catch (err) {
+      console.warn(`[IndexedDB] Error getting all from ${storeName}:`, err);
+      return [];
+    }
+  },
+  async getByIndex(storeName, indexName, queryValue) {
+    try {
+      const db = await getDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const index = store.index(indexName);
+        const request = index.getAll(Number(queryValue));
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+    } catch (err) {
+      console.warn(`[IndexedDB] Index query error in ${storeName} on index ${indexName}:`, err);
+      return [];
+    }
+  }
+};
+
+// ── In-Memory (RAM) Caching Layer (Client RAM Memory) ─────────────────────────
+const MemoryCache = {
+  cache: new Map(),
+
+  set(key, data, ttlMs = 5 * 60 * 1000) { // Default TTL: 5 mins
+    const expiry = Date.now() + ttlMs;
+    this.cache.set(key, { data, expiry });
+  },
+
+  get(key) {
+    const cached = this.cache.get(key);
+    if (!cached) return null;
+    if (Date.now() > cached.expiry) {
+      this.cache.delete(key);
+      return null;
+    }
+    return cached.data;
+  },
+
+  delete(key) {
+    this.cache.delete(key);
+  },
+
+  clear() {
+    this.cache.clear();
+  }
+};
+
 const settingsConfig = JSON.parse(localStorage.getItem('system_settings') || '{}');
 const BASE_URL = settingsConfig.backendApiUrl || 'http://localhost:3000/api';
 
@@ -87,16 +215,155 @@ const AuthAPI = {
   },
 };
 
+// Helper to guarantee offline IndexedDB contains the mock data if empty
+async function getSeededProducts() {
+  let localProducts = await LocalDB.getAll('products');
+  if (!localProducts || localProducts.length === 0) {
+    const mockProducts = JSON.parse(localStorage.getItem('admin_products')) || MOCK.products;
+    await LocalDB.put('products', mockProducts);
+    return mockProducts;
+  }
+  return localProducts;
+}
+
 // ── Products API ──────────────────────────────────────────────────────────────
 
 const ProductAPI = {
-  getAll: (params = {}) => {
+  async getAll(params = {}) {
     const qs = new URLSearchParams(params).toString();
-    return request('GET', `/products${qs ? '?' + qs : ''}`);
+    const cacheKey = `products:all:${qs}`;
+    
+    // ── Check RAM Memory Cache ──
+    const cachedData = MemoryCache.get(cacheKey);
+    if (cachedData) {
+      console.log(`[MemoryCache] HIT for query: ${qs}`);
+      return cachedData;
+    }
+
+    try {
+      const data = await request('GET', `/products${qs ? '?' + qs : ''}`);
+      if (data && data.items) {
+        // Save database records to local disk (IndexedDB)
+        LocalDB.put('products', data.items);
+        // Save to RAM Memory Cache
+        MemoryCache.set(cacheKey, data);
+      }
+      return data;
+    } catch (err) {
+      console.warn('[API] Failed to fetch products from network, falling back to local hardware DB:', err);
+      // Fallback: Read products from local IndexedDB
+      let localProducts = await getSeededProducts();
+      
+      // Simple offline filtering
+      if (params.category && params.category !== 'Tất cả') {
+        localProducts = localProducts.filter(p => p.category === params.category);
+      }
+      if (params.q) {
+        const q = params.q.toLowerCase();
+        localProducts = localProducts.filter(p => p.name.toLowerCase().includes(q));
+      }
+      
+      const pageNum = parseInt(params.page) || 1;
+      const pageSize = parseInt(params.limit) || 9;
+      const offset = (pageNum - 1) * pageSize;
+      const paginatedProducts = localProducts.slice(offset, offset + pageSize);
+      
+      const response = {
+        success: true,
+        items: paginatedProducts,
+        total: localProducts.length,
+        page: pageNum,
+        totalPages: Math.ceil(localProducts.length / pageSize),
+        fromOfflineDB: true
+      };
+      
+      // Cache the offline response in RAM too
+      MemoryCache.set(cacheKey, response);
+      return response;
+    }
   },
-  getById: (id) => request('GET', `/products/${id}`),
-  getFeatured: () => request('GET', '/products?featured=true&limit=8'),
-  getNewArrivals: () => request('GET', '/products?sort=newest&limit=4'),
+
+  async getById(id) {
+    const cacheKey = `products:id:${id}`;
+    
+    // ── Check RAM Memory Cache ──
+    const cachedData = MemoryCache.get(cacheKey);
+    if (cachedData) {
+      console.log(`[MemoryCache] HIT for product: ${id}`);
+      return cachedData;
+    }
+
+    try {
+      const data = await request('GET', `/products/${id}`);
+      if (data && data.product) {
+        LocalDB.put('products', data.product);
+        MemoryCache.set(cacheKey, data);
+      }
+      return data;
+    } catch (err) {
+      console.warn(`[API] Failed to fetch product ${id} from network, falling back to local hardware DB:`, err);
+      const localProducts = await getSeededProducts();
+      const localProduct = localProducts.find(p => p.id === Number(id));
+      if (localProduct) {
+        const response = { success: true, product: localProduct, fromOfflineDB: true };
+        MemoryCache.set(cacheKey, response);
+        return response;
+      }
+      throw err;
+    }
+  },
+
+  async getFeatured() {
+    const cacheKey = 'products:featured';
+    
+    // ── Check RAM Memory Cache ──
+    const cachedData = MemoryCache.get(cacheKey);
+    if (cachedData) {
+      console.log('[MemoryCache] HIT for featured products');
+      return cachedData;
+    }
+
+    try {
+      const data = await request('GET', '/products?featured=true&limit=8');
+      if (data && data.items) {
+        LocalDB.put('products', data.items);
+        MemoryCache.set(cacheKey, data);
+      }
+      return data;
+    } catch (err) {
+      const localProducts = await getSeededProducts();
+      const featured = localProducts.filter(p => p.featured).slice(0, 8);
+      const response = { success: true, items: featured, fromOfflineDB: true };
+      MemoryCache.set(cacheKey, response);
+      return response;
+    }
+  },
+
+  async getNewArrivals() {
+    const cacheKey = 'products:newarrivals';
+    
+    // ── Check RAM Memory Cache ──
+    const cachedData = MemoryCache.get(cacheKey);
+    if (cachedData) {
+      console.log('[MemoryCache] HIT for new arrivals');
+      return cachedData;
+    }
+
+    try {
+      const data = await request('GET', '/products?sort=newest&limit=4');
+      if (data && data.items) {
+        LocalDB.put('products', data.items);
+        MemoryCache.set(cacheKey, data);
+      }
+      return data;
+    } catch (err) {
+      const localProducts = await getSeededProducts();
+      const sorted = localProducts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 4);
+      const response = { success: true, items: sorted, fromOfflineDB: true };
+      MemoryCache.set(cacheKey, response);
+      return response;
+    }
+  }
 };
 
 // ── Cart API ──────────────────────────────────────────────────────────────────
@@ -120,9 +387,21 @@ const OrderAPI = {
 
 const AdminAPI = {
   getProducts: () => request('GET', '/admin/products'),
-  createProduct: (data) => request('POST', '/admin/products', data),
-  updateProduct: (id, data) => request('PUT', `/admin/products/${id}`, data),
-  deleteProduct: (id) => request('DELETE', `/admin/products/${id}`),
+  async createProduct(data) {
+    const res = await request('POST', '/admin/products', data);
+    MemoryCache.clear(); // Invalidate RAM cache to update listing views
+    return res;
+  },
+  async updateProduct(id, data) {
+    const res = await request('PUT', `/admin/products/${id}`, data);
+    MemoryCache.clear(); // Invalidate RAM cache
+    return res;
+  },
+  async deleteProduct(id) {
+    const res = await request('DELETE', `/admin/products/${id}`);
+    MemoryCache.clear(); // Invalidate RAM cache
+    return res;
+  },
   getOrders: () => request('GET', '/admin/orders'),
   updateOrder: (id, data) => request('PUT', `/admin/orders/${id}`, data),
 };
@@ -132,8 +411,47 @@ const AdminAPI = {
 // ==========================================
 
 const ReviewAPI = {
-  getByProduct: (productId) => request('GET', `/reviews/product/${productId}`),
-  create: (productId, data) => request('POST', `/reviews/product/${productId}`, data),
+  async getByProduct(productId) {
+    const cacheKey = `reviews:product:${productId}`;
+    
+    // ── Check RAM Memory Cache ──
+    const cachedData = MemoryCache.get(cacheKey);
+    if (cachedData) {
+      console.log(`[MemoryCache] HIT for reviews: ${productId}`);
+      return cachedData;
+    }
+
+    try {
+      const data = await request('GET', `/reviews/product/${productId}`);
+      if (data && data.reviews) {
+        const reviewsToSave = data.reviews.map(r => ({ ...r, productId: Number(productId) }));
+        LocalDB.put('reviews', reviewsToSave);
+        MemoryCache.set(cacheKey, data);
+      }
+      return data;
+    } catch (err) {
+      console.warn(`[API] Failed to fetch reviews for product ${productId}, falling back to local hardware DB:`, err);
+      const localReviews = await LocalDB.getByIndex('reviews', 'productId', productId);
+      const totalReviews = localReviews.length;
+      const averageRating = totalReviews > 0 
+        ? (localReviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews).toFixed(1)
+        : 0;
+      const response = {
+        success: true,
+        totalReviews,
+        averageRating: Number(averageRating),
+        reviews: localReviews,
+        fromOfflineDB: true
+      };
+      MemoryCache.set(cacheKey, response);
+      return response;
+    }
+  },
+  async create(productId, data) {
+    const res = await request('POST', `/reviews/product/${productId}`, data);
+    MemoryCache.delete(`reviews:product:${productId}`); // Clear RAM cache for this product's reviews
+    return res;
+  }
 };
 
 // ── Mock Data (dùng trước khi backend sẵn sàng) ───────────────────────────────

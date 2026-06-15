@@ -19,6 +19,16 @@ const createOrder = asyncHandler(async (req, res) => {
     paymentMethod, voucherCode, note,
   });
 
+  // Gửi email xác nhận bất đồng bộ (Non-blocking)
+  setImmediate(async () => {
+    try {
+      const EmailService = require('../services/email.service');
+      await EmailService.sendOrderConfirmation(req.user.email, order);
+    } catch (err) {
+      console.error('[Async Order Email Error]', err);
+    }
+  });
+
   res.status(201).json({ success: true, order });
 });
 

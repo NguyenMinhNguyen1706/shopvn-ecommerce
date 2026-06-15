@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
+const { clearCache } = require('../middlewares/cache.middleware');
 
 const asyncHandler = fn => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -71,6 +72,9 @@ exports.createReview = asyncHandler(async (req, res) => {
     rating,
     comment
   });
+
+  // Clear reviews cache for this product
+  await clearCache.productReviews(productId);
 
   res.status(201).json({
     success: true,

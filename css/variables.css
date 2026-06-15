@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap&subset=vietnamese');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap&subset=vietnamese');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -23,14 +23,14 @@
   /* Status */
   --c-success: #10B981; /* Emerald 500 */
   --c-error:   #EF4444; /* Red 500 */
-  --c-warning: var(--c-warning); /* Amber 500 */
+  --c-warning: #F59E0B; /* Amber 500 */
   --c-border-hover: #94A3B8; /* Slate 400 */
 
   /* Headings & Text Semantics */
   --c-title:   #0D1B2A;
 
   /* Typography */
-  --f-display: 'Poppins', sans-serif;
+  --f-display: 'Outfit', sans-serif;
   --f-body:    'Inter', sans-serif;
 
   /* Space */
@@ -38,7 +38,7 @@
   --sp-lg: 24px; --sp-xl: 40px; --sp-2xl: 64px;
 
   /* Radius */
-  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 24px;
+  --r-sm: 6px; --r-md: 12px; --r-lg: 20px; --r-xl: 9999px; --r-2xl: 24px;
 
   /* Shadow */
   --shadow-sm: 0 1px 3px rgba(13,27,42,.06), 0 1px 2px rgba(13,27,42,.04);

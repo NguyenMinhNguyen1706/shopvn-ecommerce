@@ -6,8 +6,8 @@ class OMSService {
   /**
    * Giữ kho tạm thời (khi khách checkout nhưng chưa thanh toán)
    */
-  static async reserveStock(items, orderId) {
-    const t = await sequelize.transaction();
+  static async reserveStock(items, orderId, parentTxn = null) {
+    const t = parentTxn || await sequelize.transaction();
     try {
       for (const item of items) {
         const inv = await MasterInventory.findOne({
@@ -31,10 +31,10 @@ class OMSService {
           note: 'Khách hàng đặt lệnh Checkout'
         }, { transaction: t });
       }
-      await t.commit();
+      if (!parentTxn) await t.commit();
       return true;
     } catch (error) {
-      await t.rollback();
+      if (!parentTxn) await t.rollback();
       throw error;
     }
   }
@@ -42,8 +42,8 @@ class OMSService {
   /**
    * Khách hàng đã thanh toán thành công -> trừ vĩnh viễn
    */
-  static async commitReservedStock(orderId, items) {
-    const t = await sequelize.transaction();
+  static async commitReservedStock(orderId, items, parentTxn = null) {
+    const t = parentTxn || await sequelize.transaction();
     try {
       for (const item of items) {
         const inv = await MasterInventory.findOne({
@@ -65,10 +65,10 @@ class OMSService {
           }, { transaction: t });
         }
       }
-      await t.commit();
+      if (!parentTxn) await t.commit();
       return true;
     } catch (error) {
-      await t.rollback();
+      if (!parentTxn) await t.rollback();
       throw error;
     }
   }
@@ -76,8 +76,8 @@ class OMSService {
   /**
    * Huỷ đơn -> trả lại kho
    */
-  static async releaseReservedStock(orderId, items) {
-    const t = await sequelize.transaction();
+  static async releaseReservedStock(orderId, items, parentTxn = null) {
+    const t = parentTxn || await sequelize.transaction();
     try {
       for (const item of items) {
         const inv = await MasterInventory.findOne({
@@ -99,10 +99,10 @@ class OMSService {
           }, { transaction: t });
         }
       }
-      await t.commit();
+      if (!parentTxn) await t.commit();
       return true;
     } catch (error) {
-      await t.rollback();
+      if (!parentTxn) await t.rollback();
       throw error;
     }
   }

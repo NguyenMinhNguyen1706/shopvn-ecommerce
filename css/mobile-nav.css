@@ -1,0 +1,105 @@
+/* ── MOBILE BOTTOM NAVIGATION ──────────────────── */
+/* Fixed bottom nav for mobile — 5 tabs matching Stitch design */
+
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 900;
+  background: var(--c-white);
+  border-top: 1px solid var(--c-border);
+  box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+}
+
+[data-theme="dark"] .mobile-bottom-nav {
+  background: rgba(9, 9, 11, 0.92);
+  border-top-color: rgba(255,255,255,.06);
+  box-shadow: 0 -4px 20px rgba(0,0,0,.3);
+}
+
+.mobile-bottom-nav__inner {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.mobile-bottom-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px;
+  min-width: 56px;
+  min-height: 44px;
+  border-radius: var(--r-md);
+  color: var(--c-muted);
+  font-size: .65rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+  transition: all var(--dur) var(--ease);
+  text-decoration: none;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-bottom-nav__item:active {
+  transform: scale(0.92);
+}
+
+.mobile-bottom-nav__item.active {
+  color: var(--c-blue);
+  font-weight: 700;
+}
+
+.mobile-bottom-nav__item.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 24px; height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--c-blue);
+}
+
+.mobile-bottom-nav__item svg {
+  width: 22px; height: 22px;
+  stroke-width: 1.8;
+}
+
+.mobile-bottom-nav__badge {
+  position: absolute;
+  top: 2px; right: 4px;
+  background: var(--c-accent);
+  color: white;
+  font-size: .58rem;
+  font-weight: 700;
+  min-width: 16px; height: 16px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--c-white);
+}
+
+[data-theme="dark"] .mobile-bottom-nav__badge {
+  border-color: #09090B;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: block;
+  }
+  
+  /* Add bottom padding to body so content isn't hidden behind nav */
+  body {
+    padding-bottom: 72px;
+  }
+  
+  /* Move toast above bottom nav */
+  .toast-container {
+    bottom: 84px;
+  }
+}
