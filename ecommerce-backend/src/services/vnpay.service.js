@@ -36,6 +36,9 @@ function getClientIp(req) {
  * VNPay yêu cầu sort params theo alphabet trước khi ký
  */
 function createSignature(params, secretKey) {
+  if (!secretKey) {
+    return '';
+  }
   // Sort theo key alphabet
   const sortedKeys = Object.keys(params).sort();
   const signData   = sortedKeys
