@@ -107,12 +107,10 @@ app.use('/api/wms', wmsRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
 app.get('/health', (req, res) => {
-  const redisStatus = redisClient.isReady ? 'connected' : 'disconnected';
   res.json({
     status:    'OK',
     timestamp: new Date().toISOString(),
-    env:       process.env.NODE_ENV,
-    redis:     redisStatus
+    env:       process.env.NODE_ENV
   });
 });
 
