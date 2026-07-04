@@ -2,6 +2,7 @@ services:
   - type: web
     name: shopvn-backend
     runtime: node
+    region: singapore
     rootDir: ecommerce-backend
     plan: free
     buildCommand: npm install
@@ -12,9 +13,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: shopvn-postgres
-          property: connectionString
+        sync: false
       - key: DB_SSL
         value: "true"
       - key: REDIS_URL
@@ -40,11 +39,13 @@ services:
   - type: keyvalue
     name: shopvn-redis
     plan: free
+    region: singapore
     ipAllowList: []
     maxmemoryPolicy: allkeys-lru
 
 databases:
   - name: shopvn-postgres
     plan: free
+    region: singapore
     databaseName: ecommerce_db
     user: shopvn
