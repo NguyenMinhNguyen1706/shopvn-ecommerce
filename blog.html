@@ -1,12 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 
 <head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tin tức Công nghệ &amp; Hướng dẫn — ShopVN</title>
+  <title>Tin tá»©c CÃ´ng nghá»‡ &amp; HÆ°á»›ng dáº«n â€” ShopVN</title>
   <meta name="description"
-    content="Khám phá các tin tức công nghệ mới nhất, hướng dẫn chọn mua laptop, điện thoại và các đánh giá thiết bị chi tiết tại ShopVN." />
+    content="KhÃ¡m phÃ¡ cÃ¡c tin tá»©c cÃ´ng nghá»‡ má»›i nháº¥t, hÆ°á»›ng dáº«n chá»n mua laptop, Ä‘iá»‡n thoáº¡i vÃ  cÃ¡c Ä‘Ã¡nh giÃ¡ thiáº¿t bá»‹ chi tiáº¿t táº¡i ShopVN." />
 
   <!-- ========================================== -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -24,21 +25,21 @@
   <!-- ========================================== -->
   <header class="navbar" role="banner">
     <div class="container">
-      <nav class="navbar__inner" aria-label="Điều hướng chính">
+      <nav class="navbar__inner" aria-label="Äiá»u hÆ°á»›ng chÃ­nh">
 
-        <a href="index.html" class="navbar__logo" aria-label="ShopVN - Trang chủ">
+        <a href="index.html" class="navbar__logo" aria-label="ShopVN - Trang chá»§">
           Shop<span>VN</span>
         </a>
 
         <ul class="navbar__nav" role="list">
-          <li><a href="index.html" class="navbar__link"><span data-i18n="nav.home">Trang chủ</span></a></li>
-          <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sản phẩm</span></a></li>
+          <li><a href="index.html" class="navbar__link"><span data-i18n="nav.home">Trang chá»§</span></a></li>
+          <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sáº£n pháº©m</span></a></li>
           <li><a href="products.html?category=Laptop" class="navbar__link"><span
                 data-i18n="nav.laptop">Laptop</span></a></li>
-          <li><a href="products.html?category=Điện thoại" class="navbar__link"><span data-i18n="nav.phone">Điện
-                thoại</span></a></li>
-          <li><a href="products.html?category=Phụ kiện" class="navbar__link"><span data-i18n="nav.accessories">Phụ
-                kiện</span></a></li>
+          <li><a href="products.html?category=Äiá»‡n thoáº¡i" class="navbar__link"><span data-i18n="nav.phone">Äiá»‡n
+                thoáº¡i</span></a></li>
+          <li><a href="products.html?category=Phá»¥ kiá»‡n" class="navbar__link"><span data-i18n="nav.accessories">Phá»¥
+                kiá»‡n</span></a></li>
         </ul>
 
         <div class="navbar__search" role="search">
@@ -47,7 +48,7 @@
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-          <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm"
+          <input type="search" placeholder="TÃ¬m laptop, Ä‘iá»‡n thoáº¡i, phá»¥ kiá»‡n..." aria-label="TÃ¬m kiáº¿m sáº£n pháº©m"
             onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
         </div>
 
@@ -55,12 +56,12 @@
           <div class="navbar__cart-btn" aria-label="ShopVN Xu"
             style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default"
             title="ShopVN Xu">
-            ✨
+            âœ¨
             <span class="navbar__cart-count" id="xu-badge" aria-live="polite"
               style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
           </div>
 
-          <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
+          <a href="wishlist.html" class="navbar__cart-btn" aria-label="YÃªu thÃ­ch" style="margin-right:-4px">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               aria-hidden="true">
               <path
@@ -69,7 +70,7 @@
             <span class="navbar__wish-count navbar__cart-count" aria-live="polite" style="display:none">0</span>
           </a>
 
-          <a href="cart.html" class="navbar__cart-btn" aria-label="Giỏ hàng">
+          <a href="cart.html" class="navbar__cart-btn" aria-label="Giá» hÃ ng">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               aria-hidden="true">
               <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -80,8 +81,8 @@
           </a>
 
           <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
-            <a href="login.html" class="btn btn-ghost btn-sm"><span data-i18n="auth.login">Đăng nhập</span></a>
-            <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">Đăng ký</span></a>
+            <a href="login.html" class="btn btn-ghost btn-sm"><span data-i18n="auth.login">ÄÄƒng nháº­p</span></a>
+            <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">ÄÄƒng kÃ½</span></a>
           </div>
         </div>
 
@@ -92,16 +93,16 @@
   <!-- ========================================== -->
   <main class="container" style="padding-top: var(--sp-xl); padding-bottom: var(--sp-2xl);">
 
-    <!-- Breadcrumbs (Tiêu chí 27) -->
+    <!-- Breadcrumbs (TiÃªu chÃ­ 27) -->
     <nav class="breadcrumb" style="margin-bottom: var(--sp-md); font-size: 0.88rem; color: var(--c-muted);"
-      aria-label="Đường dẫn">
-      <a href="index.html" data-i18n="nav.home">Trang chủ</a> / <span id="breadcrumb-current" data-i18n="nav.blog">Tin
-        tức</span>
+      aria-label="ÄÆ°á»ng dáº«n">
+      <a href="index.html" data-i18n="nav.home">Trang chá»§</a> / <span id="breadcrumb-current" data-i18n="nav.blog">Tin
+        tá»©c</span>
     </nav>
 
     <h1 class="page-title" id="page-main-title"
       style="font-family: var(--f-display); font-size: 2.2rem; font-weight: 800; color: var(--c-title); margin-bottom: var(--sp-xl);"
-      data-i18n="nav.blog">Tin tức</h1>
+      data-i18n="nav.blog">Tin tá»©c</h1>
 
     <!-- Blog Layout Container -->
     <div class="blog-layout">
@@ -111,45 +112,45 @@
         <!-- populated dynamically -->
       </div>
 
-      <!-- Sidebar (Tiêu chí 53) -->
-      <aside class="blog-sidebar" aria-label="Thanh bên tin tức">
+      <!-- Sidebar (TiÃªu chÃ­ 53) -->
+      <aside class="blog-sidebar" aria-label="Thanh bÃªn tin tá»©c">
         <!-- Search widget -->
         <div class="sidebar-widget">
-          <h3 class="widget-title">Tìm kiếm</h3>
+          <h3 class="widget-title">TÃ¬m kiáº¿m</h3>
           <div style="display: flex; gap: 8px;">
-            <input type="text" id="blog-search" placeholder="Từ khóa..."
+            <input type="text" id="blog-search" placeholder="Tá»« khÃ³a..."
               style="flex: 1; padding: 8px 12px; border: 1px solid var(--c-border); border-radius: var(--r-sm); background: var(--c-white); color: var(--c-text); outline: none;"
               onkeydown="if(event.key==='Enter') searchPosts()" />
-            <button onclick="searchPosts()" class="btn btn-primary btn-sm" style="padding: 8px 12px;">Tìm</button>
+            <button onclick="searchPosts()" class="btn btn-primary btn-sm" style="padding: 8px 12px;">TÃ¬m</button>
           </div>
         </div>
 
         <!-- Categories widget -->
         <div class="sidebar-widget">
-          <h3 class="widget-title">Danh mục</h3>
+          <h3 class="widget-title">Danh má»¥c</h3>
           <ul class="widget-cat-list">
             <li>
               <a href="javascript:void(0)" class="widget-cat-link active" id="cat-all" onclick="filterCategory('all')">
-                <span>Tất cả</span>
+                <span>Táº¥t cáº£</span>
                 <span id="count-all">0</span>
               </a>
             </li>
             <li>
               <a href="javascript:void(0)" class="widget-cat-link" id="cat-technology"
                 onclick="filterCategory('technology')">
-                <span data-i18n="bot.quick_search_laptop">Xu hướng công nghệ</span>
+                <span data-i18n="bot.quick_search_laptop">Xu hÆ°á»›ng cÃ´ng nghá»‡</span>
                 <span id="count-technology">0</span>
               </a>
             </li>
             <li>
               <a href="javascript:void(0)" class="widget-cat-link" id="cat-guides" onclick="filterCategory('guides')">
-                <span>Tư vấn mua sắm</span>
+                <span>TÆ° váº¥n mua sáº¯m</span>
                 <span id="count-guides">0</span>
               </a>
             </li>
             <li>
               <a href="javascript:void(0)" class="widget-cat-link" id="cat-reviews" onclick="filterCategory('reviews')">
-                <span>Đánh giá chi tiết</span>
+                <span>ÄÃ¡nh giÃ¡ chi tiáº¿t</span>
                 <span id="count-reviews">0</span>
               </a>
             </li>
@@ -158,24 +159,24 @@
 
         <!-- Recent Posts widget -->
         <div class="sidebar-widget">
-          <h3 class="widget-title">Bài viết mới</h3>
+          <h3 class="widget-title">BÃ i viáº¿t má»›i</h3>
           <ul id="sidebar-recent-posts" style="display: flex; flex-direction: column; gap: 12px;">
             <!-- populated dynamically -->
           </ul>
         </div>
 
-        <!-- Email newsletter sidebar sign-up (Tiêu chí 20) -->
+        <!-- Email newsletter sidebar sign-up (TiÃªu chÃ­ 20) -->
         <div class="sidebar-widget"
           style="background: linear-gradient(135deg, var(--c-navy-soft) 0%, var(--c-navy) 100%); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.05);">
-          <h3 class="widget-title" style="color: white; border-left-color: var(--c-accent)">Nhận tin mới</h3>
-          <p style="font-size: 0.8rem; line-height: 1.4; margin-bottom: 12px; color: rgba(255,255,255,0.6);">Đăng ký
-            email để nhận tin công nghệ và khuyến mãi ShopVN nhanh nhất.</p>
-          <form onsubmit="event.preventDefault(); showToast('Đăng ký nhận tin thành công!', 'success'); this.reset();"
+          <h3 class="widget-title" style="color: white; border-left-color: var(--c-accent)">Nháº­n tin má»›i</h3>
+          <p style="font-size: 0.8rem; line-height: 1.4; margin-bottom: 12px; color: rgba(255,255,255,0.6);">ÄÄƒng kÃ½
+            email Ä‘á»ƒ nháº­n tin cÃ´ng nghá»‡ vÃ  khuyáº¿n mÃ£i ShopVN nhanh nháº¥t.</p>
+          <form onsubmit="event.preventDefault(); showToast('ÄÄƒng kÃ½ nháº­n tin thÃ nh cÃ´ng!', 'success'); this.reset();"
             style="display: flex; flex-direction: column; gap: 8px;">
-            <input type="email" required placeholder="Email của bạn..."
+            <input type="email" required placeholder="Email cá»§a báº¡n..."
               style="padding: 8px 12px; font-size: 0.85rem; border-radius: var(--r-sm); border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: white; outline: none;" />
             <button type="submit" class="btn btn-primary btn-sm"
-              style="justify-content: center; background: var(--c-accent)">Đăng ký</button>
+              style="justify-content: center; background: var(--c-accent)">ÄÄƒng kÃ½</button>
           </form>
         </div>
       </aside>
@@ -190,7 +191,8 @@
   </footer>
 
   <!-- ========================================== -->
-  <script src="js/api.js"></script>
+  <script src="js/config.js"></script>
+<script src="js/api.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/lucky-wheel.js"></script>
@@ -201,20 +203,20 @@
       {
         id: 1,
         category: 'technology',
-        categoryNameVi: 'Xu hướng công nghệ',
+        categoryNameVi: 'Xu hÆ°á»›ng cÃ´ng nghá»‡',
         categoryNameEn: 'Tech Trends',
-        titleVi: 'Xu hướng tích hợp AI trên điện thoại di động năm 2026',
+        titleVi: 'Xu hÆ°á»›ng tÃ­ch há»£p AI trÃªn Ä‘iá»‡n thoáº¡i di Ä‘á»™ng nÄƒm 2026',
         titleEn: 'Mobile AI Integration Trends in 2026',
-        excerptVi: 'Điện thoại di động năm 2026 không chỉ chạy ứng dụng thường nữa. AI cục bộ (Edge AI) chạy trực tiếp trên chip xử lý thần kinh NPU đang định hình lại toàn bộ trải nghiệm.',
+        excerptVi: 'Äiá»‡n thoáº¡i di Ä‘á»™ng nÄƒm 2026 khÃ´ng chá»‰ cháº¡y á»©ng dá»¥ng thÆ°á»ng ná»¯a. AI cá»¥c bá»™ (Edge AI) cháº¡y trá»±c tiáº¿p trÃªn chip xá»­ lÃ½ tháº§n kinh NPU Ä‘ang Ä‘á»‹nh hÃ¬nh láº¡i toÃ n bá»™ tráº£i nghiá»‡m.',
         excerptEn: 'Smartphones in 2026 are moving beyond basic apps. Local Edge AI operating directly on NPU hardware is revolutionizing the entire mobile experience.',
         contentVi: `
-          <p style="margin-bottom:15px">Vào năm 2026, trí tuệ nhân tạo (AI) đã tiến hóa từ một tính năng đám mây phụ trợ thành cốt lõi vận hành của mọi chiếc smartphone cao cấp. Thay vì gửi dữ liệu lên máy chủ và chờ phản hồi, các dòng điện thoại mới như iPhone 17 và Galaxy S26 xử lý hàng tỷ tham số trực tiếp trên phần cứng cục bộ.</p>
-          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">1. Edge AI & Chip xử lý NPU thế hệ mới</h3>
-          <p style="margin-bottom:15px">Bộ vi xử lý mới tích hợp nhân xử lý thần kinh thế hệ mới cho phép chạy trực tiếp các mô hình ngôn ngữ lớn (LLM) thu nhỏ. Nhờ đó, trợ lý ảo có khả năng hiểu ngữ cảnh siêu tốc, hoạt động hoàn hảo ngay cả khi không có kết nối Internet.</p>
-          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">2. Dịch thuật & Chỉnh sửa ảnh thời gian thực</h3>
-          <p style="margin-bottom:15px">Người dùng có thể dịch các cuộc gọi video đa ngôn ngữ tức thì với độ trễ dưới 50ms. Ngoài ra, việc chỉnh sửa hình ảnh, xóa vật thể và nâng cấp độ phân giải video được tự động tối ưu bằng mô hình khuếch tán nội bộ (on-device diffusion model).</p>
-          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">3. Bảo mật tuyệt đối</h3>
-          <p style="margin-bottom:15px">Vì mọi tác vụ phân tích dữ liệu đều diễn ra trên thiết bị, các thông tin sinh trắc học, hội thoại cá nhân và hành vi duyệt web được bảo mật 100%, loại bỏ rủi ro rò rỉ dữ liệu lên máy chủ đám mây.</p>
+          <p style="margin-bottom:15px">VÃ o nÄƒm 2026, trÃ­ tuá»‡ nhÃ¢n táº¡o (AI) Ä‘Ã£ tiáº¿n hÃ³a tá»« má»™t tÃ­nh nÄƒng Ä‘Ã¡m mÃ¢y phá»¥ trá»£ thÃ nh cá»‘t lÃµi váº­n hÃ nh cá»§a má»i chiáº¿c smartphone cao cáº¥p. Thay vÃ¬ gá»­i dá»¯ liá»‡u lÃªn mÃ¡y chá»§ vÃ  chá» pháº£n há»“i, cÃ¡c dÃ²ng Ä‘iá»‡n thoáº¡i má»›i nhÆ° iPhone 17 vÃ  Galaxy S26 xá»­ lÃ½ hÃ ng tá»· tham sá»‘ trá»±c tiáº¿p trÃªn pháº§n cá»©ng cá»¥c bá»™.</p>
+          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">1. Edge AI & Chip xá»­ lÃ½ NPU tháº¿ há»‡ má»›i</h3>
+          <p style="margin-bottom:15px">Bá»™ vi xá»­ lÃ½ má»›i tÃ­ch há»£p nhÃ¢n xá»­ lÃ½ tháº§n kinh tháº¿ há»‡ má»›i cho phÃ©p cháº¡y trá»±c tiáº¿p cÃ¡c mÃ´ hÃ¬nh ngÃ´n ngá»¯ lá»›n (LLM) thu nhá». Nhá» Ä‘Ã³, trá»£ lÃ½ áº£o cÃ³ kháº£ nÄƒng hiá»ƒu ngá»¯ cáº£nh siÃªu tá»‘c, hoáº¡t Ä‘á»™ng hoÃ n háº£o ngay cáº£ khi khÃ´ng cÃ³ káº¿t ná»‘i Internet.</p>
+          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">2. Dá»‹ch thuáº­t & Chá»‰nh sá»­a áº£nh thá»i gian thá»±c</h3>
+          <p style="margin-bottom:15px">NgÆ°á»i dÃ¹ng cÃ³ thá»ƒ dá»‹ch cÃ¡c cuá»™c gá»i video Ä‘a ngÃ´n ngá»¯ tá»©c thÃ¬ vá»›i Ä‘á»™ trá»… dÆ°á»›i 50ms. NgoÃ i ra, viá»‡c chá»‰nh sá»­a hÃ¬nh áº£nh, xÃ³a váº­t thá»ƒ vÃ  nÃ¢ng cáº¥p Ä‘á»™ phÃ¢n giáº£i video Ä‘Æ°á»£c tá»± Ä‘á»™ng tá»‘i Æ°u báº±ng mÃ´ hÃ¬nh khuáº¿ch tÃ¡n ná»™i bá»™ (on-device diffusion model).</p>
+          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">3. Báº£o máº­t tuyá»‡t Ä‘á»‘i</h3>
+          <p style="margin-bottom:15px">VÃ¬ má»i tÃ¡c vá»¥ phÃ¢n tÃ­ch dá»¯ liá»‡u Ä‘á»u diá»…n ra trÃªn thiáº¿t bá»‹, cÃ¡c thÃ´ng tin sinh tráº¯c há»c, há»™i thoáº¡i cÃ¡ nhÃ¢n vÃ  hÃ nh vi duyá»‡t web Ä‘Æ°á»£c báº£o máº­t 100%, loáº¡i bá» rá»§i ro rÃ² rá»‰ dá»¯ liá»‡u lÃªn mÃ¡y chá»§ Ä‘Ã¡m mÃ¢y.</p>
         `,
         contentEn: `
           <p style="margin-bottom:15px">By 2026, Artificial Intelligence (AI) has evolved from a cloud-based addon into the operating core of premium smartphones. Instead of sending requests to remote servers, devices like the iPhone 17 and Galaxy S26 compute billions of parameters directly on local silicon.</p>
@@ -227,27 +229,27 @@
         `,
         date: '2026-05-24',
         author: 'Admin ShopVN',
-        icon: '📱',
-        readTimeVi: '4 phút đọc',
+        icon: 'ðŸ“±',
+        readTimeVi: '4 phÃºt Ä‘á»c',
         readTimeEn: '4 min read'
       },
       {
         id: 2,
         category: 'guides',
-        categoryNameVi: 'Tư vấn mua sắm',
+        categoryNameVi: 'TÆ° váº¥n mua sáº¯m',
         categoryNameEn: 'Shopping Guides',
-        titleVi: 'Bí quyết chọn laptop lập trình chuyên nghiệp cho dev năm 2026',
+        titleVi: 'BÃ­ quyáº¿t chá»n laptop láº­p trÃ¬nh chuyÃªn nghiá»‡p cho dev nÄƒm 2026',
         titleEn: 'Choosing a Developer Laptop in 2026',
-        excerptVi: 'Làm thế nào để chọn một chiếc máy cấu hình mạnh mẽ, bàn phím gõ êm, màn hình chống mỏi mắt và pin trâu cho cả ngày code? Dưới đây là các tiêu chuẩn phần cứng mới nhất.',
+        excerptVi: 'LÃ m tháº¿ nÃ o Ä‘á»ƒ chá»n má»™t chiáº¿c mÃ¡y cáº¥u hÃ¬nh máº¡nh máº½, bÃ n phÃ­m gÃµ Ãªm, mÃ n hÃ¬nh chá»‘ng má»i máº¯t vÃ  pin trÃ¢u cho cáº£ ngÃ y code? DÆ°á»›i Ä‘Ã¢y lÃ  cÃ¡c tiÃªu chuáº©n pháº§n cá»©ng má»›i nháº¥t.',
         excerptEn: 'How to select a laptop with high CPU throughput, a tactile keyboard, low eye-strain display, and all-day battery? Read our updated hardware benchmarks.',
         contentVi: `
-          <p style="margin-bottom:15px">Nghề lập trình đòi hỏi máy tính chạy nhiều máy ảo, container Docker, biên dịch mã nguồn nặng và chạy thử nghiệm AI cục bộ. Chọn laptop lập trình trong năm 2026 cần những tiêu chí rất khác so với trước đây.</p>
-          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">1. RAM LPDDR6 tốc độ cao</h3>
-          <p style="margin-bottom:15px">Thời kỳ RAM 8GB và 16GB đã lùi xa. Với việc chạy các IDE nặng cùng mô hình copilot chạy nội bộ, 32GB RAM hiện là tiêu chuẩn tối thiểu đề xuất, và 64GB là lựa chọn tối ưu nếu bạn làm việc với dữ liệu lớn hoặc máy ảo.</p>
-          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">2. Vi xử lý đa nhân tích hợp NPU</h3>
-          <p style="margin-bottom:15px">Các dòng chip như Apple M5, Intel Core Ultra 2 và AMD Ryzen AI 9 mang lại tỷ lệ hiệu năng trên điện năng vượt trội. NPU mạnh giúp tăng tốc độ gợi ý code của AI lên 3 lần và tiết kiệm 40% pin.</p>
-          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">3. Màn hình OLED bảo vệ mắt</h3>
-          <p style="margin-bottom:15px">Màn hình lập trình viên cần độ phân giải từ 2K trở lên, tỷ lệ 16:10 hoặc 3:2 để hiển thị được nhiều dòng code hơn. Công nghệ tấm nền OLED giảm ánh sáng xanh có hại và tần số 120Hz giúp mắt không bị mệt mỏi sau 8 tiếng làm việc liên tục.</p>
+          <p style="margin-bottom:15px">Nghá» láº­p trÃ¬nh Ä‘Ã²i há»i mÃ¡y tÃ­nh cháº¡y nhiá»u mÃ¡y áº£o, container Docker, biÃªn dá»‹ch mÃ£ nguá»“n náº·ng vÃ  cháº¡y thá»­ nghiá»‡m AI cá»¥c bá»™. Chá»n laptop láº­p trÃ¬nh trong nÄƒm 2026 cáº§n nhá»¯ng tiÃªu chÃ­ ráº¥t khÃ¡c so vá»›i trÆ°á»›c Ä‘Ã¢y.</p>
+          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">1. RAM LPDDR6 tá»‘c Ä‘á»™ cao</h3>
+          <p style="margin-bottom:15px">Thá»i ká»³ RAM 8GB vÃ  16GB Ä‘Ã£ lÃ¹i xa. Vá»›i viá»‡c cháº¡y cÃ¡c IDE náº·ng cÃ¹ng mÃ´ hÃ¬nh copilot cháº¡y ná»™i bá»™, 32GB RAM hiá»‡n lÃ  tiÃªu chuáº©n tá»‘i thiá»ƒu Ä‘á» xuáº¥t, vÃ  64GB lÃ  lá»±a chá»n tá»‘i Æ°u náº¿u báº¡n lÃ m viá»‡c vá»›i dá»¯ liá»‡u lá»›n hoáº·c mÃ¡y áº£o.</p>
+          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">2. Vi xá»­ lÃ½ Ä‘a nhÃ¢n tÃ­ch há»£p NPU</h3>
+          <p style="margin-bottom:15px">CÃ¡c dÃ²ng chip nhÆ° Apple M5, Intel Core Ultra 2 vÃ  AMD Ryzen AI 9 mang láº¡i tá»· lá»‡ hiá»‡u nÄƒng trÃªn Ä‘iá»‡n nÄƒng vÆ°á»£t trá»™i. NPU máº¡nh giÃºp tÄƒng tá»‘c Ä‘á»™ gá»£i Ã½ code cá»§a AI lÃªn 3 láº§n vÃ  tiáº¿t kiá»‡m 40% pin.</p>
+          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">3. MÃ n hÃ¬nh OLED báº£o vá»‡ máº¯t</h3>
+          <p style="margin-bottom:15px">MÃ n hÃ¬nh láº­p trÃ¬nh viÃªn cáº§n Ä‘á»™ phÃ¢n giáº£i tá»« 2K trá»Ÿ lÃªn, tá»· lá»‡ 16:10 hoáº·c 3:2 Ä‘á»ƒ hiá»ƒn thá»‹ Ä‘Æ°á»£c nhiá»u dÃ²ng code hÆ¡n. CÃ´ng nghá»‡ táº¥m ná»n OLED giáº£m Ã¡nh sÃ¡ng xanh cÃ³ háº¡i vÃ  táº§n sá»‘ 120Hz giÃºp máº¯t khÃ´ng bá»‹ má»‡t má»i sau 8 tiáº¿ng lÃ m viá»‡c liÃªn tá»¥c.</p>
         `,
         contentEn: `
           <p style="margin-bottom:15px">Software development entails virtual machines, Docker containers, heavy builds, and local AI assistance. Coding hardware requirements in 2026 demand a highly tailored approach.</p>
@@ -260,27 +262,27 @@
         `,
         date: '2026-05-18',
         author: 'Tech Guru ShopVN',
-        icon: '💻',
-        readTimeVi: '5 phút đọc',
+        icon: 'ðŸ’»',
+        readTimeVi: '5 phÃºt Ä‘á»c',
         readTimeEn: '5 min read'
       },
       {
         id: 3,
         category: 'reviews',
-        categoryNameVi: 'Đánh giá chi tiết',
+        categoryNameVi: 'ÄÃ¡nh giÃ¡ chi tiáº¿t',
         categoryNameEn: 'Detailed Reviews',
-        titleVi: 'Đánh giá bàn phím cơ hot swap dưới 1 triệu đáng mua nhất 2026',
+        titleVi: 'ÄÃ¡nh giÃ¡ bÃ n phÃ­m cÆ¡ hot swap dÆ°á»›i 1 triá»‡u Ä‘Ã¡ng mua nháº¥t 2026',
         titleEn: 'Best Hotswap Keyboard Under 1 Million VND in 2026',
-        excerptVi: 'Bàn phím cơ giá rẻ nay đã có chất lượng build cực tốt, switch pre-lubed mượt mà, gasket mount êm ái và khả năng thay switch nóng dễ dàng.',
+        excerptVi: 'BÃ n phÃ­m cÆ¡ giÃ¡ ráº» nay Ä‘Ã£ cÃ³ cháº¥t lÆ°á»£ng build cá»±c tá»‘t, switch pre-lubed mÆ°á»£t mÃ , gasket mount Ãªm Ã¡i vÃ  kháº£ nÄƒng thay switch nÃ³ng dá»… dÃ ng.',
         excerptEn: 'Budget mechanical keyboards now feature exceptional build quality, pre-lubed switches, acoustic foam gaskets, and modular hotswap switches.',
         contentVi: `
-          <p style="margin-bottom:15px">Với ngân sách dưới 1 triệu đồng, người chơi phím cơ năm 2026 có thể sở hữu những chiếc bàn phím chất lượng không thua kém các dòng custom đắt tiền cách đây vài năm. Hôm nay ShopVN sẽ cùng các bạn đánh giá chiếc bàn phím quốc dân mới nhất.</p>
-          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">1. Gasket Mount & Lót Foam Đầy Đủ</h3>
-          <p style="margin-bottom:15px">Thiết kế gasket mount treo đệm silicon giúp cảm giác gõ êm, nhún nhẹ và giảm chấn động tay. Bàn phím được lót sẵn foam tiêu âm EVA dưới mạch và foam đáy giúp triệt tiêu hoàn toàn tiếng rỗng lọc cọc khó chịu.</p>
+          <p style="margin-bottom:15px">Vá»›i ngÃ¢n sÃ¡ch dÆ°á»›i 1 triá»‡u Ä‘á»“ng, ngÆ°á»i chÆ¡i phÃ­m cÆ¡ nÄƒm 2026 cÃ³ thá»ƒ sá»Ÿ há»¯u nhá»¯ng chiáº¿c bÃ n phÃ­m cháº¥t lÆ°á»£ng khÃ´ng thua kÃ©m cÃ¡c dÃ²ng custom Ä‘áº¯t tiá»n cÃ¡ch Ä‘Ã¢y vÃ i nÄƒm. HÃ´m nay ShopVN sáº½ cÃ¹ng cÃ¡c báº¡n Ä‘Ã¡nh giÃ¡ chiáº¿c bÃ n phÃ­m quá»‘c dÃ¢n má»›i nháº¥t.</p>
+          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">1. Gasket Mount & LÃ³t Foam Äáº§y Äá»§</h3>
+          <p style="margin-bottom:15px">Thiáº¿t káº¿ gasket mount treo Ä‘á»‡m silicon giÃºp cáº£m giÃ¡c gÃµ Ãªm, nhÃºn nháº¹ vÃ  giáº£m cháº¥n Ä‘á»™ng tay. BÃ n phÃ­m Ä‘Æ°á»£c lÃ³t sáºµn foam tiÃªu Ã¢m EVA dÆ°á»›i máº¡ch vÃ  foam Ä‘Ã¡y giÃºp triá»‡t tiÃªu hoÃ n toÃ n tiáº¿ng rá»—ng lá»c cá»c khÃ³ chá»‹u.</p>
           <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">2. Switch Pre-lubed & Hot-swap 5-pin</h3>
-          <p style="margin-bottom:15px">Các switch đi kèm đều được lube sẵn tại nhà máy cực kỳ mượt mà, cho âm thanh đầm (thocky hoặc clacky) tùy chọn. Mạch hot-swap 5-pin hỗ trợ cắm nóng mọi loại switch trên thị trường mà không cần hàn.</p>
-          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">3. Kết nối 3 chế độ</h3>
-          <p style="margin-bottom:15px">Bàn phím hỗ trợ 3 kết nối thông dụng: Bluetooth 5.1 (kết nối tối đa 3 thiết bị), Không dây 2.4GHz độ trễ thấp (có đầu thu USB) và Cáp rời Type-C tiện lợi.</p>
+          <p style="margin-bottom:15px">CÃ¡c switch Ä‘i kÃ¨m Ä‘á»u Ä‘Æ°á»£c lube sáºµn táº¡i nhÃ  mÃ¡y cá»±c ká»³ mÆ°á»£t mÃ , cho Ã¢m thanh Ä‘áº§m (thocky hoáº·c clacky) tÃ¹y chá»n. Máº¡ch hot-swap 5-pin há»— trá»£ cáº¯m nÃ³ng má»i loáº¡i switch trÃªn thá»‹ trÆ°á»ng mÃ  khÃ´ng cáº§n hÃ n.</p>
+          <h3 style="margin:20px 0 10px; color:var(--c-title); font-size:1.2rem">3. Káº¿t ná»‘i 3 cháº¿ Ä‘á»™</h3>
+          <p style="margin-bottom:15px">BÃ n phÃ­m há»— trá»£ 3 káº¿t ná»‘i thÃ´ng dá»¥ng: Bluetooth 5.1 (káº¿t ná»‘i tá»‘i Ä‘a 3 thiáº¿t bá»‹), KhÃ´ng dÃ¢y 2.4GHz Ä‘á»™ trá»… tháº¥p (cÃ³ Ä‘áº§u thu USB) vÃ  CÃ¡p rá»i Type-C tiá»‡n lá»£i.</p>
         `,
         contentEn: `
           <p style="margin-bottom:15px">With a budget below 1 million VND, mechanical keyboard enthusiasts in 2026 can purchase hardware that performs on par with expensive custom keyboards of past years. ShopVN presents a comprehensive review of the new entry-level champion.</p>
@@ -293,8 +295,8 @@
         `,
         date: '2026-05-12',
         author: 'Gear Reviewer ShopVN',
-        icon: '⌨️',
-        readTimeVi: '3 phút đọc',
+        icon: 'âŒ¨ï¸',
+        readTimeVi: '3 phÃºt Ä‘á»c',
         readTimeEn: '3 min read'
       }
     ];
@@ -343,11 +345,11 @@
       const isVi = lang === 'vi';
 
       // Update breadcrumbs and titles
-      document.getElementById('breadcrumb-current').textContent = isVi ? 'Tin tức' : 'Blog';
+      document.getElementById('breadcrumb-current').textContent = isVi ? 'Tin tá»©c' : 'Blog';
       document.getElementById('breadcrumb-current').setAttribute('data-i18n', 'nav.blog');
 
       const mainTitle = document.getElementById('page-main-title');
-      mainTitle.textContent = isVi ? 'Tin tức & Bài viết' : 'News & Articles';
+      mainTitle.textContent = isVi ? 'Tin tá»©c & BÃ i viáº¿t' : 'News & Articles';
       mainTitle.removeAttribute('data-i18n');
 
       // Filter posts
@@ -368,9 +370,9 @@
       if (posts.length === 0) {
         contentBox.innerHTML = `
           <div style="text-align:center; padding:var(--sp-2xl) 0; border:1px dashed var(--c-border); border-radius:var(--r-md); background:var(--c-white);">
-            <span style="font-size:3rem;">📂</span>
-            <p style="margin-top:10px; font-weight:600; color:var(--c-title);">${isVi ? 'Không tìm thấy bài viết nào' : 'No articles found'}</p>
-            <p style="font-size:0.88rem; color:var(--c-muted); margin-top:5px;">${isVi ? 'Thử tìm kiếm với từ khóa khác hoặc chuyển danh mục.' : 'Try another query or switch categories.'}</p>
+            <span style="font-size:3rem;">ðŸ“‚</span>
+            <p style="margin-top:10px; font-weight:600; color:var(--c-title);">${isVi ? 'KhÃ´ng tÃ¬m tháº¥y bÃ i viáº¿t nÃ o' : 'No articles found'}</p>
+            <p style="font-size:0.88rem; color:var(--c-muted); margin-top:5px;">${isVi ? 'Thá»­ tÃ¬m kiáº¿m vá»›i tá»« khÃ³a khÃ¡c hoáº·c chuyá»ƒn danh má»¥c.' : 'Try another query or switch categories.'}</p>
           </div>
         `;
         return;
@@ -383,15 +385,15 @@
             <div>
               <div class="blog-post-meta">
                 <span class="blog-post-cat-badge">${isVi ? p.categoryNameVi : p.categoryNameEn}</span>
-                <span>📅 ${formatDate(p.date)}</span>
-                <span>⏱️ ${isVi ? p.readTimeVi : p.readTimeEn}</span>
+                <span>ðŸ“… ${formatDate(p.date)}</span>
+                <span>â±ï¸ ${isVi ? p.readTimeVi : p.readTimeEn}</span>
               </div>
               <h2 class="blog-post-title" onclick="window.location.hash='#post-${p.id}'">${isVi ? p.titleVi : p.titleEn}</h2>
               <p class="blog-post-excerpt">${isVi ? p.excerptVi : p.excerptEn}</p>
             </div>
             <div>
               <a href="#post-${p.id}" class="blog-post-link">
-                <span>${isVi ? 'Đọc tiếp' : 'Read more'}</span>
+                <span>${isVi ? 'Äá»c tiáº¿p' : 'Read more'}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </a>
             </div>
@@ -412,11 +414,11 @@
 
       // Update breadcrumbs and title
       const breadcrumbBox = document.getElementById('breadcrumb-current');
-      breadcrumbBox.innerHTML = `<a href="blog.html">${isVi ? 'Tin tức' : 'Blog'}</a> / <span>${isVi ? post.titleVi : post.titleEn}</span>`;
+      breadcrumbBox.innerHTML = `<a href="blog.html">${isVi ? 'Tin tá»©c' : 'Blog'}</a> / <span>${isVi ? post.titleVi : post.titleEn}</span>`;
       breadcrumbBox.removeAttribute('data-i18n');
 
       const mainTitle = document.getElementById('page-main-title');
-      mainTitle.textContent = isVi ? 'Chi tiết bài viết' : 'Article Details';
+      mainTitle.textContent = isVi ? 'Chi tiáº¿t bÃ i viáº¿t' : 'Article Details';
       mainTitle.removeAttribute('data-i18n');
 
       const contentBox = document.getElementById('blog-content');
@@ -427,9 +429,9 @@
             <h1 class="post-detail-title">${isVi ? post.titleVi : post.titleEn}</h1>
             <div class="post-detail-meta">
               <span class="blog-post-cat-badge">${isVi ? post.categoryNameVi : post.categoryNameEn}</span>
-              <span>📅 ${formatDate(post.date)}</span>
-              <span>⏱️ ${isVi ? post.readTimeVi : post.readTimeEn}</span>
-              <span>✍️ ${post.author}</span>
+              <span>ðŸ“… ${formatDate(post.date)}</span>
+              <span>â±ï¸ ${isVi ? post.readTimeVi : post.readTimeEn}</span>
+              <span>âœï¸ ${post.author}</span>
             </div>
           </div>
           
@@ -440,18 +442,18 @@
             ${isVi ? post.contentVi : post.contentEn}
           </div>
           
-          <!-- Social sharing widget (Tiêu chí 54) -->
+          <!-- Social sharing widget (TiÃªu chÃ­ 54) -->
           <div class="post-detail-share-box">
-            <span class="post-share-title">${isVi ? 'Chia sẻ bài viết này:' : 'Share this article:'}</span>
+            <span class="post-share-title">${isVi ? 'Chia sáº» bÃ i viáº¿t nÃ y:' : 'Share this article:'}</span>
             <div class="share-btns">
               <button class="share-btn share-btn--fb" onclick="shareSocial('facebook')">
-                📘 Facebook
+                ðŸ“˜ Facebook
               </button>
               <button class="share-btn share-btn--tw" onclick="shareSocial('twitter')">
-                🐦 Twitter/X
+                ðŸ¦ Twitter/X
               </button>
               <button class="share-btn share-btn--copy" onclick="copyPostLink()">
-                🔗 ${isVi ? 'Sao chép liên kết' : 'Copy link'}
+                ðŸ”— ${isVi ? 'Sao chÃ©p liÃªn káº¿t' : 'Copy link'}
               </button>
             </div>
           </div>
@@ -502,13 +504,13 @@
     function copyPostLink() {
       navigator.clipboard.writeText(window.location.href).then(() => {
         const lang = window.i18n ? window.i18n.getLang() : 'vi';
-        showToast(lang === 'vi' ? 'Đã sao chép liên kết bài viết!' : 'Article link copied to clipboard!');
+        showToast(lang === 'vi' ? 'ÄÃ£ sao chÃ©p liÃªn káº¿t bÃ i viáº¿t!' : 'Article link copied to clipboard!');
       }).catch(() => {
-        showToast('Lỗi sao chép!', 'error');
+        showToast('Lá»—i sao chÃ©p!', 'error');
       });
     }
 
-    // Populate Sidebar Recent Posts widget (Tiêu chí 53)
+    // Populate Sidebar Recent Posts widget (TiÃªu chÃ­ 53)
     const recentBox = document.getElementById('sidebar-recent-posts');
     recentBox.innerHTML = BLOG_POSTS.slice(0, 3).map(p => `
       <li class="widget-recent-post">
@@ -528,48 +530,50 @@
   <script src="js/i18n.js"></script>
 
   <!-- Mobile Bottom Navigation -->
-  <nav class="mobile-bottom-nav" aria-label="Điều hướng di động">
+  <nav class="mobile-bottom-nav" aria-label="Äiá»u hÆ°á»›ng di Ä‘á»™ng">
     <div class="mobile-bottom-nav__inner">
-      <a href="index.html" class="mobile-bottom-nav__item" aria-label="Trang chủ">
+      <a href="index.html" class="mobile-bottom-nav__item" aria-label="Trang chá»§">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
           <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
-        <span>Trang chủ</span>
+        <span>Trang chá»§</span>
       </a>
-      <a href="products.html" class="mobile-bottom-nav__item" aria-label="Sản phẩm">
+      <a href="products.html" class="mobile-bottom-nav__item" aria-label="Sáº£n pháº©m">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="7" height="7" />
           <rect x="14" y="3" width="7" height="7" />
           <rect x="14" y="14" width="7" height="7" />
           <rect x="3" y="14" width="7" height="7" />
         </svg>
-        <span>Sản phẩm</span>
+        <span>Sáº£n pháº©m</span>
       </a>
-      <a href="cart.html" class="mobile-bottom-nav__item" aria-label="Giỏ hàng">
+      <a href="cart.html" class="mobile-bottom-nav__item" aria-label="Giá» hÃ ng">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
           <line x1="3" y1="6" x2="21" y2="6" />
           <path d="M16 10a4 4 0 0 1-8 0" />
         </svg>
-        <span>Giỏ hàng</span>
+        <span>Giá» hÃ ng</span>
       </a>
-      <a href="wishlist.html" class="mobile-bottom-nav__item" aria-label="Yêu thích">
+      <a href="wishlist.html" class="mobile-bottom-nav__item" aria-label="YÃªu thÃ­ch">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path
             d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
-        <span>Yêu thích</span>
+        <span>YÃªu thÃ­ch</span>
       </a>
-      <a href="login.html" class="mobile-bottom-nav__item" aria-label="Tài khoản">
+      <a href="login.html" class="mobile-bottom-nav__item" aria-label="TÃ i khoáº£n">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
         </svg>
-        <span>Tài khoản</span>
+        <span>TÃ i khoáº£n</span>
       </a>
     </div>
   </nav>
 </body>
 
 </html>
+
+

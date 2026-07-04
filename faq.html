@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Câu hỏi thường gặp — ShopVN</title>
-  <meta name="description" content="Các câu hỏi thường gặp về đơn hàng, thanh toán, vận chuyển và đổi trả tại ShopVN." />
+  <title>CÃ¢u há»i thÆ°á»ng gáº·p â€” ShopVN</title>
+  <meta name="description" content="CÃ¡c cÃ¢u há»i thÆ°á»ng gáº·p vá» Ä‘Æ¡n hÃ ng, thanh toÃ¡n, váº­n chuyá»ƒn vÃ  Ä‘á»•i tráº£ táº¡i ShopVN." />
 
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/components.css" />
@@ -16,36 +17,36 @@
 <!-- ========================================== -->
 <header class="navbar" role="banner">
   <div class="container">
-    <nav class="navbar__inner" aria-label="Điều hướng chính">
+    <nav class="navbar__inner" aria-label="Äiá»u hÆ°á»›ng chÃ­nh">
       <a href="index.html" class="navbar__logo">Shop<span>VN</span></a>
       <ul class="navbar__nav" role="list">
-        <li><a href="index.html"    class="navbar__link"><span data-i18n="nav.home">Trang chủ</span></a></li>
-        <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sản phẩm</span></a></li>
+        <li><a href="index.html"    class="navbar__link"><span data-i18n="nav.home">Trang chá»§</span></a></li>
+        <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sáº£n pháº©m</span></a></li>
         <li><a href="products.html?category=Laptop"     class="navbar__link"><span data-i18n="nav.laptop">Laptop</span></a></li>
-        <li><a href="products.html?category=Điện thoại" class="navbar__link"><span data-i18n="nav.phone">Điện thoại</span></a></li>
-        <li><a href="products.html?category=Phụ kiện"   class="navbar__link"><span data-i18n="nav.accessories">Phụ kiện</span></a></li>
+        <li><a href="products.html?category=Äiá»‡n thoáº¡i" class="navbar__link"><span data-i18n="nav.phone">Äiá»‡n thoáº¡i</span></a></li>
+        <li><a href="products.html?category=Phá»¥ kiá»‡n"   class="navbar__link"><span data-i18n="nav.accessories">Phá»¥ kiá»‡n</span></a></li>
       </ul>
       <div class="navbar__search" role="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--c-muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm"
+        <input type="search" placeholder="TÃ¬m laptop, Ä‘iá»‡n thoáº¡i, phá»¥ kiá»‡n..." aria-label="TÃ¬m kiáº¿m sáº£n pháº©m"
                onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
       </div>
       <div class="navbar__actions">
         <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
-          ✨
+          âœ¨
           <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
         </div>
-        <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
+        <a href="wishlist.html" class="navbar__cart-btn" aria-label="YÃªu thÃ­ch" style="margin-right:-4px">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           <span class="navbar__wish-count navbar__cart-count" style="display:none">0</span>
         </a>
-        <a href="cart.html" class="navbar__cart-btn" aria-label="Giỏ hàng">
+        <a href="cart.html" class="navbar__cart-btn" aria-label="Giá» hÃ ng">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           <span class="navbar__cart-count">0</span>
         </a>
         <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
-          <a href="login.html" class="btn btn-ghost btn-sm"><span data-i18n="auth.login">Đăng nhập</span></a>
-          <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">Đăng ký</span></a>
+          <a href="login.html" class="btn btn-ghost btn-sm"><span data-i18n="auth.login">ÄÄƒng nháº­p</span></a>
+          <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">ÄÄƒng kÃ½</span></a>
         </div>
       </div>
     </nav>
@@ -57,11 +58,11 @@
   <!-- ========================================== -->
   <section class="faq-hero">
     <div class="container">
-      <h1>Câu hỏi thường gặp</h1>
-      <p>Tìm câu trả lỗi nhanh cho các thắc mắc phổ biến</p>
+      <h1>CÃ¢u há»i thÆ°á»ng gáº·p</h1>
+      <p>TÃ¬m cÃ¢u tráº£ lá»—i nhanh cho cÃ¡c tháº¯c máº¯c phá»• biáº¿n</p>
       <div class="faq-search">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="search" id="faq-search-input" placeholder="Tìm câu hỏi..." aria-label="Tìm kiếm FAQ" />
+        <input type="search" id="faq-search-input" placeholder="TÃ¬m cÃ¢u há»i..." aria-label="TÃ¬m kiáº¿m FAQ" />
       </div>
     </div>
   </section>
@@ -70,12 +71,12 @@
 
     <!-- ========================================== -->
     <div class="faq-cats" id="faq-cats">
-      <button class="faq-cat-btn active" data-cat="all">Tất cả</button>
-      <button class="faq-cat-btn" data-cat="don-hang">📦 <span data-i18n="nav.orders">Đơn hàng</span></button>
-      <button class="faq-cat-btn" data-cat="thanh-toan">💳 <span data-i18n="checkout.title">Thanh toán</span></button>
-      <button class="faq-cat-btn" data-cat="van-chuyen">🚚 Vận chuyển</button>
-      <button class="faq-cat-btn" data-cat="doi-tra">🔄 Đổi trả</button>
-      <button class="faq-cat-btn" data-cat="tai-khoan">👤 <span data-i18n="footer.account">Tài khoản</span></button>
+      <button class="faq-cat-btn active" data-cat="all">Táº¥t cáº£</button>
+      <button class="faq-cat-btn" data-cat="don-hang">ðŸ“¦ <span data-i18n="nav.orders">ÄÆ¡n hÃ ng</span></button>
+      <button class="faq-cat-btn" data-cat="thanh-toan">ðŸ’³ <span data-i18n="checkout.title">Thanh toÃ¡n</span></button>
+      <button class="faq-cat-btn" data-cat="van-chuyen">ðŸšš Váº­n chuyá»ƒn</button>
+      <button class="faq-cat-btn" data-cat="doi-tra">ðŸ”„ Äá»•i tráº£</button>
+      <button class="faq-cat-btn" data-cat="tai-khoan">ðŸ‘¤ <span data-i18n="footer.account">TÃ i khoáº£n</span></button>
     </div>
 
     <!-- ========================================== -->
@@ -86,17 +87,17 @@
     <!-- ========================================== -->
     <div class="faq-no-results" id="faq-no-results">
       <div class="faq-no-results__icon">?</div>
-      <p style="font-weight:600;color:var(--c-text);margin-bottom:4px">Không tìm thấy kết quả</p>
-      <p>Thử từ khóa khác hoặc liên hệ với chúng tôi</p>
+      <p style="font-weight:600;color:var(--c-text);margin-bottom:4px">KhÃ´ng tÃ¬m tháº¥y káº¿t quáº£</p>
+      <p>Thá»­ tá»« khÃ³a khÃ¡c hoáº·c liÃªn há»‡ vá»›i chÃºng tÃ´i</p>
     </div>
 
     <!-- ========================================== -->
     <div class="faq-cta" style="margin-bottom:var(--sp-2xl)">
-      <div class="faq-cta__icon">🤔</div>
-      <div class="faq-cta__title">Không tìm thấy câu trả lời</div>
-      <p class="faq-cta__text">Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ bạn</p>
+      <div class="faq-cta__icon">ðŸ¤”</div>
+      <div class="faq-cta__title">KhÃ´ng tÃ¬m tháº¥y cÃ¢u tráº£ lá»i</div>
+      <p class="faq-cta__text">Äá»™i ngÅ© há»— trá»£ cá»§a chÃºng tÃ´i luÃ´n sáºµn sÃ ng giÃºp Ä‘á»¡ báº¡n</p>
       <a href="contact.html" class="btn btn-primary btn-lg">
-        <span data-i18n="footer.contact">Liên hệ</span> hỗ trợ
+        <span data-i18n="footer.contact">LiÃªn há»‡</span> há»— trá»£
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
     </div>
@@ -111,44 +112,45 @@
     <div class="footer__grid">
       <div>
         <div class="footer__brand-name">Shop<span>VN</span></div>
-        <p class="footer__desc">Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị điện tử, phụ kiện công nghệ chính hãng toàn quốc.</p>
+        <p class="footer__desc">Ná»n táº£ng thÆ°Æ¡ng máº¡i Ä‘iá»‡n tá»­ uy tÃ­n â€” chuyÃªn cung cáº¥p thiáº¿t bá»‹ Ä‘iá»‡n tá»­, phá»¥ kiá»‡n cÃ´ng nghá»‡ chÃ­nh hÃ£ng toÃ n quá»‘c.</p>
       </div>
       <div>
-        <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sắm</span></h3>
+        <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sáº¯m</span></h3>
         <ul class="footer__links">
-          <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
-          <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến mãi</span></a></li>
-          <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
-          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy nhất</span></a></li>
+          <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Táº¥t cáº£ sáº£n pháº©m</span></a></li>
+          <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyáº¿n mÃ£i</span></a></li>
+          <li><a href="products.html?sort=newest" class="footer__link">HÃ ng má»›i vá»</a></li>
+          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">BÃ¡n cháº¡y nháº¥t</span></a></li>
         </ul>
       </div>
       <div>
-        <h3 class="footer__heading"><span data-i18n="footer.account">Tài khoản</span></h3>
+        <h3 class="footer__heading"><span data-i18n="footer.account">TÃ i khoáº£n</span></h3>
         <ul class="footer__links">
-          <li><a href="login.html" class="footer__link"><span data-i18n="auth.login">Đăng nhập</span></a></li>
-          <li><a href="register.html" class="footer__link"><span data-i18n="auth.register">Đăng ký</span></a></li>
-          <li><a href="orders.html" class="footer__link"><span data-i18n="nav.orders">Đơn hàng</span></a></li>
-          <li><a href="cart.html" class="footer__link"><span data-i18n="nav.cart">Giỏ hàng</span></a></li>
+          <li><a href="login.html" class="footer__link"><span data-i18n="auth.login">ÄÄƒng nháº­p</span></a></li>
+          <li><a href="register.html" class="footer__link"><span data-i18n="auth.register">ÄÄƒng kÃ½</span></a></li>
+          <li><a href="orders.html" class="footer__link"><span data-i18n="nav.orders">ÄÆ¡n hÃ ng</span></a></li>
+          <li><a href="cart.html" class="footer__link"><span data-i18n="nav.cart">Giá» hÃ ng</span></a></li>
         </ul>
       </div>
       <div>
-        <h3 class="footer__heading"><span data-i18n="footer.support">Hỗ trợ</span></h3>
+        <h3 class="footer__heading"><span data-i18n="footer.support">Há»— trá»£</span></h3>
         <ul class="footer__links">
-          <li><a href="faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
-          <li><a href="contact.html" class="footer__link"><span data-i18n="footer.contact">Liên hệ</span></a></li>
-          <li><a href="faq.html#doi-tra" class="footer__link"><span data-i18n="footer.returns">Đổi trả hàng</span></a></li>
-          <li><a href="faq.html#van-chuyen" class="footer__link"><span data-i18n="footer.shipping">Chính sách vận chuyển</span></a></li>
+          <li><a href="faq.html" class="footer__link">CÃ¢u há»i thÆ°á»ng gáº·p</a></li>
+          <li><a href="contact.html" class="footer__link"><span data-i18n="footer.contact">LiÃªn há»‡</span></a></li>
+          <li><a href="faq.html#doi-tra" class="footer__link"><span data-i18n="footer.returns">Äá»•i tráº£ hÃ ng</span></a></li>
+          <li><a href="faq.html#van-chuyen" class="footer__link"><span data-i18n="footer.shipping">ChÃ­nh sÃ¡ch váº­n chuyá»ƒn</span></a></li>
         </ul>
       </div>
     </div>
     <div class="footer__bottom">
-      <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
-      <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+      <span>Â© 2024 ShopVN. Báº£o lÆ°u má»i quyá»n.</span>
+      <span>Made with â™¥ in ÄÃ  Náºµng, Viá»‡t Nam</span>
     </div>
   </div>
 </footer>
 
 
+<script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
@@ -162,39 +164,39 @@
   // FAQ Data
   const FAQ_DATA = [
     {
-      cat: 'don-hang', id: 'don-hang', title: '📦 <span data-i18n="nav.orders">Đơn hàng</span>', items: [
-        { q: 'Làm thế nào để đặt hàng', a: '<p>Bạn chỉ cần chỉ sản phẩm, thêm vào giỏ hàng và tiến hành thanh toán. Bạn có thể mua hàng mà không cần đăng ký tài khoản (Guest Checkout).</p>' },
-        { q: 'Tôi có thể hủy đơn hàng không', a: '<p>Bạn có thể hủy đơn hàng trong vòng <strong>24 giá</strong> sau khi đặt, nếu đơn hàng chưa được chuyển sang trạng thái "Đang giao". <span data-i18n="footer.contact">Liên hệ</span> hotline <strong>1800 9999</strong> để được hỗ trợ.</p>' },
-        { q: 'Làm sao để theo dõi đơn hàng', a: '<p>Sau khi đặt hàng, bạn sẽ nhận được email/SMS xác nhận kèm mã đơn hàng. Truy cập trang <strong><span data-i18n="nav.orders">Đơn hàng</span> của tôi</strong> để theo dõi trạng thái real-time.</p>' },
-        { q: 'Tôi có thể thay đổi địa chỉ giao hàng không', a: '<p>Bạn có thể thay đổi địa chỉ giao hàng trước khi đơn hàng được chuyển sang trạng thái "Đang đóng gói". <span data-i18n="footer.contact">Liên hệ</span> bộ phận CSKH để được hỗ trợ.</p>' },
+      cat: 'don-hang', id: 'don-hang', title: 'ðŸ“¦ <span data-i18n="nav.orders">ÄÆ¡n hÃ ng</span>', items: [
+        { q: 'LÃ m tháº¿ nÃ o Ä‘á»ƒ Ä‘áº·t hÃ ng', a: '<p>Báº¡n chá»‰ cáº§n chá»‰ sáº£n pháº©m, thÃªm vÃ o giá» hÃ ng vÃ  tiáº¿n hÃ nh thanh toÃ¡n. Báº¡n cÃ³ thá»ƒ mua hÃ ng mÃ  khÃ´ng cáº§n Ä‘Äƒng kÃ½ tÃ i khoáº£n (Guest Checkout).</p>' },
+        { q: 'TÃ´i cÃ³ thá»ƒ há»§y Ä‘Æ¡n hÃ ng khÃ´ng', a: '<p>Báº¡n cÃ³ thá»ƒ há»§y Ä‘Æ¡n hÃ ng trong vÃ²ng <strong>24 giÃ¡</strong> sau khi Ä‘áº·t, náº¿u Ä‘Æ¡n hÃ ng chÆ°a Ä‘Æ°á»£c chuyá»ƒn sang tráº¡ng thÃ¡i "Äang giao". <span data-i18n="footer.contact">LiÃªn há»‡</span> hotline <strong>1800 9999</strong> Ä‘á»ƒ Ä‘Æ°á»£c há»— trá»£.</p>' },
+        { q: 'LÃ m sao Ä‘á»ƒ theo dÃµi Ä‘Æ¡n hÃ ng', a: '<p>Sau khi Ä‘áº·t hÃ ng, báº¡n sáº½ nháº­n Ä‘Æ°á»£c email/SMS xÃ¡c nháº­n kÃ¨m mÃ£ Ä‘Æ¡n hÃ ng. Truy cáº­p trang <strong><span data-i18n="nav.orders">ÄÆ¡n hÃ ng</span> cá»§a tÃ´i</strong> Ä‘á»ƒ theo dÃµi tráº¡ng thÃ¡i real-time.</p>' },
+        { q: 'TÃ´i cÃ³ thá»ƒ thay Ä‘á»•i Ä‘á»‹a chá»‰ giao hÃ ng khÃ´ng', a: '<p>Báº¡n cÃ³ thá»ƒ thay Ä‘á»•i Ä‘á»‹a chá»‰ giao hÃ ng trÆ°á»›c khi Ä‘Æ¡n hÃ ng Ä‘Æ°á»£c chuyá»ƒn sang tráº¡ng thÃ¡i "Äang Ä‘Ã³ng gÃ³i". <span data-i18n="footer.contact">LiÃªn há»‡</span> bá»™ pháº­n CSKH Ä‘á»ƒ Ä‘Æ°á»£c há»— trá»£.</p>' },
       ]
     },
     {
-      cat: 'thanh-toan', id: 'thanh-toan', title: '💳 Thanh toán', items: [
-        { q: 'ShopVN hỗ trợ những phương thức thanh toán nào?', a: '<p>Chúng tôi hỗ trợ nhiều phương thức thanh toán:</p><ul><li>💳 Thẻ quốc tế (Visa/Mastercard/JCB)</li><li>📱 Ví điện tử (MoMo, ZaloPay, VNPay)</li><li>🏦 Chuyển khoản ngân hàng (VietQR)</li><li>💰 COD (Thanh toán khi nhận hàng)</li></ul>' },
-        { q: 'Thanh toán trên ShopVN có an toàn không', a: '<p>Tuyệt đối an toàn. ShopVN sử dụng mã hóa SSL 256-bit, tuân thủ chuẩn PCI DSS. Chúng tôi <strong>không lưu trữ</strong> thông tin thẻ của bạn — mã giao dịch được xử lý qua các cổng thanh toán uy tín.</p>' },
-        { q: 'Tôi có thể sử dụng mã giảm giá không', a: '<p>Có! Tại bước thanh toán, bạn sẽ thấy ô "Mã giảm giá". Nhập mã và nhấn "Áp dụng". Một số mã hiện có: <strong>SHOPVN10</strong> (giảm 10%), <strong>WELCOME50</strong> (giảm 50k), <strong>FREESHIP</strong> (miễn phí ship).</p>' },
+      cat: 'thanh-toan', id: 'thanh-toan', title: 'ðŸ’³ Thanh toÃ¡n', items: [
+        { q: 'ShopVN há»— trá»£ nhá»¯ng phÆ°Æ¡ng thá»©c thanh toÃ¡n nÃ o?', a: '<p>ChÃºng tÃ´i há»— trá»£ nhiá»u phÆ°Æ¡ng thá»©c thanh toÃ¡n:</p><ul><li>ðŸ’³ Tháº» quá»‘c táº¿ (Visa/Mastercard/JCB)</li><li>ðŸ“± VÃ­ Ä‘iá»‡n tá»­ (MoMo, ZaloPay, VNPay)</li><li>ðŸ¦ Chuyá»ƒn khoáº£n ngÃ¢n hÃ ng (VietQR)</li><li>ðŸ’° COD (Thanh toÃ¡n khi nháº­n hÃ ng)</li></ul>' },
+        { q: 'Thanh toÃ¡n trÃªn ShopVN cÃ³ an toÃ n khÃ´ng', a: '<p>Tuyá»‡t Ä‘á»‘i an toÃ n. ShopVN sá»­ dá»¥ng mÃ£ hÃ³a SSL 256-bit, tuÃ¢n thá»§ chuáº©n PCI DSS. ChÃºng tÃ´i <strong>khÃ´ng lÆ°u trá»¯</strong> thÃ´ng tin tháº» cá»§a báº¡n â€” mÃ£ giao dá»‹ch Ä‘Æ°á»£c xá»­ lÃ½ qua cÃ¡c cá»•ng thanh toÃ¡n uy tÃ­n.</p>' },
+        { q: 'TÃ´i cÃ³ thá»ƒ sá»­ dá»¥ng mÃ£ giáº£m giÃ¡ khÃ´ng', a: '<p>CÃ³! Táº¡i bÆ°á»›c thanh toÃ¡n, báº¡n sáº½ tháº¥y Ã´ "MÃ£ giáº£m giÃ¡". Nháº­p mÃ£ vÃ  nháº¥n "Ãp dá»¥ng". Má»™t sá»‘ mÃ£ hiá»‡n cÃ³: <strong>SHOPVN10</strong> (giáº£m 10%), <strong>WELCOME50</strong> (giáº£m 50k), <strong>FREESHIP</strong> (miá»…n phÃ­ ship).</p>' },
       ]
     },
     {
-      cat: 'van-chuyen', title: '🚚 Vận chuyển', id: 'van-chuyen', items: [
-        { q: 'Thời gian giao hàng là bao lâu?', a: '<p>Thời gian giao hàng tùy khu vực:</p><ul><li><strong>Nội thành HCM/HN/ĐN:</strong> 1-2 ngày làm việc</li><li><strong>Ngoại thành:</strong> 2-3 ngày làm việc</li><li><strong>Tỉnh thành khác:</strong> 3-5 ngày làm việc</li></ul>' },
-        { q: 'Phí vận chuyển là bao nhiêu?', a: '<p>Miễn phí vận chuyển cho đơn hàng từ <strong>500.000đ</strong>. Đơn dưới 500k phí ship cố định <strong>30.000đ</strong> toàn quốc. <span data-i18n="checkout.use">Sử dụng</span> mã <strong>FREESHIP</strong> để được miễn phí vận chuyển.</p>' },
-        { q: 'ShopVN giao hàng vào cuối tuần không', a: '<p>Có, chúng tôi giao hàng <strong>7 ngày/tuần</strong> bao gồm cả Thứ Bảy và Chủ Nhật (trừ ngày lễ).</p>' },
+      cat: 'van-chuyen', title: 'ðŸšš Váº­n chuyá»ƒn', id: 'van-chuyen', items: [
+        { q: 'Thá»i gian giao hÃ ng lÃ  bao lÃ¢u?', a: '<p>Thá»i gian giao hÃ ng tÃ¹y khu vá»±c:</p><ul><li><strong>Ná»™i thÃ nh HCM/HN/ÄN:</strong> 1-2 ngÃ y lÃ m viá»‡c</li><li><strong>Ngoáº¡i thÃ nh:</strong> 2-3 ngÃ y lÃ m viá»‡c</li><li><strong>Tá»‰nh thÃ nh khÃ¡c:</strong> 3-5 ngÃ y lÃ m viá»‡c</li></ul>' },
+        { q: 'PhÃ­ váº­n chuyá»ƒn lÃ  bao nhiÃªu?', a: '<p>Miá»…n phÃ­ váº­n chuyá»ƒn cho Ä‘Æ¡n hÃ ng tá»« <strong>500.000Ä‘</strong>. ÄÆ¡n dÆ°á»›i 500k phÃ­ ship cá»‘ Ä‘á»‹nh <strong>30.000Ä‘</strong> toÃ n quá»‘c. <span data-i18n="checkout.use">Sá»­ dá»¥ng</span> mÃ£ <strong>FREESHIP</strong> Ä‘á»ƒ Ä‘Æ°á»£c miá»…n phÃ­ váº­n chuyá»ƒn.</p>' },
+        { q: 'ShopVN giao hÃ ng vÃ o cuá»‘i tuáº§n khÃ´ng', a: '<p>CÃ³, chÃºng tÃ´i giao hÃ ng <strong>7 ngÃ y/tuáº§n</strong> bao gá»“m cáº£ Thá»© Báº£y vÃ  Chá»§ Nháº­t (trá»« ngÃ y lá»…).</p>' },
       ]
     },
     {
-      cat: 'doi-tra', title: '🔄 Đổi trả', id: 'doi-tra', items: [
-        { q: 'Chính sách đổi trả của ShopVN như thế nào?', a: '<p>ShopVN áp dụng chính sách <strong>đổi trả trong 30 ngày</strong>:</p><ul><li><span data-i18n="nav.products">Sản phẩm</span> lỗi do nhà sản xuất: Đổi mới hoặc hoàn tiền 100%</li><li><span data-i18n="nav.products">Sản phẩm</span> không đúng mô tả: Đổi mới hoặc hoàn tiền</li><li>Đổi ý: Chấp nhận đổi trả nếu sản phẩm chưa qua sử dụng, còn nguyên tem mác</li></ul>' },
-        { q: 'Hoàn tiền mất bao lâu?', a: '<p>Sau khi nhận được hàng trả, chúng tôi sẽ xử lý hoàn tiền trong <strong>3-5 ngày làm việc</strong>. Tiền sẽ được hoàn về phương thức thanh toán ban đầu.</p>' },
-        { q: 'Ai chịu phí vận chuyển khi đổi trả?', a: '<p>Nếu sản phẩm bị lỗi hoặc không đúng mô tả, <strong>ShopVN chịu toàn bộ chi phí</strong> vận chuyển đổi trả. Nếu đổi ý, khách hàng chịu phí ship trả hàng.</p>' },
+      cat: 'doi-tra', title: 'ðŸ”„ Äá»•i tráº£', id: 'doi-tra', items: [
+        { q: 'ChÃ­nh sÃ¡ch Ä‘á»•i tráº£ cá»§a ShopVN nhÆ° tháº¿ nÃ o?', a: '<p>ShopVN Ã¡p dá»¥ng chÃ­nh sÃ¡ch <strong>Ä‘á»•i tráº£ trong 30 ngÃ y</strong>:</p><ul><li><span data-i18n="nav.products">Sáº£n pháº©m</span> lá»—i do nhÃ  sáº£n xuáº¥t: Äá»•i má»›i hoáº·c hoÃ n tiá»n 100%</li><li><span data-i18n="nav.products">Sáº£n pháº©m</span> khÃ´ng Ä‘Ãºng mÃ´ táº£: Äá»•i má»›i hoáº·c hoÃ n tiá»n</li><li>Äá»•i Ã½: Cháº¥p nháº­n Ä‘á»•i tráº£ náº¿u sáº£n pháº©m chÆ°a qua sá»­ dá»¥ng, cÃ²n nguyÃªn tem mÃ¡c</li></ul>' },
+        { q: 'HoÃ n tiá»n máº¥t bao lÃ¢u?', a: '<p>Sau khi nháº­n Ä‘Æ°á»£c hÃ ng tráº£, chÃºng tÃ´i sáº½ xá»­ lÃ½ hoÃ n tiá»n trong <strong>3-5 ngÃ y lÃ m viá»‡c</strong>. Tiá»n sáº½ Ä‘Æ°á»£c hoÃ n vá» phÆ°Æ¡ng thá»©c thanh toÃ¡n ban Ä‘áº§u.</p>' },
+        { q: 'Ai chá»‹u phÃ­ váº­n chuyá»ƒn khi Ä‘á»•i tráº£?', a: '<p>Náº¿u sáº£n pháº©m bá»‹ lá»—i hoáº·c khÃ´ng Ä‘Ãºng mÃ´ táº£, <strong>ShopVN chá»‹u toÃ n bá»™ chi phÃ­</strong> váº­n chuyá»ƒn Ä‘á»•i tráº£. Náº¿u Ä‘á»•i Ã½, khÃ¡ch hÃ ng chá»‹u phÃ­ ship tráº£ hÃ ng.</p>' },
       ]
     },
     {
-      cat: 'tai-khoan', id: 'tai-khoan', title: '👤 Tài khoản', items: [
-        { q: 'Làm sao để tạo tài khoản', a: '<p>Nhấn nút <strong><span data-i18n="auth.register">Đăng ký</span></strong> ở góc phải trang web, điền thông tin và xác nhận email. Bạn cũng có thể đăng nhập bằng Google hoặc Facebook.</p>' },
-        { q: 'Tôi quên mật khẩu, phải làm sao?', a: '<p>Tại trang đăng nhập, nhấn <strong>"Quên mật khẩu"</strong>. Nhập email đã đăng ký, chúng tôi sẽ gửi link đặt lại mật khẩu trong vòng 5 phút.</p>' },
-        { q: 'Mua hàng có bắt buộc đăng ký tài khoản không', a: '<p>Không bắt buộc! Bạn có thể sử dụng <strong>Guest Checkout</strong> — chỉ cần nhập email, tên và địa chỉ giao hàng. Tuy nhiên, đăng ký tài khoản sẽ giúp bạn theo dõi đơn hàng và nhận ưu đãi.</p>' },
+      cat: 'tai-khoan', id: 'tai-khoan', title: 'ðŸ‘¤ TÃ i khoáº£n', items: [
+        { q: 'LÃ m sao Ä‘á»ƒ táº¡o tÃ i khoáº£n', a: '<p>Nháº¥n nÃºt <strong><span data-i18n="auth.register">ÄÄƒng kÃ½</span></strong> á»Ÿ gÃ³c pháº£i trang web, Ä‘iá»n thÃ´ng tin vÃ  xÃ¡c nháº­n email. Báº¡n cÅ©ng cÃ³ thá»ƒ Ä‘Äƒng nháº­p báº±ng Google hoáº·c Facebook.</p>' },
+        { q: 'TÃ´i quÃªn máº­t kháº©u, pháº£i lÃ m sao?', a: '<p>Táº¡i trang Ä‘Äƒng nháº­p, nháº¥n <strong>"QuÃªn máº­t kháº©u"</strong>. Nháº­p email Ä‘Ã£ Ä‘Äƒng kÃ½, chÃºng tÃ´i sáº½ gá»­i link Ä‘áº·t láº¡i máº­t kháº©u trong vÃ²ng 5 phÃºt.</p>' },
+        { q: 'Mua hÃ ng cÃ³ báº¯t buá»™c Ä‘Äƒng kÃ½ tÃ i khoáº£n khÃ´ng', a: '<p>KhÃ´ng báº¯t buá»™c! Báº¡n cÃ³ thá»ƒ sá»­ dá»¥ng <strong>Guest Checkout</strong> â€” chá»‰ cáº§n nháº­p email, tÃªn vÃ  Ä‘á»‹a chá»‰ giao hÃ ng. Tuy nhiÃªn, Ä‘Äƒng kÃ½ tÃ i khoáº£n sáº½ giÃºp báº¡n theo dÃµi Ä‘Æ¡n hÃ ng vÃ  nháº­n Æ°u Ä‘Ã£i.</p>' },
       ]
     },
   ];
@@ -310,7 +312,11 @@
 <script src="js/i18n.js"></script>
 </body>
 </html>
-
-
+
+
+
+
+
+
 
 

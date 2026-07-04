@@ -16,15 +16,47 @@ require('./src/models/Review');
 require('./src/models/MasterInventory');
 require('./src/models/InventoryTransaction');
 require('./src/models/LoyaltyPoints');
+require('./src/models/ActionPlan');
 
 const app = express();
+app.set('trust proxy', 1);
+
+function getAllowedOrigins() {
+  const origins = [
+    process.env.FRONTEND_URL,
+    process.env.ADMIN_URL,
+    ...(process.env.CORS_ORIGINS || '').split(','),
+  ]
+    .map(origin => origin && origin.trim())
+    .filter(Boolean);
+
+  return [...new Set(origins)];
+}
 
 // ── Performance Middleware ────────────────────────────────────────────────────
 // GZIP compression - reduces response size by ~60%
 app.use(compression());
+app.disable('x-powered-by');
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-app.use(cors());
+const allowedOrigins = getAllowedOrigins();
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  credentials: true,
+}));
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 app.use(morgan('dev'));
@@ -75,13 +107,32 @@ app.use('/api/wms', wmsRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
 app.get('/health', (req, res) => {
-  const redisStatus = redisClient.connected ? 'connected' : 'disconnected';
+  const redisStatus = redisClient.isReady ? 'connected' : 'disconnected';
   res.json({
     status:    'OK',
     timestamp: new Date().toISOString(),
     env:       process.env.NODE_ENV,
     redis:     redisStatus
   });
+});
+
+app.get('/ready', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    res.json({
+      status: 'ready',
+      database: 'connected',
+      redis: redisClient.isReady ? 'connected' : 'disconnected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(503).json({
+      status: 'not_ready',
+      database: 'disconnected',
+      message: err.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // ── Global error handler ──────────────────────────────────────────────────────
@@ -106,6 +157,7 @@ sequelize
     // Seed sản phẩm mẫu nếu DB trống
     const productService = require('./src/services/product.service');
     await productService.seedIfEmpty();
+    await productService.ensureMasterInventory();
 
     app.listen(PORT, () => {
       console.log(`\x1b[32m🚀 Server running → http://localhost:${PORT}\x1b[0m`);

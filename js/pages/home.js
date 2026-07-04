@@ -15,9 +15,25 @@ window.addEventListener('scroll', () => {
 
 // ── Render helpers ────────────────────────────────────────────────────────────
 
+function getProductRating(product) {
+  const reviews = JSON.parse(localStorage.getItem(`reviews_${product.id}`) || '[]');
+  if (reviews.length) {
+    const avg = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length;
+    return Math.max(0, Math.min(5, avg));
+  }
+  return Number(product.rating || 4.8);
+}
+
+function getProductSoldCount(product) {
+  if (product.soldCount || product.sold) return product.soldCount || product.sold;
+  return Math.max(24, ((Number(product.id) || 1) * 37) % 900);
+}
+
 function renderProductCard(product, delay = 0) {
   const disc = calcDiscount(product.price, product.oldPrice);
   const inWish = LocalWishlist.has(product.id);
+  const rating = getProductRating(product);
+  const sold = getProductSoldCount(product);
   return `
     <article class="product-card fade-up" style="animation-delay:${delay}s"
              onclick="window.location.href='product-detail.html?id=${product.id}'">
@@ -39,6 +55,10 @@ function renderProductCard(product, delay = 0) {
       <div class="product-card__body">
         <p class="product-card__cat">${product.category}</p>
         <h3 class="product-card__name">${product.name}</h3>
+        <div class="product-card__meta" aria-label="${rating.toFixed(1)} sao, đã bán ${sold}">
+          <span class="product-card__rating">★ ${rating.toFixed(1)}</span>
+          <span class="product-card__sold">Đã bán ${sold}+</span>
+        </div>
         <div class="product-card__price-row">
           <div>
             <span class="product-card__price">${formatPrice(product.price)}</span>
@@ -46,7 +66,9 @@ function renderProductCard(product, delay = 0) {
           </div>
           <button class="product-card__add"
                   onclick="event.stopPropagation(); addToCart(${product.id})"
-                  aria-label="Thêm vào giỏ hàng">+</button>
+                  aria-label="Thêm ${product.name} vào giỏ hàng">
+            <span>Thêm</span>
+          </button>
         </div>
       </div>
     </article>

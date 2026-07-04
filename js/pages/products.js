@@ -37,6 +37,12 @@ const CATEGORIES = [
 
 // ── Read / Write URL params ───────────────────────────────────────────────────
 
+const PRICE_FILTER = {
+  min: 0,
+  max: 50000000,
+  step: 500000,
+};
+
 function readParamsFromURL() {
   const p = new URLSearchParams(window.location.search);
   state.q        = p.get('q')        || '';
@@ -174,6 +180,101 @@ function getPaginatedProducts(allFiltered) {
   return { items, total, totalPages };
 }
 
+function clampPrice(value) {
+  const number = parseInt(value, 10);
+  if (Number.isNaN(number)) return '';
+  return Math.min(Math.max(number, PRICE_FILTER.min), PRICE_FILTER.max);
+}
+
+function updatePriceRangeUI() {
+  const minInput = document.getElementById('price-min');
+  const maxInput = document.getElementById('price-max');
+  const minRange = document.getElementById('price-range-min');
+  const maxRange = document.getElementById('price-range-max');
+  const minLabel = document.getElementById('price-range-min-label');
+  const maxLabel = document.getElementById('price-range-max-label');
+
+  const minValue = state.minPrice ? clampPrice(state.minPrice) : PRICE_FILTER.min;
+  const maxValue = state.maxPrice ? clampPrice(state.maxPrice) : PRICE_FILTER.max;
+  const safeMin = Math.min(minValue, maxValue);
+  const safeMax = Math.max(minValue, maxValue);
+
+  if (minInput) minInput.value = state.minPrice;
+  if (maxInput) maxInput.value = state.maxPrice;
+  if (minRange) minRange.value = safeMin;
+  if (maxRange) maxRange.value = safeMax;
+  if (minLabel) minLabel.textContent = formatPrice(safeMin);
+  if (maxLabel) maxLabel.textContent = formatPrice(safeMax);
+}
+
+function syncPriceInputsFromRanges() {
+  const minRange = document.getElementById('price-range-min');
+  const maxRange = document.getElementById('price-range-max');
+  const minInput = document.getElementById('price-min');
+  const maxInput = document.getElementById('price-max');
+  const minLabel = document.getElementById('price-range-min-label');
+  const maxLabel = document.getElementById('price-range-max-label');
+  if (!minRange || !maxRange) return;
+
+  let minValue = clampPrice(minRange.value) || PRICE_FILTER.min;
+  let maxValue = clampPrice(maxRange.value) || PRICE_FILTER.max;
+  if (minValue > maxValue) [minValue, maxValue] = [maxValue, minValue];
+
+  minRange.value = minValue;
+  maxRange.value = maxValue;
+  if (minInput) minInput.value = minValue === PRICE_FILTER.min ? '' : minValue;
+  if (maxInput) maxInput.value = maxValue === PRICE_FILTER.max ? '' : maxValue;
+  if (minLabel) minLabel.textContent = formatPrice(minValue);
+  if (maxLabel) maxLabel.textContent = formatPrice(maxValue);
+}
+
+function syncPriceRangesFromInputs() {
+  const minInput = document.getElementById('price-min');
+  const maxInput = document.getElementById('price-max');
+  const minRange = document.getElementById('price-range-min');
+  const maxRange = document.getElementById('price-range-max');
+  const minLabel = document.getElementById('price-range-min-label');
+  const maxLabel = document.getElementById('price-range-max-label');
+  if (!minRange || !maxRange) return;
+
+  const minValue = minInput?.value ? clampPrice(minInput.value) : PRICE_FILTER.min;
+  const maxValue = maxInput?.value ? clampPrice(maxInput.value) : PRICE_FILTER.max;
+  const safeMin = Math.min(minValue, maxValue);
+  const safeMax = Math.max(minValue, maxValue);
+
+  minRange.value = safeMin;
+  maxRange.value = safeMax;
+  if (minLabel) minLabel.textContent = formatPrice(safeMin);
+  if (maxLabel) maxLabel.textContent = formatPrice(safeMax);
+}
+
+function applyPriceFilterFromControls() {
+  const rawMin = clampPrice(document.getElementById('price-min')?.value);
+  const rawMax = clampPrice(document.getElementById('price-max')?.value);
+  const hasMin = rawMin !== '';
+  const hasMax = rawMax !== '';
+  const safeMin = hasMin && hasMax ? Math.min(rawMin, rawMax) : rawMin;
+  const safeMax = hasMin && hasMax ? Math.max(rawMin, rawMax) : rawMax;
+
+  state.minPrice = safeMin === '' || safeMin === PRICE_FILTER.min ? '' : String(safeMin);
+  state.maxPrice = safeMax === '' || safeMax === PRICE_FILTER.max ? '' : String(safeMax);
+  applyFilters();
+}
+
+function getProductRating(product) {
+  const reviews = JSON.parse(localStorage.getItem(`reviews_${product.id}`) || '[]');
+  if (reviews.length) {
+    const avg = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length;
+    return Math.max(0, Math.min(5, avg));
+  }
+  return Number(product.rating || 4.8);
+}
+
+function getProductSoldCount(product) {
+  if (product.soldCount || product.sold) return product.soldCount || product.sold;
+  return Math.max(24, ((Number(product.id) || 1) * 37) % 900);
+}
+
 // ── Render: Sidebar ───────────────────────────────────────────────────────────
 
 function renderSidebar() {
@@ -205,9 +306,10 @@ function renderSidebar() {
   const maxEl = document.getElementById('price-max');
   if (minEl) minEl.value = state.minPrice;
   if (maxEl) maxEl.value = state.maxPrice;
+  updatePriceRangeUI();
 
   // Show/hide clear button
-  const hasFilter = state.q || state.category || state.minPrice || state.maxPrice || state.inStock || state.isNew || state.onSale;
+  const hasFilter = state.q || state.category || state.minPrice || state.maxPrice || state.rating || state.inStock || state.isNew || state.onSale;
   document.getElementById('filter-clear')
     ?.classList.toggle('show', !!hasFilter);
 
@@ -310,6 +412,8 @@ function renderActiveTags() {
 function renderProductCard(product, delay = 0) {
   const disc = calcDiscount(product.price, product.oldPrice);
   const inWish = LocalWishlist.has(product.id);
+  const rating = getProductRating(product);
+  const sold = getProductSoldCount(product);
   return `
     <article class="product-card fade-up" style="animation-delay:${delay}s"
              onclick="window.location.href='product-detail.html?id=${product.id}'">
@@ -331,6 +435,10 @@ function renderProductCard(product, delay = 0) {
       <div class="product-card__body">
         <p class="product-card__cat">${product.category}</p>
         <h3 class="product-card__name">${product.name}</h3>
+        <div class="product-card__meta" aria-label="${rating.toFixed(1)} sao, đã bán ${sold}">
+          <span class="product-card__rating">★ ${rating.toFixed(1)}</span>
+          <span class="product-card__sold">Đã bán ${sold}+</span>
+        </div>
         <div class="product-card__price-row">
           <div>
             <span class="product-card__price">${formatPrice(product.price)}</span>
@@ -340,7 +448,9 @@ function renderProductCard(product, delay = 0) {
           </div>
           <button class="product-card__add"
                   onclick="event.stopPropagation(); addToCartFromGrid(${product.id})"
-                  aria-label="Thêm vào giỏ hàng">+</button>
+                  aria-label="Thêm ${product.name} vào giỏ hàng">
+            <span>Thêm</span>
+          </button>
         </div>
       </div>
     </article>
@@ -358,6 +468,26 @@ function toggleWishlist(productId) {
       btn.classList.toggle('active', isNowInWish);
     }
   });
+}
+
+function renderGridSkeleton(count = state.perPage) {
+  const grid = document.getElementById('products-grid');
+  if (!grid) return;
+
+  grid.innerHTML = Array.from({ length: count }).map(() => `
+    <article class="product-card product-card--skeleton" aria-hidden="true">
+      <div class="product-card__img ux-skeleton"></div>
+      <div class="product-card__body">
+        <div class="ux-skeleton ux-skeleton-line ux-skeleton-line--xs"></div>
+        <div class="ux-skeleton ux-skeleton-line ux-skeleton-line--lg"></div>
+        <div class="ux-skeleton ux-skeleton-line ux-skeleton-line--md"></div>
+        <div class="product-card__price-row">
+          <div class="ux-skeleton ux-skeleton-line ux-skeleton-line--price"></div>
+          <div class="ux-skeleton ux-skeleton-button"></div>
+        </div>
+      </div>
+    </article>
+  `).join('');
 }
 
 function renderGrid(items) {
@@ -436,23 +566,35 @@ function renderPagination(totalPages) {
 // ── Master render ─────────────────────────────────────────────────────────────
 
 async function renderAll() {
-  let items, total, totalPages;
-  try {
-    const res = await fetchProductsFromAPI();
-    items = res.items;
-    total = res.total;
-    totalPages = res.totalPages;
-  } catch (err) {
-    const filtered   = getFilteredProducts();
-    const paginated = getPaginatedProducts(filtered);
-    items = paginated.items;
-    total = paginated.total;
-    totalPages = paginated.totalPages;
-  }
+  const localPaginated = getPaginatedProducts(getFilteredProducts());
+  let items = localPaginated.items;
+  let total = localPaginated.total;
+  let totalPages = localPaginated.totalPages;
 
   renderSidebar();
   renderToolbar(total);
   renderActiveTags();
+  renderGrid(items);
+  renderPagination(totalPages);
+
+  try {
+    const res = await fetchProductsFromAPI();
+    items = res.items || [];
+    total = res.total || 0;
+    totalPages = res.totalPages || 1;
+
+    if (items.length === 0 && localPaginated.total > 0) {
+      items = localPaginated.items;
+      total = localPaginated.total;
+      totalPages = localPaginated.totalPages;
+    }
+  } catch (err) {
+    items = localPaginated.items;
+    total = localPaginated.total;
+    totalPages = localPaginated.totalPages;
+  }
+
+  renderToolbar(total);
   renderGrid(items);
   renderPagination(totalPages);
 }
@@ -530,11 +672,14 @@ function bindEvents() {
   // Price filter — apply khi nhấn Enter hoặc blur
   ['price-min', 'price-max'].forEach(id => {
     const el = document.getElementById(id);
-    el?.addEventListener('change', () => {
-      state.minPrice = document.getElementById('price-min').value;
-      state.maxPrice = document.getElementById('price-max').value;
-      applyFilters();
-    });
+    el?.addEventListener('input', syncPriceRangesFromInputs);
+    el?.addEventListener('change', applyPriceFilterFromControls);
+  });
+
+  ['price-range-min', 'price-range-max'].forEach(id => {
+    const el = document.getElementById(id);
+    el?.addEventListener('input', syncPriceInputsFromRanges);
+    el?.addEventListener('change', applyPriceFilterFromControls);
   });
 
   // Browser back/forward giữ filter

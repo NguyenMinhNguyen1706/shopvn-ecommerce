@@ -1,332 +1,682 @@
-﻿<!DOCTYPE html>
-<html lang="vi">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chi tiết sản phẩm — ShopVN</title>
-
-  <link rel="stylesheet" href="css/variables.css" />
-  <link rel="stylesheet" href="css/components.css" />
-  <link rel="stylesheet" href="css/pages/product-detail.css" />
-  <link rel="stylesheet" href="css/lucky-wheel.css" />
+﻿<!DOCTYPE html>
+
+<html lang="vi">
+
+
+
+<head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Chi tiết sản phẩm — ShopVN</title>
+
+
+
+  <link rel="stylesheet" href="css/variables.css" />
+
+  <link rel="stylesheet" href="css/components.css" />
+
+  <link rel="stylesheet" href="css/pages/product-detail.css" />
+
+  <link rel="stylesheet" href="css/lucky-wheel.css" />
+
   <link rel="stylesheet" href="css/mobile-nav.css" />
-</head>
-
-<body>
-
-  <!-- ========================================== -->
-  <header class="navbar" role="banner">
-    <div class="container">
-      <nav class="navbar__inner" aria-label="Điều hướng chính">
-
-        <a href="index.html" class="navbar__logo">Shop<span>VN</span></a>
-
-        <ul class="navbar__nav" role="list">
-          <li><a href="index.html" class="navbar__link"><span data-i18n="nav.home">Trang chủ</span></a></li>
-          <li><a href="products.html" class="navbar__link active"><span data-i18n="nav.products">Sản phẩm</span></a></li>
-          <li><a href="products.html?category=Laptop" class="navbar__link"><span data-i18n="nav.laptop">Laptop</span></a></li>
-          <li><a href="products.html?category=Điện thoại" class="navbar__link"><span data-i18n="nav.phone">Điện thoại</span></a></li>
-          <li><a href="products.html?category=Phụ kiện" class="navbar__link"><span data-i18n="nav.accessories">Phụ kiện</span></a></li>
-        </ul>
-
-        <div class="navbar__search" role="search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            aria-hidden="true" style="color:var(--c-muted);flex-shrink:0">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm"
-            onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
-        </div>
-
+</head>
+
+
+
+<body>
+
+
+
+  <!-- ========================================== -->
+
+  <header class="navbar" role="banner">
+
+    <div class="container">
+
+      <nav class="navbar__inner" aria-label="Điều hướng chính">
+
+
+
+        <a href="index.html" class="navbar__logo">Shop<span>VN</span></a>
+
+
+
+        <ul class="navbar__nav" role="list">
+
+          <li><a href="index.html" class="navbar__link"><span data-i18n="nav.home">Trang chủ</span></a></li>
+
+          <li><a href="products.html" class="navbar__link active"><span data-i18n="nav.products">Sản phẩm</span></a></li>
+
+          <li><a href="products.html?category=Laptop" class="navbar__link"><span data-i18n="nav.laptop">Laptop</span></a></li>
+
+          <li><a href="products.html?category=Điện thoại" class="navbar__link"><span data-i18n="nav.phone">Điện thoại</span></a></li>
+
+          <li><a href="products.html?category=Phụ kiện" class="navbar__link"><span data-i18n="nav.accessories">Phụ kiện</span></a></li>
+
+        </ul>
+
+
+
+        <div class="navbar__search" role="search">
+
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+
+            aria-hidden="true" style="color:var(--c-muted);flex-shrink:0">
+
+            <circle cx="11" cy="11" r="8" />
+
+            <path d="m21 21-4.35-4.35" />
+
+          </svg>
+
+          <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
+
+            onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
+
+        </div>
+
+
+
         <div class="navbar__actions">
         <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
           ✨
           <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
-        </div>
-          <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path
-                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-            <span class="navbar__wish-count navbar__cart-count" aria-live="polite" style="display:none">0</span>
-          </a>
-          <a href="cart.html" class="navbar__cart-btn" aria-label="Giỏ hàng">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              aria-hidden="true">
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-            <span class="navbar__cart-count" aria-live="polite">0</span>
-          </a>
-          <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
-            <a href="login.html" class="btn btn-ghost btn-sm"><span data-i18n="auth.login">Đăng nhập</span></a>
-            <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">Đăng ký</span></a>
-          </div>
-        </div>
-
-      </nav>
-    </div>
-  </header>
-
-
-  <!-- ========================================== -->
-  <div class="detail-page">
-    <div class="container">
-
-      <!-- ========================================== -->
-      <nav aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
-        <ol style="display:flex;align-items:center;gap:6px;
-                 font-size:.82rem;color:var(--c-muted);list-style:none">
-          <li>
-            <a href="index.html" style="color:var(--c-muted);transition:color var(--dur)"
-              onmouseover="this.style.color='var(--c-blue)'" onmouseout="this.style.color='var(--c-muted)'">Trang
-              chủ</a>
-          </li>
-          <li aria-hidden="true">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </li>
-          <li>
-            <a id="breadcrumb-cat" href="products.html" style="color:var(--c-muted);transition:color var(--dur)"
-              onmouseover="this.style.color='var(--c-blue)'" onmouseout="this.style.color='var(--c-muted)'">Danh mục</a>
-          </li>
-          <li aria-hidden="true">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </li>
-          <li aria-current="page" style="color:var(--c-text);font-weight:500;
-                   white-space:nowrap;overflow:hidden;
-                   text-overflow:ellipsis;max-width:240px" id="breadcrumb-product">...</li>
-        </ol>
-      </nav>
-
-      <!-- ========================================== -->
-      <div class="detail-grid">
-
-        <!-- ========================================== -->
-        <div class="detail-img-panel">
-          <div class="detail-img-main" aria-label="Ảnh sản phẩm">
-            <span id="product-icon" style="line-height:1">📦</span>
-          </div>
-          <div class="detail-img-thumbs" id="product-thumbs" role="list" aria-label="Ảnh thu nhỏ">
-            <!-- ========================================== -->
-          </div>
-        </div>
-
-        <!-- ========================================== -->
-        <div class="detail-info-panel">
-
-          <!-- ========================================== -->
-          <div class="detail-badges" id="product-badges">
-            <!-- ========================================== -->
-          </div>
-
-          <!-- ========================================== -->
-          <h1 class="detail-name" id="product-name">Đang tải...</h1>
-
-          <!-- ========================================== -->
-          <div class="detail-rating">
-            <div class="detail-stars" aria-label="4.8 sao">
-              ★★★★★
-            </div>
-            <span class="detail-rating-text">4.8 (128 đánh giá)</span>
-            <span style="color:var(--c-border)">|</span>
-            <span class="detail-rating-text">Đã bán 320+</span>
-          </div>
-
-          <!-- ========================================== -->
-          <div class="detail-price-row">
-            <span class="detail-price" id="product-price">—</span>
-            <span class="detail-price-old" id="product-price-old" style="display:none"></span>
-            <span class="detail-discount" id="product-discount" style="display:none"></span>
-          </div>
-
-          <!-- ========================================== -->
-          <div class="detail-stock">
-            <span class="detail-stock-dot" id="stock-dot"></span>
-            <span id="product-stock">Đang kiểm tra...</span>
-          </div>
-
-          <!-- ========================================== -->
-          <div class="detail-qty-row">
-            <span class="detail-qty-label">Số lượng</span>
-            <div class="qty-control" role="group" aria-label="Chuẩn số lượng">
-              <button class="qty-btn" id="qty-minus" onclick="changeQty(-1)" aria-label="Giảm số lượng">−</button>
-              <span class="qty-val" id="qty-val" aria-live="polite" aria-atomic="true">1</span>
-              <button class="qty-btn" id="qty-plus" onclick="changeQty(1)" aria-label="Tăng số lượng">+</button>
-            </div>
-          </div>
-
-          <!-- ========================================== -->
-          <div class="detail-actions">
-            <button class="btn btn-outline" onclick="addToCart()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                aria-hidden="true">
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
-              Thêm vào giá
-            </button>
-            <button class="btn btn-primary" onclick="buyNow()">
-              Mua ngay
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                aria-hidden="true">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
-            <button class="btn-wishlist" id="btn-wishlist" onclick="toggleWishlist(state.product?.id)"
-              aria-label="Thêm vào yêu thích">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06
-                       a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78
-                       1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            </button>
-          </div>
-
-          <!-- ========================================== -->
-          <div class="detail-meta" id="product-meta">
-            <!-- ========================================== -->
-          </div>
-
-        </div>
-      </div><!-- ========================================== -->
-
-
-      <!-- ========================================== -->
-      <div class="detail-tabs">
-
-        <div class="tab-list" role="tablist" aria-label="Thông tin sản phẩm">
-          <button class="tab-btn active" role="tab" data-tab="desc" aria-selected="true" onclick="switchTab('desc')">
-            Mô tả sản phẩm
-          </button>
-          <button class="tab-btn" role="tab" data-tab="specs" aria-selected="false" onclick="switchTab('specs')">
-            Thông số kỹ thuật
-          </button>
-          <button class="tab-btn" role="tab" data-tab="review" aria-selected="false" onclick="switchTab('review')">
-            Đánh giá (128)
-          </button>
-        </div>
-
-        <!-- ========================================== -->
-        <div class="tab-panel active" id="tab-desc" role="tabpanel" aria-label="Mô tả sản phẩm">
-          <!-- ========================================== -->
-        </div>
-
-        <!-- ========================================== -->
-        <div class="tab-panel" id="tab-specs" role="tabpanel" aria-label="Thông số kỹ thuật">
-          <!-- ========================================== -->
-        </div>
-
-        <!-- ========================================== -->
-        <div class="tab-panel" id="tab-review" role="tabpanel" aria-label="Đánh giá của khách hàng">
-          <div class="reviews-section">
-            <!-- ========================================== -->
-            <div class="reviews-list" id="reviews-list">
-              <!-- ========================================== -->
-            </div>
-
-            <!-- ========================================== -->
-            <div class="review-form-card" id="review-form-container">
-              <!-- ========================================== -->
-            </div>
-          </div>
-        </div>
-
-      </div><!-- ========================================== -->
-
-
-      <!-- ========================================== -->
-      <section class="related" id="bundle-section" aria-label="Thường được mua cùng" style="margin-bottom:var(--sp-xl)">
-        <div class="section-header">
-          <div class="section-header__left">
-            <p class="section-label">📦 Combo tiết kiệm</p>
-            <h2 class="section-title">Thường được mua cùng</h2>
-          </div>
-        </div>
-        <div id="bundle-grid" style="display:flex;gap:var(--sp-md);align-items:center;flex-wrap:wrap">
-          <!-- ========================================== -->
-        </div>
-      </section>
-
-      <!-- ========================================== -->
-      <section class="related" id="related-section" aria-label="Sản phẩm liên quan">
-        <div class="section-header">
-          <div class="section-header__left">
-            <p class="section-label">Có thể bạn thích</p>
-            <h2 class="section-title"><span data-i18n="nav.products">Sản phẩm</span> liên quan</h2>
-          </div>
-        </div>
-        <div class="related__grid" id="related-grid" role="list">
-          <!-- ========================================== -->
-        </div>
-      </section>
-
-    </div><!-- ========================================== -->
-  </div><!-- ========================================== -->
-
-
-  <!-- ========================================== -->
-  <footer class="footer" role="contentinfo">
-    <div class="container">
-      <div class="footer__grid">
-        <div>
-          <div class="footer__brand-name">Shop<span>VN</span></div>
-          <p class="footer__desc">
-            Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị
-            điện tử, phụ kiện công nghệ chính hãng toàn quốc.
-          </p>
-        </div>
-        <div>
-          <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sắm</span></h3>
-          <ul class="footer__links">
-            <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
-            <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến mãi</span></a></li>
-            <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
-            <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy nhất</span></a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer__heading"><span data-i18n="footer.account">Tài khoản</span></h3>
-          <ul class="footer__links">
-            <li><a href="login.html" class="footer__link"><span data-i18n="auth.login">Đăng nhập</span></a></li>
-            <li><a href="register.html" class="footer__link"><span data-i18n="auth.register">Đăng ký</span></a></li>
-            <li><a href="orders.html" class="footer__link"><span data-i18n="nav.orders">Đơn hàng</span></a></li>
-            <li><a href="cart.html" class="footer__link"><span data-i18n="nav.cart">Giỏ hàng</span></a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer__heading"><span data-i18n="footer.support">Hỗ trợ</span></h3>
-          <ul class="footer__links">
-            <li><a href="faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
-            <li><a href="contact.html" class="footer__link"><span data-i18n="footer.contact">Liên hệ</span></a></li>
-            <li><a href="faq.html#doi-tra" class="footer__link"><span data-i18n="footer.returns">Đổi trả hàng</span></a></li>
-            <li><a href="faq.html#van-chuyen" class="footer__link">Vận chuyển</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="footer__bottom">
-        <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
-        <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
-      </div>
-    </div>
-  </footer>
-
-
-  <!-- ========================================== -->
-  <script src="js/api.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/lucky-wheel.js"></script>
-  <script src="js/pages/product-detail.js"></script>
-
+        </div>
+
+          <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
+
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+              <path
+
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+
+            </svg>
+
+            <span class="navbar__wish-count navbar__cart-count" aria-live="polite" style="display:none">0</span>
+
+          </a>
+
+          <a href="cart.html" class="navbar__cart-btn" aria-label="Giỏ hàng">
+
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+
+              aria-hidden="true">
+
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+
+              <line x1="3" y1="6" x2="21" y2="6" />
+
+              <path d="M16 10a4 4 0 0 1-8 0" />
+
+            </svg>
+
+            <span class="navbar__cart-count" aria-live="polite">0</span>
+
+          </a>
+
+          <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
+
+            <a href="login.html" class="btn btn-ghost btn-sm"><span data-i18n="auth.login">Đăng nhập</span></a>
+
+            <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">Đăng ký</span></a>
+
+          </div>
+
+        </div>
+
+
+
+      </nav>
+
+    </div>
+
+  </header>
+
+
+
+
+
+  <!-- ========================================== -->
+
+  <div class="detail-page">
+
+    <div class="container">
+
+
+
+      <!-- ========================================== -->
+
+      <nav aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
+
+        <ol style="display:flex;align-items:center;gap:6px;
+
+                 font-size:.82rem;color:var(--c-muted);list-style:none">
+
+          <li>
+
+            <a href="index.html" style="color:var(--c-muted);transition:color var(--dur)"
+
+              onmouseover="this.style.color='var(--c-blue)'" onmouseout="this.style.color='var(--c-muted)'">Trang
+
+              chủ</a>
+
+          </li>
+
+          <li aria-hidden="true">
+
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+              <path d="M9 18l6-6-6-6" />
+
+            </svg>
+
+          </li>
+
+          <li>
+
+            <a id="breadcrumb-cat" href="products.html" style="color:var(--c-muted);transition:color var(--dur)"
+
+              onmouseover="this.style.color='var(--c-blue)'" onmouseout="this.style.color='var(--c-muted)'">Danh mục</a>
+
+          </li>
+
+          <li aria-hidden="true">
+
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+              <path d="M9 18l6-6-6-6" />
+
+            </svg>
+
+          </li>
+
+          <li aria-current="page" style="color:var(--c-text);font-weight:500;
+
+                   white-space:nowrap;overflow:hidden;
+
+                   text-overflow:ellipsis;max-width:240px" id="breadcrumb-product">...</li>
+
+        </ol>
+
+      </nav>
+
+
+
+      <!-- ========================================== -->
+
+      <div class="detail-grid">
+
+
+
+        <!-- ========================================== -->
+
+        <div class="detail-img-panel">
+
+          <div class="detail-img-main" aria-label="Ảnh sản phẩm">
+
+            <span id="product-icon" style="line-height:1">📦</span>
+
+          </div>
+
+          <div class="detail-img-thumbs" id="product-thumbs" role="list" aria-label="Ảnh thu nhỏ">
+
+            <!-- ========================================== -->
+
+          </div>
+
+        </div>
+
+
+
+        <!-- ========================================== -->
+
+        <div class="detail-info-panel">
+
+
+
+          <!-- ========================================== -->
+
+          <div class="detail-badges" id="product-badges">
+
+            <!-- ========================================== -->
+
+          </div>
+
+
+
+          <!-- ========================================== -->
+
+          <h1 class="detail-name" id="product-name">Đang tải...</h1>
+
+
+
+          <!-- ========================================== -->
+
+          <div class="detail-rating">
+            <div class="detail-stars" aria-label="4.8 sao">
+
+              ★★★★★
+
+            </div>
+
+            <span class="detail-rating-text">4.8 (128 đánh giá)</span>
+
+            <span style="color:var(--c-border)">|</span>
+
+            <span class="detail-rating-text">Đã bán 320+</span>
+
+          </div>
+
+          <div class="pdp-confidence-strip" aria-label="Lý do nên mua tại ShopVN">
+            <div class="pdp-confidence-item">
+              <strong>Chính hãng</strong>
+              <span>Bảo hành 12 tháng</span>
+            </div>
+            <div class="pdp-confidence-item">
+              <strong>Đổi trả 30 ngày</strong>
+              <span>Hỗ trợ nhanh</span>
+            </div>
+            <div class="pdp-confidence-item">
+              <strong>Giao nhanh</strong>
+              <span>Toàn quốc</span>
+            </div>
+          </div>
+
+
+          <!-- ========================================== -->
+
+          <div class="detail-price-row">
+
+            <span class="detail-price" id="product-price">—</span>
+
+            <span class="detail-price-old" id="product-price-old" style="display:none"></span>
+
+            <span class="detail-discount" id="product-discount" style="display:none"></span>
+
+          </div>
+
+
+
+          <!-- ========================================== -->
+
+          <div class="detail-stock">
+            <span class="detail-stock-dot" id="stock-dot"></span>
+
+            <span id="product-stock">Đang kiểm tra...</span>
+
+          </div>
+
+          <div class="pdp-decision-panel" aria-label="Thông tin hỗ trợ quyết định mua">
+            <div class="pdp-decision-row">
+              <span>Ưu đãi hôm nay</span>
+              <strong>Nhập SHOPVN50 giảm 50.000đ</strong>
+            </div>
+            <div class="pdp-decision-row">
+              <span>Giao dự kiến</span>
+              <strong>1-4 ngày tùy đơn vị vận chuyển</strong>
+            </div>
+            <div class="pdp-decision-row">
+              <span>Hỗ trợ mua hàng</span>
+              <strong>Chat hoặc gọi 1800 9999</strong>
+            </div>
+          </div>
+
+
+          <!-- ========================================== -->
+
+          <div class="detail-qty-row">
+
+            <span class="detail-qty-label">Số lượng</span>
+
+            <div class="qty-control" role="group" aria-label="Chuẩn số lượng">
+
+              <button class="qty-btn" id="qty-minus" onclick="changeQty(-1)" aria-label="Giảm số lượng">−</button>
+
+              <span class="qty-val" id="qty-val" aria-live="polite" aria-atomic="true">1</span>
+
+              <button class="qty-btn" id="qty-plus" onclick="changeQty(1)" aria-label="Tăng số lượng">+</button>
+
+            </div>
+
+          </div>
+
+
+
+          <!-- ========================================== -->
+
+          <div class="detail-actions">
+
+            <button class="btn btn-outline" onclick="addToCart()">
+
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+
+                aria-hidden="true">
+
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+
+                <line x1="3" y1="6" x2="21" y2="6" />
+
+                <path d="M16 10a4 4 0 0 1-8 0" />
+
+              </svg>
+
+              Thêm vào giỏ hàng
+            </button>
+
+            <button class="btn btn-primary" onclick="buyNow()">
+
+              Mua ngay
+
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+
+                aria-hidden="true">
+
+                <path d="M5 12h14M12 5l7 7-7 7" />
+
+              </svg>
+
+            </button>
+
+            <button class="btn-wishlist" id="btn-wishlist" onclick="toggleWishlist(state.product?.id)"
+
+              aria-label="Thêm vào yêu thích">
+
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06
+
+                       a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78
+
+                       1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+
+              </svg>
+
+            </button>
+
+          </div>
+
+
+
+          <!-- ========================================== -->
+
+          <div class="detail-meta" id="product-meta">
+
+            <!-- ========================================== -->
+
+          </div>
+
+
+
+        </div>
+
+      </div><!-- ========================================== -->
+
+
+
+
+
+      <!-- ========================================== -->
+
+      <div class="detail-tabs">
+
+
+
+        <div class="tab-list" role="tablist" aria-label="Thông tin sản phẩm">
+
+          <button class="tab-btn active" role="tab" data-tab="desc" aria-selected="true" onclick="switchTab('desc')">
+
+            Mô tả sản phẩm
+
+          </button>
+
+          <button class="tab-btn" role="tab" data-tab="specs" aria-selected="false" onclick="switchTab('specs')">
+
+            Thông số kỹ thuật
+
+          </button>
+
+          <button class="tab-btn" role="tab" data-tab="review" aria-selected="false" onclick="switchTab('review')">
+
+            Đánh giá (128)
+
+          </button>
+
+        </div>
+
+
+
+        <!-- ========================================== -->
+
+        <div class="tab-panel active" id="tab-desc" role="tabpanel" aria-label="Mô tả sản phẩm">
+
+          <!-- ========================================== -->
+
+        </div>
+
+
+
+        <!-- ========================================== -->
+
+        <div class="tab-panel" id="tab-specs" role="tabpanel" aria-label="Thông số kỹ thuật">
+
+          <!-- ========================================== -->
+
+        </div>
+
+
+
+        <!-- ========================================== -->
+
+        <div class="tab-panel" id="tab-review" role="tabpanel" aria-label="Đánh giá của khách hàng">
+
+          <div class="reviews-section">
+
+            <!-- ========================================== -->
+
+            <div class="reviews-list" id="reviews-list">
+
+              <!-- ========================================== -->
+
+            </div>
+
+
+
+            <!-- ========================================== -->
+
+            <div class="review-form-card" id="review-form-container">
+
+              <!-- ========================================== -->
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+
+      </div><!-- ========================================== -->
+
+
+
+
+
+      <!-- ========================================== -->
+
+      <section class="related" id="bundle-section" aria-label="Thường được mua cùng" style="margin-bottom:var(--sp-xl)">
+
+        <div class="section-header">
+
+          <div class="section-header__left">
+
+            <p class="section-label">📦 Combo tiết kiệm</p>
+
+            <h2 class="section-title">Thường được mua cùng</h2>
+
+          </div>
+
+        </div>
+
+        <div id="bundle-grid" style="display:flex;gap:var(--sp-md);align-items:center;flex-wrap:wrap">
+
+          <!-- ========================================== -->
+
+        </div>
+
+      </section>
+
+
+
+      <!-- ========================================== -->
+
+      <section class="related" id="related-section" aria-label="Sản phẩm liên quan">
+
+        <div class="section-header">
+
+          <div class="section-header__left">
+
+            <p class="section-label">Có thể bạn thích</p>
+
+            <h2 class="section-title"><span data-i18n="nav.products">Sản phẩm</span> liên quan</h2>
+
+          </div>
+
+        </div>
+
+        <div class="related__grid" id="related-grid" role="list">
+
+          <!-- ========================================== -->
+
+        </div>
+
+      </section>
+
+
+
+    </div><!-- ========================================== -->
+
+  </div><!-- ========================================== -->
+
+
+
+
+
+  <!-- ========================================== -->
+
+  <footer class="footer" role="contentinfo">
+
+    <div class="container">
+
+      <div class="footer__grid">
+
+        <div>
+
+          <div class="footer__brand-name">Shop<span>VN</span></div>
+
+          <p class="footer__desc">
+
+            Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị
+
+            điện tử, phụ kiện công nghệ chính hãng toàn quốc.
+
+          </p>
+
+        </div>
+
+        <div>
+
+          <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sắm</span></h3>
+
+          <ul class="footer__links">
+
+            <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
+
+            <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến mãi</span></a></li>
+
+            <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
+
+            <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy nhất</span></a></li>
+
+          </ul>
+
+        </div>
+
+        <div>
+
+          <h3 class="footer__heading"><span data-i18n="footer.account">Tài khoản</span></h3>
+
+          <ul class="footer__links">
+
+            <li><a href="login.html" class="footer__link"><span data-i18n="auth.login">Đăng nhập</span></a></li>
+
+            <li><a href="register.html" class="footer__link"><span data-i18n="auth.register">Đăng ký</span></a></li>
+
+            <li><a href="orders.html" class="footer__link"><span data-i18n="nav.orders">Đơn hàng</span></a></li>
+
+            <li><a href="cart.html" class="footer__link"><span data-i18n="nav.cart">Giỏ hàng</span></a></li>
+
+          </ul>
+
+        </div>
+
+        <div>
+
+          <h3 class="footer__heading"><span data-i18n="footer.support">Hỗ trợ</span></h3>
+
+          <ul class="footer__links">
+
+            <li><a href="faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
+
+            <li><a href="contact.html" class="footer__link"><span data-i18n="footer.contact">Liên hệ</span></a></li>
+
+            <li><a href="faq.html#doi-tra" class="footer__link"><span data-i18n="footer.returns">Đổi trả hàng</span></a></li>
+
+            <li><a href="faq.html#van-chuyen" class="footer__link">Vận chuyển</a></li>
+
+          </ul>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="footer__bottom">
+
+        <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
+
+        <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+
+      </div>
+
+    </div>
+
+  </footer>
+
+
+
+
+
+  <!-- ========================================== -->
+
+  <script src="js/config.js"></script>
+<script src="js/api.js"></script>
+
+  <script src="js/utils.js"></script>
+
+  <script src="js/auth.js"></script>
+
+  <script src="js/lucky-wheel.js"></script>
+
+  <script src="js/pages/product-detail.js"></script>
+
+
+
 <script src="js/locales/vi.js"></script>
 <script src="js/locales/en.js"></script>
 <script src="js/i18n.js"></script>
@@ -356,8 +706,14 @@
       </a>
     </div>
   </nav>
-</body>
-
-</html>
-
+</body>
+
+
+
+</html>
+
+
+
+
+
 

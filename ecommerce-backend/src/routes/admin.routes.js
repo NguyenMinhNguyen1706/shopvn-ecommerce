@@ -3,6 +3,7 @@ const Product    = require('../models/Product');
 const Order      = require('../models/Order');
 const OrderItem  = require('../models/OrderItem');
 const User       = require('../models/User');
+const ActionPlan = require('../models/ActionPlan');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
 const asyncHandler = fn => (req, res, next) =>
@@ -115,6 +116,97 @@ router.get('/stats', asyncHandler(async (req, res) => {
     success: true,
     stats: { totalOrders, totalProducts, totalUsers, pendingOrders, revenue },
   });
+}));
+
+// Action Center persistence
+
+function summarizeActionPlan(plan) {
+  const tasks = Array.isArray(plan.tasks) ? plan.tasks : [];
+  return {
+    totalTasks: tasks.length,
+    completedTasks: tasks.filter(task => task.status === 'done').length,
+    p1Tasks: tasks.filter(task => task.priority === 'P1').length,
+  };
+}
+
+function serializeActionPlan(record) {
+  if (!record) return null;
+  return {
+    ...record.payload,
+    serverId: record.id,
+    syncedAt: record.updatedAt,
+  };
+}
+
+router.get('/action-plan', asyncHandler(async (req, res) => {
+  const record = await ActionPlan.findOne({ order: [['generatedAt', 'DESC']] });
+  res.json({ success: true, plan: serializeActionPlan(record) });
+}));
+
+router.get('/action-plans/history', asyncHandler(async (req, res) => {
+  const records = await ActionPlan.findAll({
+    order: [['generatedAt', 'DESC']],
+    limit: 12,
+  });
+  res.json({ success: true, plans: records.map(serializeActionPlan) });
+}));
+
+router.post('/action-plan', asyncHandler(async (req, res) => {
+  const plan = req.body?.plan || req.body;
+  if (!plan || !plan.id || !Array.isArray(plan.tasks)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Action plan khong hop le: can id va tasks.',
+    });
+  }
+
+  const summary = summarizeActionPlan(plan);
+  const [record] = await ActionPlan.upsert({
+    clientPlanId: String(plan.id),
+    generatedAt: plan.generatedAt ? new Date(plan.generatedAt) : new Date(),
+    filenameBase: plan.filenameBase || `shopvn-action-plan-${new Date().toISOString().slice(0, 10)}`,
+    briefingId: plan.briefingId || null,
+    sourceSnapshotId: plan.sourceSnapshotId || null,
+    ...summary,
+    payload: plan,
+  }, { returning: true });
+
+  const savedRecord = record || await ActionPlan.findOne({ where: { clientPlanId: String(plan.id) } });
+  res.status(201).json({ success: true, plan: serializeActionPlan(savedRecord) });
+}));
+
+router.patch('/action-plan/:clientPlanId/tasks/:taskId', asyncHandler(async (req, res) => {
+  const { status } = req.body;
+  const validStatuses = ['todo', 'doing', 'done'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: `Status khong hop le. Phai la: ${validStatuses.join(', ')}`,
+    });
+  }
+
+  const record = await ActionPlan.findOne({ where: { clientPlanId: req.params.clientPlanId } });
+  if (!record) {
+    return res.status(404).json({ success: false, message: 'Khong tim thay action plan.' });
+  }
+
+  const plan = { ...record.payload };
+  const tasks = Array.isArray(plan.tasks) ? plan.tasks : [];
+  const task = tasks.find(item => String(item.id) === req.params.taskId);
+  if (!task) {
+    return res.status(404).json({ success: false, message: 'Khong tim thay task.' });
+  }
+
+  task.status = status;
+  task.updatedAt = new Date().toISOString();
+  plan.tasks = tasks;
+
+  await record.update({
+    ...summarizeActionPlan(plan),
+    payload: plan,
+  });
+
+  res.json({ success: true, plan: serializeActionPlan(record) });
 }));
 
 module.exports = router;

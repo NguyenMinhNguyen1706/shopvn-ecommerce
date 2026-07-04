@@ -832,8 +832,7 @@ const ThemeManager = {
 
   init() {
     const saved = localStorage.getItem(this.KEY);
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const theme = saved || (prefersDark ? 'dark' : 'light');
+    const theme = saved || 'light';
     this.setTheme(theme);
   },
 
@@ -1246,6 +1245,572 @@ const AIShoppingAssistant = {
 };
 
 // ── Dynamic Layout Injection (Blog, Footer, Legal) ──────────────────────────
+
+Object.assign(AIShoppingAssistant, {
+  init() {
+    if (window.location.pathname.includes('/admin/')) return;
+    document.getElementById('shopvn-chatbot')?.remove();
+    this.lastResults = [];
+    this.injectFab();
+  },
+
+  injectFab() {
+    if (document.getElementById('chatbot-fab')) return;
+
+    const fab = document.createElement('button');
+    fab.id = 'chatbot-fab';
+    fab.className = 'chatbot-fab';
+    fab.type = 'button';
+    fab.setAttribute('aria-label', this.copy('fabLabel'));
+    fab.innerHTML = `
+      <span class="chatbot-fab__spark" aria-hidden="true">AI</span>
+      <span class="chatbot-fab__label">${this.copy('fabText')}</span>
+    `;
+    if (this.hasNotification) {
+      fab.innerHTML += '<span class="chatbot-fab__badge" id="chatbot-badge"></span>';
+    }
+    fab.addEventListener('click', () => this.toggle());
+    document.body.appendChild(fab);
+  },
+
+  openChat() {
+    this.isOpen = true;
+    const win = document.createElement('div');
+    win.id = 'chatbot-window';
+    win.className = 'chatbot-window';
+
+    win.innerHTML = `
+      <div class="chatbot-header">
+        <div class="chatbot-header__title">
+          <span class="chatbot-header__avatar">AI</span>
+          <div>
+            <span>ShopVN Assistant</span>
+            <small>${this.copy('subtitle')}</small>
+          </div>
+        </div>
+        <button class="chatbot-header__close" onclick="AIShoppingAssistant.toggle()" aria-label="${this.copy('close')}">×</button>
+      </div>
+      <div class="chatbot-context" id="chatbot-context">${this.renderContextBar()}</div>
+      <div class="chatbot-messages" id="chatbot-messages-box"></div>
+      <div class="chatbot-footer">
+        <input type="text" class="chatbot-input" id="chatbot-user-input" placeholder="${this.copy('placeholder')}">
+        <button class="chatbot-send-btn" id="chatbot-send-btn" aria-label="${this.copy('send')}">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(win);
+
+    const input = win.querySelector('#chatbot-user-input');
+    const sendBtn = win.querySelector('#chatbot-send-btn');
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') this.send();
+    });
+    sendBtn.addEventListener('click', () => this.send());
+
+    this.addMessage(this.copy('welcome'), 'bot', { html: true, feedback: false });
+    this.showQuickReplies();
+    input.focus();
+  },
+
+  isVi() {
+    return !window.i18n || window.i18n.getLang() === 'vi';
+  },
+
+  copy(key) {
+    const vi = {
+      fabLabel: 'Mở trợ lý mua sắm ShopVN',
+      fabText: 'Trợ lý mua sắm',
+      subtitle: 'Tư vấn, so sánh, ưu đãi',
+      close: 'Đóng',
+      send: 'Gửi tin nhắn',
+      placeholder: 'Hỏi về sản phẩm, giá, ưu đãi...',
+      welcome: '<strong>Chào bạn!</strong> Mình có thể gợi ý sản phẩm, so sánh lựa chọn, tìm ưu đãi và kiểm tra giỏ hàng cho bạn.',
+      pageHome: 'Trang chủ',
+      pageProducts: 'Danh mục',
+      pageDetail: 'Chi tiết',
+      pageCart: 'Giỏ hàng',
+      pageCheckout: 'Thanh toán',
+      pageOther: 'Đang mua sắm',
+      cartEmpty: 'Giỏ hàng trống',
+      cartItems: 'sản phẩm',
+      quickLaptop: 'Laptop học tập',
+      quickCompare: 'So sánh lựa chọn',
+      quickDeal: 'Săn ưu đãi',
+      quickShipping: 'Phí vận chuyển',
+      quickBudget: 'Dưới 1 triệu',
+      foundTitle: 'Mình gợi ý những sản phẩm phù hợp nhất:',
+      compareTitle: 'Bảng so sánh nhanh',
+      dealTitle: 'Ưu đãi có thể dùng ngay',
+      shippingTitle: 'Thông tin giao hàng',
+      cartTitle: 'Tình trạng giỏ hàng',
+      fallbackTitle: 'Mình có thể hỗ trợ theo các cách này:',
+      view: 'Chi tiết',
+      add: 'Thêm',
+      compare: 'So sánh',
+      inStock: 'Còn hàng',
+      outStock: 'Hết hàng',
+      featured: 'Bán chạy',
+      newItem: 'Mới',
+      sale: 'Đang giảm',
+      underBudget: 'Hợp ngân sách',
+      freeShipDone: 'Đơn hàng đã đủ điều kiện miễn phí ship.',
+      freeShipNeed: 'Mua thêm để miễn phí ship:',
+      checkout: 'Thanh toán',
+      useful: 'Hữu ích',
+      notUseful: 'Chưa đúng',
+      thanks: 'Cảm ơn bạn, mình đã ghi nhận phản hồi.',
+      added: 'Đã thêm vào giỏ hàng.',
+      noProduct: 'Mình chưa tìm thấy sản phẩm phù hợp. Thử nói rõ hơn như "laptop dưới 15 triệu", "điện thoại mới", hoặc "phụ kiện giảm giá".'
+    };
+    const en = {
+      fabLabel: 'Open ShopVN shopping assistant',
+      fabText: 'Shopping assistant',
+      subtitle: 'Advice, compare, deals',
+      close: 'Close',
+      send: 'Send message',
+      placeholder: 'Ask about products, prices, deals...',
+      welcome: '<strong>Hi!</strong> I can recommend products, compare options, find deals, and check your cart.',
+      pageHome: 'Home',
+      pageProducts: 'Catalog',
+      pageDetail: 'Product detail',
+      pageCart: 'Cart',
+      pageCheckout: 'Checkout',
+      pageOther: 'Shopping',
+      cartEmpty: 'Cart empty',
+      cartItems: 'items',
+      quickLaptop: 'Student laptop',
+      quickCompare: 'Compare picks',
+      quickDeal: 'Find deals',
+      quickShipping: 'Shipping fees',
+      quickBudget: 'Under 1M',
+      foundTitle: 'Here are the best matches I found:',
+      compareTitle: 'Quick comparison',
+      dealTitle: 'Deals you can use now',
+      shippingTitle: 'Shipping information',
+      cartTitle: 'Cart status',
+      fallbackTitle: 'I can help with these shopping tasks:',
+      view: 'View',
+      add: 'Add',
+      compare: 'Compare',
+      inStock: 'In stock',
+      outStock: 'Out of stock',
+      featured: 'Popular',
+      newItem: 'New',
+      sale: 'On sale',
+      underBudget: 'Within budget',
+      freeShipDone: 'Your cart qualifies for free shipping.',
+      freeShipNeed: 'Add this much for free shipping:',
+      checkout: 'Checkout',
+      useful: 'Useful',
+      notUseful: 'Not right',
+      thanks: 'Thanks, I noted your feedback.',
+      added: 'Added to cart.',
+      noProduct: 'I could not find a good match. Try "laptop under 15M", "new phone", or "discounted accessories".'
+    };
+    return (this.isVi() ? vi : en)[key] || key;
+  },
+
+  pageLabel() {
+    const path = window.location.pathname;
+    if (path.includes('products')) return this.copy('pageProducts');
+    if (path.includes('product-detail')) return this.copy('pageDetail');
+    if (path.includes('cart')) return this.copy('pageCart');
+    if (path.includes('checkout')) return this.copy('pageCheckout');
+    if (path.endsWith('/') || path.includes('index')) return this.copy('pageHome');
+    return this.copy('pageOther');
+  },
+
+  renderContextBar() {
+    const cart = LocalCart.get();
+    const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const total = LocalCart.total();
+    const cartLabel = count > 0
+      ? `${count} ${this.copy('cartItems')} · ${formatPrice(total)}`
+      : this.copy('cartEmpty');
+
+    return `
+      <span>${this.pageLabel()}</span>
+      <span>${cartLabel}</span>
+    `;
+  },
+
+  refreshContext() {
+    const context = document.getElementById('chatbot-context');
+    if (context) context.innerHTML = this.renderContextBar();
+  },
+
+  addMessage(text, sender = 'bot', options = {}) {
+    const box = document.getElementById('chatbot-messages-box');
+    if (!box) return;
+
+    const msg = document.createElement('div');
+    msg.className = `chat-msg chat-msg--${sender}`;
+    if (options.html) msg.innerHTML = text;
+    else msg.textContent = text;
+    box.appendChild(msg);
+
+    if (sender === 'bot' && options.feedback !== false) {
+      this.addFeedbackControls();
+    }
+    box.scrollTop = box.scrollHeight;
+  },
+
+  addFeedbackControls() {
+    const box = document.getElementById('chatbot-messages-box');
+    if (!box) return;
+    const controls = document.createElement('div');
+    controls.className = 'chat-feedback';
+    controls.innerHTML = `
+      <button type="button" onclick="AIShoppingAssistant.rateResponse(this)">${this.copy('useful')}</button>
+      <button type="button" onclick="AIShoppingAssistant.rateResponse(this)">${this.copy('notUseful')}</button>
+    `;
+    box.appendChild(controls);
+  },
+
+  rateResponse(button) {
+    const wrap = button.closest('.chat-feedback');
+    if (!wrap) return;
+    wrap.innerHTML = `<span>${this.copy('thanks')}</span>`;
+  },
+
+  showQuickReplies() {
+    const box = document.getElementById('chatbot-messages-box');
+    if (!box) return;
+
+    const existing = box.querySelector('.chat-quick-replies');
+    if (existing) existing.remove();
+
+    const repliesDiv = document.createElement('div');
+    repliesDiv.className = 'chat-quick-replies';
+    const replies = [
+      { label: this.copy('quickLaptop'), query: this.isVi() ? 'laptop cho học tập dưới 15 triệu' : 'student laptop under 15 million' },
+      { label: this.copy('quickCompare'), query: this.isVi() ? 'so sánh sản phẩm nổi bật' : 'compare popular products' },
+      { label: this.copy('quickDeal'), query: this.isVi() ? 'mã giảm giá và flash sale' : 'discount codes and flash sale' },
+      { label: this.copy('quickShipping'), query: this.isVi() ? 'phí vận chuyển' : 'shipping fee' },
+      { label: this.copy('quickBudget'), query: this.isVi() ? 'phụ kiện dưới 1 triệu' : 'accessories under 1 million' }
+    ];
+
+    replies.forEach(reply => {
+      const btn = document.createElement('button');
+      btn.className = 'chat-quick-reply';
+      btn.textContent = reply.label;
+      btn.addEventListener('click', () => {
+        this.addMessage(btn.textContent, 'user');
+        this.processQuery(reply.query);
+      });
+      repliesDiv.appendChild(btn);
+    });
+
+    box.appendChild(repliesDiv);
+    box.scrollTop = box.scrollHeight;
+  },
+
+  processQuery(rawText) {
+    const normalized = this.normalizeText(rawText);
+    this.showTyping(() => {
+      if (this.hasAny(normalized, ['ma', 'voucher', 'khuyen mai', 'giam gia', 'promo', 'sale', 'deal', 'flash'])) {
+        this.renderDealPanel();
+        this.showQuickReplies();
+        return;
+      }
+
+      if (this.hasAny(normalized, ['van chuyen', 'ship', 'giao hang', 'phi ship', 'freeship', 'shipping', 'delivery'])) {
+        this.renderShippingPanel();
+        this.showQuickReplies();
+        return;
+      }
+
+      if (this.hasAny(normalized, ['gio hang', 'cart', 'checkout', 'thanh toan', 'don hang'])) {
+        this.renderCartPanel();
+        this.showQuickReplies();
+        return;
+      }
+
+      if (this.hasAny(normalized, ['so sanh', 'compare', 'khac nhau', 'chon giua'])) {
+        const products = this.recommendProducts(normalized).slice(0, 3);
+        this.renderComparison(products);
+        this.showQuickReplies();
+        return;
+      }
+
+      const matched = this.recommendProducts(normalized);
+      if (matched.length > 0) {
+        this.renderProductResults(matched.slice(0, 4));
+        this.showQuickReplies();
+        return;
+      }
+
+      this.renderFallback();
+      this.showQuickReplies();
+    });
+  },
+
+  normalizeText(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .toLowerCase();
+  },
+
+  hasAny(text, terms) {
+    return terms.some(term => text.includes(term));
+  },
+
+  parseBudget(text) {
+    const patterns = [
+      /(?:duoi|under|max|toi da)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr|m|million)/,
+      /(\d+(?:[.,]\d+)?)\s*(trieu|tr|m|million)/,
+      /(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan)/
+    ];
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (!match) continue;
+      const amount = Number(match[1].replace(',', '.'));
+      const unit = match[2];
+      if (['k', 'nghin', 'ngan'].includes(unit)) return amount * 1000;
+      return amount * 1000000;
+    }
+    return null;
+  },
+
+  recommendProducts(text) {
+    const products = getProductsFromStorage();
+    const budget = this.parseBudget(text);
+    const terms = text.split(/\s+/).filter(term => term.length > 1);
+    const categoryHints = {
+      laptop: ['laptop', 'may tinh', 'notebook'],
+      'dien thoai': ['phone', 'dien thoai', 'iphone', 'mobile'],
+      'phu kien': ['phu kien', 'tai nghe', 'ban phim', 'chuot', 'accessory', 'headphone', 'keyboard', 'mouse'],
+      tablet: ['tablet'],
+      'man hinh': ['man hinh', 'monitor', '4k'],
+      wearable: ['dong ho', 'watch', 'wearable']
+    };
+    const requestedCategories = Object.entries(categoryHints)
+      .filter(([, hints]) => hints.some(hint => text.includes(hint)));
+
+    const wantsSale = this.hasAny(text, ['sale', 'giam', 'deal', 'khuyen mai']);
+    const wantsNew = this.hasAny(text, ['moi', 'new', '2024', '2025', '2026']);
+    const wantsPopular = this.hasAny(text, ['ban chay', 'noi bat', 'pho bien', 'popular', 'featured', 'tot nhat', 'best']);
+
+    return products
+      .map(product => {
+        const name = this.normalizeText(product.name);
+        const category = this.normalizeText(product.category);
+        const searchable = `${name} ${category}`;
+        let score = 0;
+        const reasons = [];
+        const matchesRequestedCategory = requestedCategories.length === 0
+          || requestedCategories.some(([label, hints]) => category.includes(label) || hints.some(hint => searchable.includes(hint)));
+
+        if (!matchesRequestedCategory) score -= 40;
+
+        Object.entries(categoryHints).forEach(([label, hints]) => {
+          const textMatchesCategory = hints.some(hint => text.includes(hint));
+          const productMatchesCategory = category.includes(label) || hints.some(hint => searchable.includes(hint));
+          if (textMatchesCategory && productMatchesCategory) {
+            score += 30;
+            reasons.push(product.category);
+          }
+        });
+
+        terms.forEach(term => {
+          if (searchable.includes(term)) score += 8;
+        });
+
+        if (budget && Number(product.price) <= budget) {
+          score += 22;
+          reasons.push(this.copy('underBudget'));
+        } else if (budget) {
+          score -= 18;
+        }
+
+        if (wantsSale && product.oldPrice && product.oldPrice > product.price) {
+          score += 18;
+          reasons.push(this.copy('sale'));
+        }
+        if (wantsNew && product.isNew) {
+          score += 14;
+          reasons.push(this.copy('newItem'));
+        }
+        if (wantsPopular && product.featured) {
+          score += 14;
+          reasons.push(this.copy('featured'));
+        }
+        if (!budget && !wantsSale && !wantsNew && !wantsPopular && score === 0 && (product.featured || product.isNew)) {
+          score += product.featured ? 7 : 4;
+        }
+        if (product.stock > 0) score += 3;
+
+        return { ...product, _score: score, _reasons: [...new Set(reasons)].slice(0, 3) };
+      })
+      .filter(product => product._score > 0)
+      .sort((a, b) => b._score - a._score || Number(a.price) - Number(b.price));
+  },
+
+  escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[char]));
+  },
+
+  renderProductResults(products) {
+    this.lastResults = products;
+    this.addMessage(this.copy('foundTitle'), 'bot');
+    const box = document.getElementById('chatbot-messages-box');
+    if (!box) return;
+
+    const grid = document.createElement('div');
+    grid.className = 'chat-product-grid';
+    grid.innerHTML = products.map(product => this.productCardTemplate(product)).join('');
+    box.appendChild(grid);
+
+    const compareBtn = document.createElement('button');
+    compareBtn.type = 'button';
+    compareBtn.className = 'chat-action-link';
+    compareBtn.textContent = this.copy('compare');
+    compareBtn.addEventListener('click', () => this.renderComparison(this.lastResults.slice(0, 3)));
+    box.appendChild(compareBtn);
+    box.scrollTop = box.scrollHeight;
+  },
+
+  productCardTemplate(product) {
+    const stockLabel = product.stock > 0 ? `${this.copy('inStock')}: ${product.stock}` : this.copy('outStock');
+    const tags = (product._reasons || []).map(reason => `<span>${this.escapeHtml(reason)}</span>`).join('');
+    return `
+      <article class="chat-product-card">
+        <div class="chat-product-card__img">${product.icon || '📦'}</div>
+        <div class="chat-product-card__info">
+          <div class="chat-product-card__name" title="${this.escapeHtml(product.name)}">${this.escapeHtml(product.name)}</div>
+          <div class="chat-product-card__price">${formatPrice(product.price)}</div>
+          <div class="chat-product-card__meta">${this.escapeHtml(product.category)} · ${stockLabel}</div>
+          ${tags ? `<div class="chat-product-card__tags">${tags}</div>` : ''}
+        </div>
+        <div class="chat-product-card__actions">
+          <button class="chat-product-card__btn" onclick="AIShoppingAssistant.viewProduct(${product.id})">${this.copy('view')}</button>
+          <button class="chat-product-card__btn chat-product-card__btn--primary" onclick="AIShoppingAssistant.addToCart(${product.id})">${this.copy('add')}</button>
+        </div>
+      </article>
+    `;
+  },
+
+  renderComparison(products) {
+    const choices = products.length ? products : getProductsFromStorage().filter(product => product.featured).slice(0, 3);
+    if (!choices.length) {
+      this.addMessage(this.copy('noProduct'), 'bot');
+      return;
+    }
+    const rows = choices.map(product => `
+      <tr>
+        <td>${product.icon || '📦'} ${this.escapeHtml(product.name)}</td>
+        <td>${formatPrice(product.price)}</td>
+        <td>${product.stock > 0 ? product.stock : '0'}</td>
+      </tr>
+    `).join('');
+    this.addMessage(`
+      <div class="chat-rich-panel">
+        <h4>${this.copy('compareTitle')}</h4>
+        <table class="chat-compare-table">
+          <thead><tr><th>Model</th><th>Giá</th><th>Kho</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `, 'bot', { html: true });
+  },
+
+  renderDealPanel() {
+    this.addMessage(`
+      <div class="chat-rich-panel">
+        <h4>${this.copy('dealTitle')}</h4>
+        <div class="chat-coupon-list">
+          <button type="button" onclick="AIShoppingAssistant.copyCoupon('SHOPVN50')"><strong>SHOPVN50</strong><span>Giảm 50.000đ</span></button>
+          <button type="button" onclick="AIShoppingAssistant.copyCoupon('SAVE10')"><strong>SAVE10</strong><span>Giảm 10%</span></button>
+          <button type="button" onclick="window.location.href='index.html#flash-sale'"><strong>Flash Sale</strong><span>Xem sản phẩm đang giảm</span></button>
+        </div>
+      </div>
+    `, 'bot', { html: true });
+  },
+
+  renderShippingPanel() {
+    const total = LocalCart.total();
+    const threshold = 500000;
+    const remaining = Math.max(0, threshold - total);
+    this.addMessage(`
+      <div class="chat-rich-panel">
+        <h4>${this.copy('shippingTitle')}</h4>
+        <p>ShopVN miễn phí vận chuyển cho đơn từ ${formatPrice(threshold)}. Đơn dưới mức này có phí dự kiến ${formatPrice(30000)}.</p>
+        <div class="chat-progress">
+          <span style="width:${Math.min(100, total / threshold * 100)}%"></span>
+        </div>
+        <p class="chat-rich-panel__note">${remaining === 0 ? this.copy('freeShipDone') : `${this.copy('freeShipNeed')} ${formatPrice(remaining)}`}</p>
+      </div>
+    `, 'bot', { html: true });
+  },
+
+  renderCartPanel() {
+    const cart = LocalCart.get();
+    if (!cart.length) {
+      this.addMessage(`
+        <div class="chat-rich-panel">
+          <h4>${this.copy('cartTitle')}</h4>
+          <p>${this.copy('cartEmpty')}. Mình có thể gợi ý sản phẩm bán chạy nếu bạn muốn.</p>
+          <button type="button" class="chat-panel-btn" onclick="window.location.href='products.html'">${this.copy('pageProducts')}</button>
+        </div>
+      `, 'bot', { html: true });
+      return;
+    }
+
+    const total = LocalCart.total();
+    const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+    this.addMessage(`
+      <div class="chat-rich-panel">
+        <h4>${this.copy('cartTitle')}</h4>
+        <p>${count} ${this.copy('cartItems')} · <strong>${formatPrice(total)}</strong></p>
+        <button type="button" class="chat-panel-btn" onclick="window.location.href='cart.html'">${this.copy('pageCart')}</button>
+        <button type="button" class="chat-panel-btn chat-panel-btn--primary" onclick="window.location.href='checkout.html'">${this.copy('checkout')}</button>
+      </div>
+    `, 'bot', { html: true });
+  },
+
+  renderFallback() {
+    this.addMessage(`
+      <div class="chat-rich-panel">
+        <h4>${this.copy('fallbackTitle')}</h4>
+        <ul>
+          <li>Laptop dưới 15 triệu cho học tập</li>
+          <li>So sánh 3 sản phẩm nổi bật</li>
+          <li>Tìm mã giảm giá hoặc điều kiện freeship</li>
+          <li>Kiểm tra giỏ hàng và đi tới thanh toán</li>
+        </ul>
+      </div>
+    `, 'bot', { html: true });
+  },
+
+  viewProduct(productId) {
+    QuickView.open(productId);
+  },
+
+  addToCart(productId) {
+    const product = getProductsFromStorage().find(item => item.id === productId);
+    if (!product) return;
+    LocalCart.add(product, 1);
+    this.refreshContext();
+    this.addMessage(this.copy('added'), 'bot', { feedback: false });
+    this.showQuickReplies();
+  },
+
+  copyCoupon(code) {
+    navigator.clipboard?.writeText(code).catch(() => {});
+    this.addMessage(`${code} - ${this.copy('thanks')}`, 'bot', { feedback: false });
+  }
+});
 
 function injectNavbarBlogLink() {
   const nav = document.querySelector('.navbar__nav');

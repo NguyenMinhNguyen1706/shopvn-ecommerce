@@ -1,7 +1,8 @@
-﻿<html lang="vi"><head>  <link rel="stylesheet" href="css/mobile-nav.css" />
-</head><body>
+﻿<!DOCTYPE html>
+<html lang="vi">
 
-
+<head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Giỏ hàng — ShopVN</title>
@@ -14,10 +15,12 @@
   <!-- ========================================== -->
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/pages/cart.css">
-  <link rel="stylesheet" href="css/lucky-wheel.css">
+<link rel="stylesheet" href="css/pages/cart.css">
+<link rel="stylesheet" href="css/lucky-wheel.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
+</head>
 
-
+<body>
 
 <!-- ========================================== -->
 <header class="navbar" role="banner">
@@ -43,7 +46,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--c-muted);flex-shrink:0">
           <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
         </svg>
-        <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm" onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value">
+        <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm" onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value">
       </div>
 
       <!-- ========================================== -->
@@ -102,6 +105,14 @@
       </ol>
     </nav>
 
+    <div class="cart-reassurance" role="note">
+      <div>
+        <strong>Kiểm tra giỏ hàng trước khi thanh toán</strong>
+        <span>Phí vận chuyển, voucher và tổng tiền được cập nhật rõ ràng trước khi bạn đặt hàng.</span>
+      </div>
+      <a href="products.html">Tiếp tục mua sắm</a>
+    </div>
+
     <!-- ========================================== -->
     <div class="cart-layout">
 
@@ -143,10 +154,11 @@
         </div>
 
         <!-- ========================================== -->
+        <label class="voucher-label" for="voucher-input">Mã giảm giá</label>
         <div class="voucher-wrap">
-          <input class="voucher-input" type="text" id="voucher-input" placeholder="Nhập mã giảm giá" aria-label="Mã voucher">
+          <input class="voucher-input" type="text" id="voucher-input" placeholder="Ví dụ: SHOPVN50" aria-label="Mã voucher">
           <button class="btn btn-outline btn-sm" onclick="applyVoucher()">
-            Áp dụng
+            Áp dụng mã
           </button>
         </div>
 
@@ -189,6 +201,14 @@
 
   </div><!-- ========================================== -->
 </div><!-- ========================================== -->
+
+<div class="cart-mobile-summary" id="cart-mobile-summary" hidden aria-label="Thanh toán giỏ hàng trên di động">
+  <div>
+    <span>Tổng giỏ hàng</span>
+    <strong id="cart-mobile-total">0đ</strong>
+  </div>
+  <button class="btn btn-primary btn-sm" onclick="goToCheckout()">Thanh toán</button>
+</div>
 
 
 <!-- ========================================== -->
@@ -240,6 +260,7 @@
 
 
 <!-- ========================================== -->
+<script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
@@ -279,6 +300,8 @@
     </div>
   </nav>
 </body></html>
+
+
 
 
 

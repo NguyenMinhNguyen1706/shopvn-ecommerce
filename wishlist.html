@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Yêu thích — ShopVN</title>
@@ -30,7 +31,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--c-muted);flex-shrink:0">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm"
+        <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
                onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
       </div>
       <div class="navbar__actions">
@@ -143,6 +144,7 @@
 </footer>
 
 
+<script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
@@ -167,7 +169,7 @@
     const items = LocalWishlist.get();
 
     countText.textContent = `${items.length} sản phẩm`;
-    addAllBtn.style.display = items.length > 0 - 'inline-flex' : 'none';
+    addAllBtn.style.display = items.length > 0 ? 'inline-flex' : 'none';
 
     if (items.length === 0) {
       grid.innerHTML = `
@@ -187,7 +189,7 @@
         <article class="product-card fade-up" style="animation-delay:${i * 0.05}s">
           <div class="product-card__img" onclick="window.location.href='product-detail.html?id=${p.id}'">
             <span class="product-card__img-icon">${p.icon || '📦'}</span>
-            ${disc - `<span class="badge badge-accent product-card__badge">-${disc}%</span>` : ''}
+            ${disc ? `<span class="badge badge-accent product-card__badge">-${disc}%</span>` : ''}
             <button class="product-card__wish active"
                     onclick="event.stopPropagation(); removeFromWishlist(${p.id})"
                     aria-label="Xóa khỏi yêu thích">
@@ -202,7 +204,7 @@
             <div class="product-card__price-row">
               <div>
                 <span class="product-card__price">${formatPrice(p.price)}</span>
-                ${p.oldPrice - `<span class="product-card__price-old">${formatPrice(p.oldPrice)}</span>` : ''}
+                ${p.oldPrice ? `<span class="product-card__price-old">${formatPrice(p.oldPrice)}</span>` : ''}
               </div>
               <button class="product-card__add"
                       onclick="event.stopPropagation(); addToCartFromWish(${p.id})"
@@ -281,8 +283,13 @@
   </nav>
 </body>
 </html>
-
-
-
+
+
+
+
+
+
+
+
 
 

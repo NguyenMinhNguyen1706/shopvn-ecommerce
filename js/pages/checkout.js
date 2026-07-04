@@ -1,9 +1,7 @@
 /**
- * checkout.js — Logic trang thanh toán
- * Bảo vệ route (yêu cầu đăng nhập) -> load giỏ hàng -> validation -> tạo đơn hàng
+ * checkout.js - Logic trang thanh toán
+ * Cho phép guest checkout, load giỏ hàng, validate form và tạo đơn hàng.
  */
-
-// ── State ─────────────────────────────────────────────────────────────────────
 
 const state = {
   items: [],
@@ -17,29 +15,32 @@ const state = {
   carrier: 'ghtk'
 };
 
-const SHIPPING_THRESHOLD = 500000;  // miễn ship khi >= 500k
-const SHIPPING_FEE       = 30000;   // phí ship mặc định
+const SHIPPING_THRESHOLD = 500000;
 
-// ── Guard & Init ──────────────────────────────────────────────────────────────
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Kiểm tra đăng nhập (Cho phép Guest Checkout)
   const isLoggedIn = Auth.isLoggedIn();
   if (!isLoggedIn) {
-    showToast('Thanh toán dưới vai trò Khách. Đăng nhập để tích xu thành viên!', 'info');
+    showToast('Bạn đang thanh toán với vai trò khách. Đăng nhập để tích ShopVN Xu và theo dõi đơn dễ hơn.', 'info');
   }
 
-  // 2. Kiểm tra giỏ hàng
   state.items = LocalCart.get();
   if (state.items.length === 0) {
-    showToast('Giỏ hàng trống, quay lại mua sắm nhé!', 'warning');
+    showToast('Giỏ hàng trống, hãy chọn thêm sản phẩm trước khi thanh toán.', 'warning');
     setTimeout(() => {
       window.location.href = 'products.html';
     }, 1500);
     return;
   }
 
-  // 3. Điền thông tin user hiện tại nếu có
   const user = Auth.getUser();
   if (user) {
     const nameInput = document.getElementById('customer-name');
@@ -48,15 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (emailInput && user.email) emailInput.value = user.email;
   }
 
-  // 4. Khởi tạo UI và Event listeners
   updateNavbarAuth();
   updateCartBadge();
   setupPaymentMethods();
   setupShippingCarriers();
+  setupCheckoutUx();
   calculateTotals();
   renderSummaryItems();
 
-  // 5. Khởi tạo Xu
   const xuBalance = isLoggedIn ? LoyaltyPoints.getBalance() : 0;
   if (xuBalance > 0) {
     const wrap = document.getElementById('loyalty-points-wrap');
@@ -68,48 +68,38 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ── Setup Payment Methods ─────────────────────────────────────────────────────
-
 function setupPaymentMethods() {
   const methods = document.querySelectorAll('.payment-method');
   methods.forEach(method => {
     method.addEventListener('click', () => {
-      // Deactivate all methods
       methods.forEach(m => m.classList.remove('active'));
       document.querySelectorAll('.payment-details').forEach(d => d.classList.remove('active'));
 
-      // Activate clicked method
       method.classList.add('active');
       const radio = method.querySelector('input[type="radio"]');
       if (radio) radio.checked = true;
 
-      // Show specific details
-      const methodVal = radio.value;
-      const detailsPanel = document.getElementById(`details-${methodVal}`);
+      if (!radio) return;
+      const detailsPanel = document.getElementById(`details-${radio.value}`);
       if (detailsPanel) detailsPanel.classList.add('active');
     });
   });
 }
 
-// ── Calculate and Render Totals ───────────────────────────────────────────────
-
-const CARRIER_FEES = { ghtk: 30000, ghn: 35000, viettel: 25000 };
-
 function setupShippingCarriers() {
   const radios = document.querySelectorAll('input[name="shipping-carrier"]');
-  
+
   function updateVisuals(selectedVal) {
-    const carriers = ['ghtk', 'ghn', 'viettel'];
-    carriers.forEach(c => {
-      const el = document.getElementById(`carrier-${c}`);
-      if (el) {
-        if (c === selectedVal) {
-          el.style.borderColor = 'var(--c-blue)';
-          el.style.backgroundColor = 'var(--c-blue-light)';
-        } else {
-          el.style.borderColor = 'var(--c-border)';
-          el.style.backgroundColor = 'var(--c-white)';
-        }
+    ['ghtk', 'ghn', 'viettel'].forEach(carrier => {
+      const el = document.getElementById(`carrier-${carrier}`);
+      if (!el) return;
+
+      if (carrier === selectedVal) {
+        el.style.borderColor = 'var(--c-blue)';
+        el.style.backgroundColor = 'var(--c-blue-light)';
+      } else {
+        el.style.borderColor = 'var(--c-border)';
+        el.style.backgroundColor = 'var(--c-white)';
       }
     });
   }
@@ -120,9 +110,9 @@ function setupShippingCarriers() {
       updateVisuals(radio.value);
     }
 
-    radio.addEventListener('change', (e) => {
-      state.carrier = e.target.value;
-      updateVisuals(e.target.value);
+    radio.addEventListener('change', (event) => {
+      state.carrier = event.target.value;
+      updateVisuals(event.target.value);
       calculateTotals();
     });
   });
@@ -130,8 +120,7 @@ function setupShippingCarriers() {
 
 function calculateTotals() {
   state.subtotal = LocalCart.total();
-  
-  // Read system settings configured by Admin if available
+
   const settings = JSON.parse(localStorage.getItem('system_settings') || '{}');
   const carrierFees = {
     ghtk: settings.feeGhtk !== undefined ? settings.feeGhtk : 30000,
@@ -139,20 +128,21 @@ function calculateTotals() {
     viettel: settings.feeViettel !== undefined ? settings.feeViettel : 25000
   };
   const threshold = settings.freeshipThreshold !== undefined ? settings.freeshipThreshold : SHIPPING_THRESHOLD;
-  
+
   const baseShippingFee = carrierFees[state.carrier] || 30000;
   state.shipping = state.subtotal >= threshold ? 0 : baseShippingFee;
-  
+
   if (state.xuUsed) {
     const maxXu = LoyaltyPoints.getBalance();
     const maxVnd = LoyaltyPoints.xuToVnd(maxXu);
-    const currentTotalBeforeXu = state.subtotal + state.shipping - state.discount;
+    const currentTotalBeforeXu = Math.max(0, state.subtotal + state.shipping - state.discount);
     state.xuDiscount = Math.min(maxVnd, currentTotalBeforeXu);
+  } else {
+    state.xuDiscount = 0;
   }
 
-  state.total = state.subtotal + state.shipping - state.discount - state.xuDiscount;
+  state.total = Math.max(0, state.subtotal + state.shipping - state.discount - state.xuDiscount);
 
-  // Render text
   const subtotalEl = document.getElementById('summary-subtotal');
   const shippingEl = document.getElementById('summary-shipping');
   const discountRow = document.getElementById('summary-discount-row');
@@ -160,7 +150,7 @@ function calculateTotals() {
   const totalEl = document.getElementById('summary-total');
 
   if (subtotalEl) subtotalEl.textContent = formatPrice(state.subtotal);
-  
+
   if (shippingEl) {
     if (state.shipping === 0) {
       shippingEl.textContent = 'Miễn phí';
@@ -174,9 +164,9 @@ function calculateTotals() {
   const totalDiscount = state.discount + state.xuDiscount;
   if (discountRow && discountEl) {
     if (totalDiscount > 0) {
-      let desc = [];
-      if (state.discount > 0) desc.push(`Voucher`);
-      if (state.xuDiscount > 0) desc.push(`Xu`);
+      const desc = [];
+      if (state.discount > 0) desc.push('Voucher');
+      if (state.xuDiscount > 0) desc.push('Xu');
       discountRow.querySelector('.summary-row__label').textContent = `Giảm giá (${desc.join(' + ')})`;
       discountEl.textContent = `-${formatPrice(totalDiscount)}`;
       discountRow.style.display = 'flex';
@@ -185,30 +175,56 @@ function calculateTotals() {
     }
   }
 
-  if (totalEl) totalEl.textContent = formatPrice(Math.max(0, state.total));
+  if (totalEl) totalEl.textContent = formatPrice(state.total);
+  updateCheckoutActionCopy(state.total);
+}
+
+function updateCheckoutActionCopy(total) {
+  const totalText = formatPrice(total);
+  const mobileTotal = document.getElementById('mobile-checkout-total');
+  if (mobileTotal) mobileTotal.textContent = totalText;
+
+  const btn = document.getElementById('place-order-btn');
+  if (btn && !btn.disabled) {
+    btn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      Xác nhận đặt hàng - ${totalText}
+    `;
+  }
+}
+
+function setupCheckoutUx() {
+  document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('blur', () => validateSingleField(input));
+    input.addEventListener('input', () => {
+      if (input.classList.contains('error')) validateSingleField(input, { quiet: true });
+    });
+  });
 }
 
 function toggleXu() {
   const btn = document.getElementById('loyalty-points-btn');
   if (!btn) return;
+
   if (state.xuUsed) {
     state.xuUsed = false;
     state.xuDiscount = 0;
-    btn.textContent = 'Sử dụng';
+    btn.textContent = 'Dùng Xu';
     btn.classList.replace('btn-primary', 'btn-outline');
     btn.style.color = '#F57C00';
     btn.style.background = 'white';
   } else {
     state.xuUsed = true;
-    btn.textContent = 'Hủy';
+    btn.textContent = 'Bỏ Xu';
     btn.classList.replace('btn-outline', 'btn-primary');
     btn.style.color = 'white';
     btn.style.background = '#F57C00';
   }
+
   calculateTotals();
 }
-
-// ── Render Items in Sidebar ───────────────────────────────────────────────────
 
 function renderSummaryItems() {
   const container = document.getElementById('summary-items-list');
@@ -216,11 +232,11 @@ function renderSummaryItems() {
 
   container.innerHTML = state.items.map(item => `
     <div class="summary-item">
-      <div class="summary-item__thumb">${item.icon || '📦'}</div>
+      <div class="summary-item__thumb">${escapeHtml(item.icon || '📦')}</div>
       <div class="summary-item__info">
-        <h4 class="summary-item__name">${item.name}</h4>
+        <h4 class="summary-item__name">${escapeHtml(item.name)}</h4>
         <div class="summary-item__qty-price">
-          Số lượng: ${item.quantity} × ${formatPrice(item.price)}
+          Số lượng: ${Number(item.quantity) || 0} × ${formatPrice(item.price)}
         </div>
       </div>
       <div class="summary-item__subtotal">
@@ -230,65 +246,71 @@ function renderSummaryItems() {
   `).join('');
 }
 
-// ── Voucher Handling ──────────────────────────────────────────────────────────
-
 function applyCheckoutVoucher() {
   const input = document.getElementById('voucher-input');
   if (!input) return;
-  
+
   const code = input.value.trim().toUpperCase();
   if (!code) {
-    showToast('Vui lòng nhập mã voucher', 'warning');
+    showToast('Vui lòng nhập mã voucher.', 'warning');
     return;
   }
 
-  // Giả lập mã giảm giá SHOPVN50 giảm 50k
   if (code === 'SHOPVN50') {
     state.discount = 50000;
     state.voucherCode = code;
-    showToast('Áp dụng voucher thành công! Giảm 50.000đ 🎉', 'success');
+    showToast('Áp dụng voucher thành công. Bạn được giảm 50.000đ.', 'success');
     calculateTotals();
   } else {
-    showToast('Mã giảm giá không chính xác hoặc đã hết hạn', 'error');
+    showToast('Mã giảm giá không chính xác hoặc đã hết hạn.', 'error');
   }
 }
-
-// ── Form Validation & Order Placement ─────────────────────────────────────────
 
 function validateForm() {
   let isValid = true;
 
-  const fields = [
-    { id: 'customer-name', name: 'Họ và tên' },
-    { id: 'customer-phone', name: 'Số điện thoại', pattern: /^[0-9]{10,11}$/, errorMsg: 'Số điện thoại gồm 10-11 chữ số' },
-    { id: 'customer-email', name: 'Email', pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, errorMsg: 'Địa chỉ email không hợp lệ' },
-    { id: 'customer-province', name: 'Tỉnh/Thành phố' },
-    { id: 'customer-district', name: 'Quận/Huyện' },
-    { id: 'customer-ward', name: 'Phường/Xã' },
-    { id: 'customer-address', name: 'Địa chỉ chi tiết' }
-  ];
-
-  fields.forEach(field => {
+  getCheckoutFields().forEach(field => {
     const el = document.getElementById(field.id);
     if (!el) return;
-
-    const val = el.value.trim();
-    let isFieldValid = true;
-
-    if (!val) {
-      isFieldValid = false;
-      setFieldError(el, `Vui lòng nhập ${field.name.toLowerCase()}`);
-    } else if (field.pattern && !field.pattern.test(val)) {
-      isFieldValid = false;
-      setFieldError(el, field.errorMsg);
-    } else {
-      clearFieldError(el);
-    }
-
-    if (!isFieldValid) isValid = false;
+    if (!validateSingleField(el)) isValid = false;
   });
 
   return isValid;
+}
+
+function getCheckoutFields() {
+  return [
+    { id: 'customer-name', name: 'họ và tên' },
+    { id: 'customer-phone', name: 'số điện thoại', pattern: /^[0-9]{10,11}$/, errorMsg: 'Số điện thoại gồm 10-11 chữ số' },
+    { id: 'customer-email', name: 'email', pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, errorMsg: 'Địa chỉ email không hợp lệ' },
+    { id: 'customer-province', name: 'tỉnh/thành phố' },
+    { id: 'customer-district', name: 'quận/huyện' },
+    { id: 'customer-ward', name: 'phường/xã' },
+    { id: 'customer-address', name: 'địa chỉ chi tiết' }
+  ];
+}
+
+function validateSingleField(element, options = {}) {
+  const field = getCheckoutFields().find(item => item.id === element.id);
+  if (!field) return true;
+
+  const value = element.value.trim();
+  if (!value) {
+    if (!options.quiet) setFieldError(element, `Vui lòng nhập ${field.name}`);
+    return false;
+  }
+
+  const valueForPattern = element.id === 'customer-phone'
+    ? value.replace(/\s+/g, '')
+    : value;
+
+  if (field.pattern && !field.pattern.test(valueForPattern)) {
+    setFieldError(element, field.errorMsg);
+    return false;
+  }
+
+  clearFieldError(element);
+  return true;
 }
 
 function setFieldError(element, message) {
@@ -308,7 +330,6 @@ function clearFieldError(element) {
   }
 }
 
-// Xóa lỗi khi bắt đầu gõ lại
 document.querySelectorAll('.form-control').forEach(input => {
   input.addEventListener('input', () => {
     if (input.classList.contains('error')) {
@@ -317,13 +338,9 @@ document.querySelectorAll('.form-control').forEach(input => {
   });
 });
 
-// ── Submit Order ──────────────────────────────────────────────────────────────
-
 async function submitOrder() {
-  // 1. Kiểm tra validation
   if (!validateForm()) {
-    showToast('Vui lòng kiểm tra lại thông tin giao hàng', 'error');
-    // Scroll to the first error field
+    showToast('Vui lòng kiểm tra lại thông tin giao hàng.', 'error');
     const firstError = document.querySelector('.form-control.error');
     if (firstError) {
       firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -332,10 +349,8 @@ async function submitOrder() {
     return;
   }
 
-  // 2. Thu thập thông tin giao hàng và thanh toán
   const name = document.getElementById('customer-name').value.trim();
   const phone = document.getElementById('customer-phone').value.trim();
-  const email = document.getElementById('customer-email').value.trim();
   const province = document.getElementById('customer-province').value.trim();
   const district = document.getElementById('customer-district').value.trim();
   const ward = document.getElementById('customer-ward').value.trim();
@@ -345,10 +360,10 @@ async function submitOrder() {
   const paymentMethodEl = document.querySelector('input[name="payment-method"]:checked');
   const paymentMethod = paymentMethodEl ? paymentMethodEl.value : 'cod';
   const paymentMethodName = {
-    'cod': 'Thanh toán khi nhận hàng (COD)',
-    'bank': 'Chuyển khoản ngân hàng',
-    'momo': 'Ví điện tử MoMo',
-    'vnpay': 'Thanh toán qua cổng VNPay'
+    cod: 'Thanh toán khi nhận hàng (COD)',
+    bank: 'Chuyển khoản ngân hàng',
+    momo: 'Ví điện tử MoMo',
+    vnpay: 'Thanh toán qua cổng VNPay'
   }[paymentMethod] || 'Không xác định';
 
   const backendOrderData = {
@@ -357,10 +372,9 @@ async function submitOrder() {
     shippingAddress: `${address}, ${ward}, ${district}, ${province}`,
     paymentMethod,
     voucherCode: state.voucherCode || null,
-    note: note || null,
+    note: note || null
   };
 
-  // 3. Loading state cho nút đặt hàng
   const btn = document.getElementById('place-order-btn');
   const originalText = btn.innerHTML;
   btn.disabled = true;
@@ -368,19 +382,16 @@ async function submitOrder() {
 
   try {
     if (Auth.isLoggedIn()) {
-      // 1. Đồng bộ giỏ hàng lên database backend
       await request('POST', '/cart/sync', {
         items: state.items.map(item => ({ id: item.id, quantity: item.quantity }))
       });
 
-      // 2. Tạo đơn hàng qua backend API
       const orderRes = await OrderAPI.create(backendOrderData);
       const order = orderRes.order;
 
-      // 3. Nếu thanh toán qua VNPay -> Lấy url thanh toán và chuyển hướng
       if (paymentMethod === 'vnpay') {
         const payRes = await request('POST', '/payment/vnpay/create', {
-          orderId: order.id,
+          orderId: order.id
         });
 
         if (payRes.success) {
@@ -390,7 +401,6 @@ async function submitOrder() {
         }
       }
 
-      // 4. Các hình thức khác (COD, Bank, MoMo) -> Lưu vào localStorage để đồng bộ hiển thị và hiển thị popup
       const popupOrderData = {
         id: order.id,
         createdAt: new Date().toISOString(),
@@ -398,10 +408,10 @@ async function submitOrder() {
           name: order.shippingName,
           phone: order.shippingPhone,
           carrier: state.carrier,
-          address: address,
-          ward: ward,
-          district: district,
-          province: province
+          address,
+          ward,
+          district,
+          province
         },
         shippingStatus: 'Chờ lấy hàng',
         status: 'Chờ xác nhận',
@@ -415,45 +425,40 @@ async function submitOrder() {
         }
       };
 
-      // Đồng bộ ngược đơn hàng này vào local để hiển thị (nếu local có dùng)
       const orders = JSON.parse(localStorage.getItem('orders') || '[]');
       orders.unshift(popupOrderData);
       localStorage.setItem('orders', JSON.stringify(orders));
 
-      // Xử lý Xu
       if (state.xuUsed && state.xuDiscount > 0) {
         const xuToDeduct = LoyaltyPoints.vndToXu(state.xuDiscount);
         LoyaltyPoints.spend(xuToDeduct);
       }
       const earnedXu = LoyaltyPoints.earn(state.total);
 
-      // Clear giỏ hàng sau khi đặt thành công
       LocalCart.clear();
 
-      // Pass xu info to popup
       popupOrderData.earnedXu = earnedXu;
       showSuccessPopup(popupOrderData);
     } else {
-      // GUEST CHECKOUT (Local Simulation)
-      const guestOrderId = `GUEST-${Date.now().toString().slice(-6)}-${Math.floor(Math.random()*9000+1000)}`;
+      const guestOrderId = `GUEST-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 9000 + 1000)}`;
 
       const popupOrderData = {
         id: guestOrderId,
         createdAt: new Date().toISOString(),
         shippingInfo: {
-          name: name,
-          phone: phone,
+          name,
+          phone,
           carrier: state.carrier,
-          address: address,
-          ward: ward,
-          district: district,
-          province: province
+          address,
+          ward,
+          district,
+          province
         },
         shippingStatus: 'Chờ lấy hàng',
         status: 'Chờ xác nhận',
         payment: {
           method: paymentMethod,
-          methodName: paymentMethod === 'vnpay' ? 'Thanh toán VNPay (Giả lập Khách)' : paymentMethodName,
+          methodName: paymentMethod === 'vnpay' ? 'Thanh toán VNPay (giả lập khách)' : paymentMethodName,
           status: 'Chờ thanh toán'
         },
         pricing: {
@@ -465,20 +470,15 @@ async function submitOrder() {
       orders.unshift(popupOrderData);
       localStorage.setItem('orders', JSON.stringify(orders));
 
-      // Clear giỏ hàng sau khi đặt thành công
       LocalCart.clear();
-
       showSuccessPopup(popupOrderData);
     }
-
   } catch (error) {
     showToast(error.message || 'Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.', 'error');
     btn.disabled = false;
     btn.innerHTML = originalText;
   }
 }
-
-// ── Success Popup ─────────────────────────────────────────────────────────────
 
 function showSuccessPopup(order) {
   const overlay = document.createElement('div');
@@ -510,21 +510,21 @@ function showSuccessPopup(order) {
     <h3 style="font-family: var(--f-display); font-size: 1.4rem; font-weight: 800; color: var(--c-navy); margin-bottom: var(--sp-sm)">Đặt hàng thành công!</h3>
     <p style="font-size: .88rem; color: var(--c-muted); margin-bottom: var(--sp-lg)">
       Cảm ơn bạn đã mua sắm tại ShopVN. Mã đơn hàng của bạn là:<br>
-      <strong style="color: var(--c-blue); font-size: 1.1rem; letter-spacing: 0.5px">${order.id}</strong>
+      <strong style="color: var(--c-blue); font-size: 1.1rem; letter-spacing: 0.5px">${escapeHtml(order.id)}</strong>
     </p>
-    
+
     <div style="background: var(--c-off); border-radius: var(--r-md); padding: var(--sp-md); text-align: left; margin-bottom: var(--sp-lg); font-size: .82rem; border: 1px solid var(--c-border)">
       <div style="display:flex; justify-content:space-between; margin-bottom:6px">
         <span style="color:var(--c-muted)">Khách hàng:</span>
-        <span style="font-weight:600">${order.shippingInfo.name}</span>
+        <span style="font-weight:600">${escapeHtml(order.shippingInfo.name)}</span>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:6px">
         <span style="color:var(--c-muted)">Số điện thoại:</span>
-        <span style="font-weight:600">${order.shippingInfo.phone}</span>
+        <span style="font-weight:600">${escapeHtml(order.shippingInfo.phone)}</span>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:6px">
         <span style="color:var(--c-muted)">Phương thức:</span>
-        <span style="font-weight:600">${order.payment.methodName}</span>
+        <span style="font-weight:600">${escapeHtml(order.payment.methodName)}</span>
       </div>
       <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--c-border); padding-top:6px; margin-top:6px">
         <span style="font-weight:600">Tổng thanh toán:</span>
@@ -534,13 +534,13 @@ function showSuccessPopup(order) {
 
     ${order.payment.method === 'bank' ? `
       <div style="margin-bottom: var(--sp-lg); font-size: .78rem; color: #e65100; background: #fff3e0; padding: 10px; border-radius: var(--r-sm); border: 1px solid #ffe0b2; text-align: left">
-        💡 <strong>Lưu ý:</strong> Vui lòng chuyển khoản đúng số tiền <strong>${formatPrice(order.pricing.total)}</strong> vào tài khoản ngân hàng hiển thị ở trang thanh toán với nội dung chuyển khoản là mã đơn hàng <strong>${order.id}</strong> để đơn hàng được duyệt nhanh nhất.
+        <strong>Lưu ý:</strong> Vui lòng chuyển khoản đúng số tiền <strong>${formatPrice(order.pricing.total)}</strong> vào tài khoản ngân hàng hiển thị ở trang thanh toán, với nội dung chuyển khoản là mã đơn hàng <strong>${escapeHtml(order.id)}</strong> để đơn được duyệt nhanh nhất.
       </div>
     ` : ''}
 
     ${order.earnedXu ? `
       <div style="margin-bottom: var(--sp-lg); font-size: .85rem; color: #2E7D32; background: #E8F5E9; padding: 10px; border-radius: var(--r-sm); border: 1px solid #C8E6C9; text-align: center">
-        🎉 Bạn được tích lũy <strong>${order.earnedXu} ShopVN Xu</strong> từ đơn hàng này!
+        Bạn được tích lũy <strong>${order.earnedXu} ShopVN Xu</strong> từ đơn hàng này.
       </div>
     ` : ''}
 
@@ -550,7 +550,6 @@ function showSuccessPopup(order) {
     </div>
   `;
 
-  // Thêm styles động cho modal animation
   const styleTag = document.createElement('style');
   styleTag.textContent = `
     @keyframes scaleUp {

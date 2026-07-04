@@ -1,6 +1,7 @@
 const { Op, fn, col, literal } = require('sequelize');
 const Product = require('../models/Product');
 const Review = require('../models/Review');
+const MasterInventory = require('../models/MasterInventory');
 
 // ── Get all (filter + sort + pagination) ──────────────────────────────────────
 
@@ -123,4 +124,33 @@ async function seedIfEmpty() {
   console.log('\x1b[33m[Seed]\x1b[0m Đã tạo 8 sản phẩm mẫu.');
 }
 
-module.exports = { getAll, getById, seedIfEmpty };
+async function ensureMasterInventory() {
+  const products = await Product.findAll({
+    attributes: ['id', 'stock'],
+    order: [['id', 'ASC']],
+  });
+
+  let created = 0;
+  for (const product of products) {
+    const [inventory, wasCreated] = await MasterInventory.findOrCreate({
+      where: { productId: product.id, warehouseId: 'MAIN_WH' },
+      defaults: {
+        availableStock: product.stock,
+        reservedStock: 0,
+        lockedStock: 0,
+      },
+    });
+
+    if (wasCreated) {
+      created += 1;
+    } else if (inventory.availableStock === null || inventory.availableStock === undefined) {
+      await inventory.update({ availableStock: product.stock });
+    }
+  }
+
+  if (created > 0) {
+    console.log(`\x1b[33m[Seed]\x1b[0m Created ${created} master inventory rows.`);
+  }
+}
+
+module.exports = { getAll, getById, seedIfEmpty, ensureMasterInventory };

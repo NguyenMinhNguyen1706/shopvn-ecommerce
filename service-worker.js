@@ -4,7 +4,7 @@
  * Implements Stale-While-Revalidate, Cache-First, and Network-First strategies.
  */
 
-const CACHE_NAME = 'shopvn-cache-v1';
+const CACHE_NAME = 'shopvn-cache-v3';
 
 // App Shell Assets - Pre-cached on install
 const ASSETS_TO_CACHE = [
@@ -40,7 +40,6 @@ const ASSETS_TO_CACHE = [
   './js/utils.js',
   './js/auth.js',
   './js/lucky-wheel.js',
-  './js/chatbot-widget.js',
   './js/compare.js',
   './js/i18n.js',
   './js/locales/vi.js',

@@ -132,8 +132,12 @@ const MemoryCache = {
   }
 };
 
+const runtimeConfig = window.SHOPVN_CONFIG || {};
 const settingsConfig = JSON.parse(localStorage.getItem('system_settings') || '{}');
-const BASE_URL = settingsConfig.backendApiUrl || 'http://localhost:3000/api';
+const BASE_URL = runtimeConfig.backendApiUrl
+  || settingsConfig.backendApiUrl
+  || 'http://localhost:3000/api';
+const USE_BACKEND_API = Boolean(runtimeConfig.backendApiUrl || settingsConfig.backendApiUrl);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -241,6 +245,9 @@ const ProductAPI = {
     }
 
     try {
+      if (!USE_BACKEND_API) {
+        throw new Error('Backend API is not configured; using local product data.');
+      }
       const data = await request('GET', `/products${qs ? '?' + qs : ''}`);
       if (data && data.items) {
         // Save database records to local disk (IndexedDB)
@@ -294,6 +301,9 @@ const ProductAPI = {
     }
 
     try {
+      if (!USE_BACKEND_API) {
+        throw new Error('Backend API is not configured; using local product data.');
+      }
       const data = await request('GET', `/products/${id}`);
       if (data && data.product) {
         LocalDB.put('products', data.product);
@@ -324,6 +334,9 @@ const ProductAPI = {
     }
 
     try {
+      if (!USE_BACKEND_API) {
+        throw new Error('Backend API is not configured; using local product data.');
+      }
       const data = await request('GET', '/products?featured=true&limit=8');
       if (data && data.items) {
         LocalDB.put('products', data.items);
@@ -350,6 +363,9 @@ const ProductAPI = {
     }
 
     try {
+      if (!USE_BACKEND_API) {
+        throw new Error('Backend API is not configured; using local product data.');
+      }
       const data = await request('GET', '/products?sort=newest&limit=4');
       if (data && data.items) {
         LocalDB.put('products', data.items);
@@ -403,7 +419,17 @@ const AdminAPI = {
     return res;
   },
   getOrders: () => request('GET', '/admin/orders'),
-  updateOrder: (id, data) => request('PUT', `/admin/orders/${id}`, data),
+  updateOrder: (id, data) => request('PATCH', `/admin/orders/${id}/status`, {
+    status: typeof data === 'string' ? data : data.status,
+  }),
+  getActionPlan: () => request('GET', '/admin/action-plan'),
+  getActionPlanHistory: () => request('GET', '/admin/action-plans/history'),
+  saveActionPlan: (plan) => request('POST', '/admin/action-plan', { plan }),
+  updateActionTaskStatus: (planId, taskId, status) => request(
+    'PATCH',
+    `/admin/action-plan/${encodeURIComponent(planId)}/tasks/${encodeURIComponent(taskId)}`,
+    { status }
+  ),
 };
 
 // ==========================================

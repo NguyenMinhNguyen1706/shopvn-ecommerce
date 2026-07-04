@@ -8,6 +8,7 @@
     "dev": "nodemon app.js",
     "test": "jest --verbose",
     "test:watch": "jest --watch",
+    "load:test": "node scripts/load-test.js",
     "db:backup": "node scripts/backup-db.js",
     "db:restore": "node scripts/restore-db.js"
   },

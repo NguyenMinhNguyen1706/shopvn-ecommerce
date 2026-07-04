@@ -3,6 +3,7 @@
 <html lang="vi">
 
 <head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <meta charset="UTF-8" />
 
@@ -72,7 +73,7 @@
 
           </svg>
 
-          <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm"
+          <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
             onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
 
         </div>
@@ -253,25 +254,30 @@
 
             <div class="price-inputs">
 
-              <input class="price-input" type="number" id="price-min" placeholder="Từ" min="0" aria-label="Giá từ" />
+              <input class="price-input" type="number" id="price-min" placeholder="Từ 0đ" min="0" aria-label="Giá từ" />
 
               <span class="price-sep">—</span>
 
-              <input class="price-input" type="number" id="price-max" placeholder="Đến" min="0" aria-label="Giá đến" />
+              <input class="price-input" type="number" id="price-max" placeholder="Đến 50.000.000đ" min="0" aria-label="Giá đến" />
 
+            </div>
+
+            <div class="price-range" aria-label="Chọn khoảng giá nhanh">
+              <input class="price-range__input" type="range" id="price-range-min" min="0" max="50000000" step="500000" value="0" aria-label="Giá thấp nhất">
+              <input class="price-range__input" type="range" id="price-range-max" min="0" max="50000000" step="500000" value="50000000" aria-label="Giá cao nhất">
+              <div class="price-range__values">
+                <span id="price-range-min-label">0đ</span>
+                <span id="price-range-max-label">50.000.000đ</span>
+              </div>
             </div>
 
             <button class="btn btn-outline btn-sm btn-full" onclick="
 
-                    state.minPrice = document.getElementById('price-min').value;
-
-                    state.maxPrice = document.getElementById('price-max').value;
-
-                    applyFilters();
+                    applyPriceFilterFromControls();
 
                   ">
 
-              Áp dụng
+              Áp dụng khoảng giá
 
             </button>
 
@@ -349,13 +355,13 @@
 
               </svg>
 
-              <input type="search" id="search-input" placeholder="Tìm theo tên, danh mục..."
+              <input type="search" id="search-input" placeholder="Tìm laptop, điện thoại, phụ kiện..."
                 aria-label="Tìm kiếm sản phẩm" />
 
             </div>
 
             <!-- Mobile Filter Trigger -->
-            <button id="mobile-filter-trigger" class="btn btn-outline" style="display:none; gap:6px; align-items:center; height:42px" aria-label="Mở bộ lọc">
+            <button id="mobile-filter-trigger" class="btn btn-outline mobile-filter-btn" aria-label="Mở bộ lọc">
               <span data-i18n="Bộ lọc">Bộ lọc</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
@@ -551,7 +557,8 @@
 
   <!-- ========================================== -->
 
-  <script src="js/api.js"></script>
+  <script src="js/config.js"></script>
+<script src="js/api.js"></script>
 
   <script src="js/utils.js"></script>
 
@@ -594,4 +601,6 @@
 </body>
 
 </html>
+
+
 

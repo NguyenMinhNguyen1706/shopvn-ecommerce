@@ -1,4 +1,5 @@
 ﻿<!DOCTYPE html><html lang="vi"><head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thanh toán — ShopVN</title>
@@ -41,7 +42,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--c-muted);flex-shrink:0">
           <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
         </svg>
-        <input type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm sản phẩm" onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value">
+        <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm" onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value">
       </div>
 
       <!-- ========================================== -->
@@ -107,6 +108,36 @@
       </ol>
     </nav>
 
+    <div class="checkout-progress" aria-label="Tiến trình thanh toán">
+      <a class="checkout-progress__step done" href="cart.html">
+        <span>1</span>
+        <strong>Giỏ hàng</strong>
+      </a>
+      <div class="checkout-progress__line"></div>
+      <div class="checkout-progress__step active" aria-current="step">
+        <span>2</span>
+        <strong>Giao hàng</strong>
+      </div>
+      <div class="checkout-progress__line"></div>
+      <div class="checkout-progress__step">
+        <span>3</span>
+        <strong>Thanh toán</strong>
+      </div>
+      <div class="checkout-progress__line"></div>
+      <div class="checkout-progress__step">
+        <span>4</span>
+        <strong>Hoàn tất</strong>
+      </div>
+    </div>
+
+    <div class="checkout-reassurance" role="note">
+      <div>
+        <strong>Thanh toán nhanh, không bắt buộc tạo tài khoản</strong>
+        <span>Đăng nhập nếu bạn muốn tích ShopVN Xu và theo dõi đơn thuận tiện hơn.</span>
+      </div>
+      <a href="login.html">Đăng nhập</a>
+    </div>
+
     <!-- ========================================== -->
     <div class="checkout-layout">
 
@@ -129,49 +160,49 @@
             <!-- ========================================== -->
             <div class="form-group form-grid__full">
               <label class="form-label" for="customer-name">Họ và tên <span>*</span></label>
-              <input class="form-control" type="text" id="customer-name" placeholder="Ví dụ: Nguyễn Văn A">
+              <input class="form-control" type="text" id="customer-name" name="name" autocomplete="name" placeholder="Ví dụ: Nguyễn Văn A">
               <span class="form-error">Vui lòng nhập họ và tên</span>
             </div>
 
             <!-- ========================================== -->
             <div class="form-group">
               <label class="form-label" for="customer-phone"><span data-i18n="checkout.phone">Số điện thoại</span> <span>*</span></label>
-              <input class="form-control" type="tel" id="customer-phone" placeholder="Ví dụ: 0905123456">
+              <input class="form-control" type="tel" id="customer-phone" name="tel" autocomplete="tel" inputmode="numeric" placeholder="Ví dụ: 0905 123 456">
               <span class="form-error">Vui lòng nhập số điện thoại hợp lệ</span>
             </div>
 
             <!-- ========================================== -->
             <div class="form-group">
               <label class="form-label" for="customer-email">Email <span>*</span></label>
-              <input class="form-control" type="email" id="customer-email" placeholder="Ví dụ: nva@gmail.com">
+              <input class="form-control" type="email" id="customer-email" name="email" autocomplete="email" placeholder="Ví dụ: nva@gmail.com">
               <span class="form-error">Vui lòng nhập email hợp lệ</span>
             </div>
 
             <!-- ========================================== -->
             <div class="form-group">
               <label class="form-label" for="customer-province"><span data-i18n="checkout.province">Tỉnh / Thành phố</span> <span>*</span></label>
-              <input class="form-control" type="text" id="customer-province" placeholder="Ví dụ: Đà Nẵng">
+              <input class="form-control" type="text" id="customer-province" name="address-level1" autocomplete="address-level1" placeholder="Ví dụ: Đà Nẵng">
               <span class="form-error">Vui lòng nhập tỉnh/thành phố</span>
             </div>
 
             <!-- ========================================== -->
             <div class="form-group">
               <label class="form-label" for="customer-district"><span data-i18n="checkout.district">Quận / Huyện</span> <span>*</span></label>
-              <input class="form-control" type="text" id="customer-district" placeholder="Ví dụ: Hải Châu">
+              <input class="form-control" type="text" id="customer-district" name="address-level2" autocomplete="address-level2" placeholder="Ví dụ: Hải Châu">
               <span class="form-error">Vui lòng nhập quận/huyện</span>
             </div>
 
             <!-- ========================================== -->
             <div class="form-group">
               <label class="form-label" for="customer-ward">Phường / Xã <span>*</span></label>
-              <input class="form-control" type="text" id="customer-ward" placeholder="Ví dụ: Hòa Cường Bắc">
+              <input class="form-control" type="text" id="customer-ward" name="address-level3" placeholder="Ví dụ: Hòa Cường Bắc">
               <span class="form-error">Vui lòng nhập phường/xã</span>
             </div>
 
             <!-- ========================================== -->
             <div class="form-group">
               <label class="form-label" for="customer-address">Địa chỉ chi tiết (Số nhà, tên đường...) <span>*</span></label>
-              <input class="form-control" type="text" id="customer-address" placeholder="Ví dụ: 123 Nguyễn Tri Phương">
+              <input class="form-control" type="text" id="customer-address" name="address-line1" autocomplete="address-line1" placeholder="Ví dụ: 123 Nguyễn Tri Phương">
               <span class="form-error">Vui lòng nhập địa chỉ chi tiết</span>
             </div>
 
@@ -179,6 +210,7 @@
             <div class="form-group form-grid__full">
               <label class="form-label" for="customer-note">Ghi chú giao hàng (Tùy chọn)</label>
               <textarea class="form-control" id="customer-note" placeholder="Ghi chú thêm cho shipper (ví dụ: giao giờ hành chính, gọi trước khi đến...)"></textarea>
+              <span class="form-hint">Không nhập mật khẩu, mã OTP hoặc thông tin thẻ trong ghi chú.</span>
             </div>
 
             <!-- ========================================== -->
@@ -226,7 +258,7 @@
             <div class="payment-method active">
               <input class="payment-method__radio" type="radio" name="payment-method" id="pay-cod" value="cod" checked="">
               <div class="payment-method__info">
-                <label class="payment-method__name" for="pay-cod"><span data-i18n="checkout.title">Thanh toán</span> khi nhận hàng (COD)</label>
+                <label class="payment-method__name" for="pay-cod"><span data-i18n="checkout.title">Thanh toán</span> khi nhận hàng (COD) <small>Khuyên dùng</small></label>
                 <div class="payment-method__desc"><span data-i18n="checkout.title">Thanh toán</span> bằng tiền mặt khi shipper giao hàng tận nơi.</div>
               </div>
             </div>
@@ -326,6 +358,7 @@
       <!-- ========================================== -->
       <aside class="checkout-summary" aria-label="Tóm tắt đơn hàng">
         <h2 class="checkout-summary__title"><span data-i18n="nav.orders">Đơn hàng</span> của bạn</h2>
+        <a class="checkout-summary__edit" href="cart.html">Sửa giỏ hàng</a>
 
         <!-- ========================================== -->
         <div class="summary-items" id="summary-items-list">
@@ -361,10 +394,11 @@
         </div>
 
         <!-- ========================================== -->
+        <label class="voucher-label" for="voucher-input">Mã giảm giá</label>
         <div class="voucher-wrap">
           <input class="voucher-input" type="text" id="voucher-input" placeholder="Mã giảm giá (ví dụ: SHOPVN50)" aria-label="Mã voucher">
           <button class="btn btn-outline btn-sm" onclick="applyCheckoutVoucher()">
-            Áp dụng
+            Áp dụng mã
           </button>
         </div>
 
@@ -375,7 +409,7 @@
             <span style="font-size: 0.8rem; color: var(--c-muted);">Bạn có <strong id="loyalty-points-balance">0</strong> xu (giảm <strong id="loyalty-points-vnd">0đ</strong>)</span>
           </div>
           <button id="loyalty-points-btn" class="btn btn-outline btn-sm" onclick="toggleXu()" style="border-color: var(--c-warning); color: var(--c-warning); background: white">
-            <span data-i18n="checkout.use">Sử dụng</span>
+            <span data-i18n="checkout.use">Dùng Xu</span>
           </button>
         </div>
 
@@ -384,8 +418,12 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
-          Đặt hàng ngay
+          Xác nhận đặt hàng
         </button>
+
+        <p class="checkout-legal-note">
+          Khi đặt hàng, bạn xác nhận thông tin giao hàng là chính xác. ShopVN sẽ gọi xác nhận trước khi giao với đơn COD giá trị cao.
+        </p>
 
         <!-- ========================================== -->
         <div class="summary-trust">
@@ -410,6 +448,14 @@
 
   </div><!-- ========================================== -->
 </div><!-- ========================================== -->
+
+<div class="checkout-mobile-bar" id="checkout-mobile-bar" aria-label="Đặt hàng trên di động">
+  <div>
+    <span>Tổng thanh toán</span>
+    <strong id="mobile-checkout-total">0đ</strong>
+  </div>
+  <button class="btn btn-primary btn-sm" onclick="submitOrder()">Xác nhận</button>
+</div>
 
 <!-- ========================================== -->
 <footer class="footer" role="contentinfo">
@@ -459,6 +505,7 @@
 </footer>
 
 <!-- ========================================== -->
+<script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
@@ -497,7 +544,12 @@
       </a>
     </div>
   </nav>
-</body></html>
-
-
+</body></html>
+
+
+
+
+
+
+
 

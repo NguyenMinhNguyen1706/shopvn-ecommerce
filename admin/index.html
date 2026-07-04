@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trang quản trị — ShopVN</title>
-  <meta name="description" content="Hệ thống quản trị bán hàng ShopVN." />
+  <title>Trang quáº£n trá»‹ â€” ShopVN</title>
+  <meta name="description" content="Há»‡ thá»‘ng quáº£n trá»‹ bÃ¡n hÃ ng ShopVN." />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,33 +18,33 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      NAVBAR
-════════════════════════════════════════════════════════════ -->
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <header class="navbar" role="banner">
   <div class="container">
-    <nav class="navbar__inner" aria-label="Điều hướng chính">
+    <nav class="navbar__inner" aria-label="Äiá»u hÆ°á»›ng chÃ­nh">
 
       <!-- Logo -->
-      <a href="../index.html" class="navbar__logo" aria-label="ShopVN - Trang chủ">
+      <a href="../index.html" class="navbar__logo" aria-label="ShopVN - Trang chá»§">
         Shop<span>VN</span>
       </a>
 
       <!-- Nav links -->
       <ul class="navbar__nav" role="list">
-        <li><a href="../index.html"    class="navbar__link">Trang chủ</a></li>
-        <li><a href="../products.html" class="navbar__link">Sản phẩm</a></li>
+        <li><a href="../index.html"    class="navbar__link">Trang chá»§</a></li>
+        <li><a href="../products.html" class="navbar__link">Sáº£n pháº©m</a></li>
         <li><a href="../products.html?category=Laptop"      class="navbar__link">Laptop</a></li>
-        <li><a href="../products.html?category=Điện thoại"  class="navbar__link">Điện thoại</a></li>
-        <li><a href="../products.html?category=Phụ kiện"    class="navbar__link">Phụ kiện</a></li>
+        <li><a href="../products.html?category=Äiá»‡n thoáº¡i"  class="navbar__link">Äiá»‡n thoáº¡i</a></li>
+        <li><a href="../products.html?category=Phá»¥ kiá»‡n"    class="navbar__link">Phá»¥ kiá»‡n</a></li>
       </ul>
 
       <!-- Actions -->
       <div class="navbar__actions">
         <!-- Auth buttons (updated by auth.js) -->
         <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
-          <a href="../login.html"    class="btn btn-ghost btn-sm">Đăng nhập</a>
-          <a href="../register.html" class="btn btn-primary btn-sm">Đăng ký</a>
+          <a href="../login.html"    class="btn btn-ghost btn-sm">ÄÄƒng nháº­p</a>
+          <a href="../register.html" class="btn btn-primary btn-sm">ÄÄƒng kÃ½</a>
         </div>
       </div>
 
@@ -51,39 +52,51 @@
   </div>
 </header>
 
-<!-- ═══════════════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      ADMIN PAGE
-════════════════════════════════════════════════════════════ -->
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="admin-page">
   <div class="container">
     
     <div class="admin-layout">
 
       <!-- LEFT: Sidebar Menu -->
-      <aside class="admin-sidebar" aria-label="Menu quản trị">
+      <aside class="admin-sidebar" aria-label="Menu quáº£n trá»‹">
         <h2 class="admin-sidebar__title">ShopVN Admin</h2>
         
-        <nav class="admin-menu" aria-label="Menu chức năng">
+        <nav class="admin-menu" aria-label="Menu chá»©c nÄƒng">
           <button class="admin-menu__item active" data-section="dashboard">
-            📊 Tổng quan
+            ðŸ“Š Tá»•ng quan
+          </button>
+          <button class="admin-menu__item" data-section="trends">
+            ðŸ“¡ Trend Radar
+          </button>
+          <button class="admin-menu__item" data-section="briefing">
+            ðŸ—žï¸ Weekly Briefing
+          </button>
+          <button class="admin-menu__item" data-section="sources">
+            ðŸ›°ï¸ Source Center
+          </button>
+          <button class="admin-menu__item" data-section="actions">
+            âœ… Action Center
           </button>
           <button class="admin-menu__item" data-section="orders">
-            📦 Đơn hàng
+            ðŸ“¦ ÄÆ¡n hÃ ng
           </button>
           <button class="admin-menu__item" data-section="products">
-            🛒 Sản phẩm
+            ðŸ›’ Sáº£n pháº©m
           </button>
           <button class="admin-menu__item" data-section="customers">
-            👥 Khách hàng (CRM)
+            ðŸ‘¥ KhÃ¡ch hÃ ng (CRM)
           </button>
           <button class="admin-menu__item" data-section="blog">
-            📝 Bài viết (CMS)
+            ðŸ“ BÃ i viáº¿t (CMS)
           </button>
           <button class="admin-menu__item" data-section="shipments">
-            🚚 Vận đơn
+            ðŸšš Váº­n Ä‘Æ¡n
           </button>
           <button class="admin-menu__item" data-section="settings">
-            ⚙️ Cấu hình
+            âš™ï¸ Cáº¥u hÃ¬nh
           </button>
         </nav>
       </aside>
@@ -97,43 +110,43 @@
           <!-- Stats Grid -->
           <div class="admin-stats">
             <div class="stat-card">
-              <span class="stat-card__label">Tổng doanh thu</span>
-              <span class="stat-card__value" id="stat-revenue">0đ</span>
-              <span class="stat-card__desc">Doanh số từ các đơn không bị hủy</span>
+              <span class="stat-card__label">Tá»•ng doanh thu</span>
+              <span class="stat-card__value" id="stat-revenue">0Ä‘</span>
+              <span class="stat-card__desc">Doanh sá»‘ tá»« cÃ¡c Ä‘Æ¡n khÃ´ng bá»‹ há»§y</span>
             </div>
             
             <div class="stat-card">
-              <span class="stat-card__label">Tổng đơn hàng</span>
+              <span class="stat-card__label">Tá»•ng Ä‘Æ¡n hÃ ng</span>
               <span class="stat-card__value" id="stat-orders">0</span>
-              <span class="stat-card__desc">Tất cả các đơn đã phát sinh</span>
+              <span class="stat-card__desc">Táº¥t cáº£ cÃ¡c Ä‘Æ¡n Ä‘Ã£ phÃ¡t sinh</span>
             </div>
             
             <div class="stat-card">
-              <span class="stat-card__label">Sản phẩm bán</span>
+              <span class="stat-card__label">Sáº£n pháº©m bÃ¡n</span>
               <span class="stat-card__value" id="stat-products">0</span>
-              <span class="stat-card__desc">Số lượng sản phẩm trong kho</span>
+              <span class="stat-card__desc">Sá»‘ lÆ°á»£ng sáº£n pháº©m trong kho</span>
             </div>
             
             <div class="stat-card" style="border-color:var(--c-accent)">
-              <span class="stat-card__label" style="color:var(--c-accent)">Đơn chờ duyệt</span>
+              <span class="stat-card__label" style="color:var(--c-accent)">ÄÆ¡n chá» duyá»‡t</span>
               <span class="stat-card__value" id="stat-pending" style="color:var(--c-accent)">0</span>
-              <span class="stat-card__desc">Cần được admin xử lý ngay</span>
+              <span class="stat-card__desc">Cáº§n Ä‘Æ°á»£c admin xá»­ lÃ½ ngay</span>
             </div>
           </div>
 
           <!-- Latest Orders Card -->
           <div class="admin-card">
-            <h3 class="admin-card__title" style="margin-bottom:var(--sp-md)">5 đơn hàng gần nhất</h3>
+            <h3 class="admin-card__title" style="margin-bottom:var(--sp-md)">5 Ä‘Æ¡n hÃ ng gáº§n nháº¥t</h3>
             
             <div class="admin-table-wrapper">
-              <table class="admin-table" aria-label="Đơn hàng gần nhất">
+              <table class="admin-table" aria-label="ÄÆ¡n hÃ ng gáº§n nháº¥t">
                 <thead>
                   <tr>
-                    <th>Mã đơn</th>
-                    <th>Khách hàng</th>
-                    <th>Ngày đặt</th>
-                    <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
+                    <th>MÃ£ Ä‘Æ¡n</th>
+                    <th>KhÃ¡ch hÃ ng</th>
+                    <th>NgÃ y Ä‘áº·t</th>
+                    <th>Tá»•ng tiá»n</th>
+                    <th>Tráº¡ng thÃ¡i</th>
                   </tr>
                 </thead>
                 <tbody id="dashboard-latest-orders">
@@ -146,20 +159,220 @@
         </section>
 
         <!-- SECTION 2: ORDERS MANAGEMENT -->
+        <section id="sec-trends" style="display:none">
+          <div class="trend-hero admin-card">
+            <div>
+              <span class="trend-eyebrow">Weekly Market Intelligence</span>
+              <h3 class="admin-card__title">Trend Radar cho Laptop &amp; Äiá»‡n thoáº¡i</h3>
+              <p class="trend-hero__desc">
+                Theo dÃµi tÃ­n hiá»‡u thá»‹ trÆ°á»ng Viá»‡t Nam tá»« GitHub, YouTube public vÃ  TikTok Ä‘á»ƒ há»— trá»£ nháº­p hÃ ng,
+                marketing, chatbot tÆ° váº¥n vÃ  theo dÃµi Ä‘á»‘i thá»§.
+              </p>
+            </div>
+            <div class="trend-actions">
+              <button class="btn btn-primary btn-sm" onclick="refreshTrendRadar()">Cáº­p nháº­t tuáº§n nÃ y</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportTrendRadarHTML()">Export HTML</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportTrendRadarJSON()">Export JSON</button>
+            </div>
+          </div>
+
+          <div class="trend-meta-grid">
+            <div class="trend-meta-card">
+              <span>Chu ká»³</span>
+              <strong id="trend-cadence">Háº±ng tuáº§n</strong>
+              <small id="trend-next-update">Äang tÃ­nh lá»‹ch cáº­p nháº­t...</small>
+            </div>
+            <div class="trend-meta-card">
+              <span>Thá»‹ trÆ°á»ng</span>
+              <strong>Viá»‡t Nam Æ°u tiÃªn</strong>
+              <small>So sÃ¡nh thÃªm tÃ­n hiá»‡u quá»‘c táº¿ khi há»¯u Ã­ch.</small>
+            </div>
+            <div class="trend-meta-card">
+              <span>Nguá»“n Phase 1</span>
+              <strong>GitHub Â· YouTube Â· TikTok</strong>
+              <small>Adapter tháº­t sáº½ cháº¡y phÃ­a server khi cÃ³ API key.</small>
+            </div>
+            <div class="trend-meta-card">
+              <span>Äá»‘i thá»§ theo dÃµi</span>
+              <strong>TGDD Â· FPT Â· CellphoneS Â· Shopee Mall</strong>
+              <small>Táº­p trung campaign, danh má»¥c vÃ  thÃ´ng Ä‘iá»‡p bÃ¡n hÃ ng.</small>
+            </div>
+          </div>
+
+          <div class="trend-score-grid" id="trend-score-grid"></div>
+
+          <div class="trend-grid">
+            <div class="trend-panel">
+              <div class="trend-panel__header">
+                <h4>Topic Æ°u tiÃªn tuáº§n nÃ y</h4>
+                <span id="trend-generated-at"></span>
+              </div>
+              <div id="trend-topic-list" class="trend-topic-list"></div>
+            </div>
+
+            <div class="trend-panel">
+              <div class="trend-panel__header">
+                <h4>Äá» xuáº¥t hÃ nh Ä‘á»™ng</h4>
+                <span>Business actions</span>
+              </div>
+              <div id="trend-action-list" class="trend-action-list"></div>
+            </div>
+          </div>
+
+          <div class="trend-grid trend-grid--wide">
+            <div class="trend-panel">
+              <div class="trend-panel__header">
+                <h4>Pain points &amp; cÃ¢u há»i khÃ¡ch hay há»i</h4>
+                <span>Customer voice</span>
+              </div>
+              <div id="trend-voice-list" class="trend-voice-list"></div>
+            </div>
+
+            <div class="trend-panel">
+              <div class="trend-panel__header">
+                <h4>Äá»‘i thá»§ &amp; nguá»“n dá»¯ liá»‡u</h4>
+                <span>Signals</span>
+              </div>
+              <div id="trend-source-list" class="trend-source-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-briefing" style="display:none">
+          <div class="briefing-hero admin-card">
+            <div>
+              <span class="trend-eyebrow">Weekly HTML / Markdown Briefing</span>
+              <h3 class="admin-card__title">Briefing tuáº§n cho Chá»§ shop, Marketing &amp; Nháº­p hÃ ng</h3>
+              <p class="trend-hero__desc">
+                Káº¿t há»£p 70% dá»¯ liá»‡u ná»™i bá»™ há»‡ thá»‘ng vÃ  30% tÃ­n hiá»‡u Trend Radar Ä‘á»ƒ táº¡o bÃ¡o cÃ¡o tiáº¿ng Viá»‡t,
+                cÃ³ báº£n xem trÆ°á»›c trong admin vÃ  export HTML/Markdown.
+              </p>
+            </div>
+            <div class="trend-actions">
+              <button class="btn btn-primary btn-sm" onclick="createWeeklyBriefing()">Táº¡o briefing tuáº§n nÃ y</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportWeeklyBriefingHTML()">Export HTML</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportWeeklyBriefingMarkdown()">Export Markdown</button>
+            </div>
+          </div>
+
+          <div class="briefing-layout">
+            <div class="briefing-preview" id="weekly-briefing-preview"></div>
+            <aside class="briefing-history admin-card">
+              <div class="trend-panel__header">
+                <h4>Lá»‹ch sá»­ briefing</h4>
+                <span id="briefing-history-count">0 báº£n</span>
+              </div>
+              <div id="weekly-briefing-history" class="briefing-history__list"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="sec-sources" style="display:none">
+          <div class="source-hero admin-card">
+            <div>
+              <span class="trend-eyebrow">Phase 3 Â· Source Intelligence</span>
+              <h3 class="admin-card__title">Source Center cho GitHub, YouTube, TikTok &amp; Ä‘á»‘i thá»§</h3>
+              <p class="trend-hero__desc">
+                Chuáº©n hÃ³a tÃ­n hiá»‡u thá»‹ trÆ°á»ng trÆ°á»›c khi ná»‘i API tháº­t: cáº¥u hÃ¬nh nguá»“n, cháº¡y thu tháº­p tuáº§n nÃ y,
+                lÆ°u lá»‹ch sá»­ signals vÃ  export JSON cho cÃ¡c bÆ°á»›c tá»± Ä‘á»™ng hÃ³a sau.
+              </p>
+            </div>
+            <div class="trend-actions">
+              <button class="btn btn-primary btn-sm" onclick="collectSourceSignals()">Thu tháº­p tuáº§n nÃ y</button>
+              <button class="btn btn-ghost btn-sm" onclick="applySourceSignalsToTrendRadar()">Äáº©y vÃ o Trend Radar</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportSourceSignalsJSON()">Export JSON</button>
+            </div>
+          </div>
+
+          <div class="source-grid">
+            <div class="source-panel admin-card">
+              <div class="trend-panel__header">
+                <h4>Cáº¥u hÃ¬nh adapter</h4>
+                <span>Adapter readiness</span>
+              </div>
+              <div id="source-adapter-list" class="source-adapter-list"></div>
+            </div>
+
+            <div class="source-panel admin-card">
+              <div class="trend-panel__header">
+                <h4>Signals má»›i nháº¥t</h4>
+                <span id="source-generated-at">ChÆ°a cháº¡y</span>
+              </div>
+              <div id="source-signal-list" class="source-signal-list"></div>
+            </div>
+          </div>
+
+          <div class="source-grid source-grid--wide">
+            <div class="source-panel admin-card">
+              <div class="trend-panel__header">
+                <h4>Cá»¥m insight theo chá»§ Ä‘á»</h4>
+                <span>Clusters</span>
+              </div>
+              <div id="source-cluster-list" class="source-cluster-list"></div>
+            </div>
+
+            <div class="source-panel admin-card">
+              <div class="trend-panel__header">
+                <h4>Lá»‹ch sá»­ thu tháº­p</h4>
+                <span id="source-history-count">0 báº£n</span>
+              </div>
+              <div id="source-history-list" class="source-history-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-actions" style="display:none">
+          <div class="action-hero admin-card">
+            <div>
+              <span class="trend-eyebrow">Phase 4 Â· Execution Hub</span>
+              <h3 class="admin-card__title">Action Center cho Marketing, Nháº­p hÃ ng &amp; Chatbot</h3>
+              <p class="trend-hero__desc">
+                Chuyá»ƒn Trend Radar, Weekly Briefing vÃ  Source Signals thÃ nh danh sÃ¡ch viá»‡c cÃ³ owner, Æ°u tiÃªn,
+                deadline, tráº¡ng thÃ¡i vÃ  file export Ä‘á»ƒ Ä‘á»™i váº­n hÃ nh lÃ m ngay.
+              </p>
+            </div>
+            <div class="trend-actions">
+              <button class="btn btn-primary btn-sm" onclick="generateActionPlan()">Táº¡o action plan</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportActionPlanJSON()">Export JSON</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportActionPlanCSV()">Export CSV</button>
+            </div>
+          </div>
+
+          <div class="action-score-grid" id="action-score-grid"></div>
+
+          <div class="action-layout">
+            <div class="action-board admin-card">
+              <div class="trend-panel__header">
+                <h4>Báº£ng thá»±c thi tuáº§n nÃ y</h4>
+                <span id="action-generated-at">ChÆ°a táº¡o</span>
+              </div>
+              <div class="action-board__columns" id="action-board-columns"></div>
+            </div>
+
+            <aside class="action-side admin-card">
+              <div class="trend-panel__header">
+                <h4>Checklist theo team</h4>
+                <span>Owners</span>
+              </div>
+              <div id="action-owner-list" class="action-owner-list"></div>
+            </aside>
+          </div>
+        </section>
+
         <section id="sec-orders" style="display:none">
           <div class="admin-card">
-            <h3 class="admin-card__title" style="margin-bottom:var(--sp-lg)">Quản lý đơn hàng</h3>
+            <h3 class="admin-card__title" style="margin-bottom:var(--sp-lg)">Quáº£n lÃ½ Ä‘Æ¡n hÃ ng</h3>
 
             <div class="admin-table-wrapper">
-              <table class="admin-table" aria-label="Tất cả đơn hàng">
+              <table class="admin-table" aria-label="Táº¥t cáº£ Ä‘Æ¡n hÃ ng">
                 <thead>
                   <tr>
-                    <th>Mã đơn</th>
-                    <th>Khách hàng</th>
-                    <th>Ngày đặt</th>
-                    <th>Tổng cộng</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
+                    <th>MÃ£ Ä‘Æ¡n</th>
+                    <th>KhÃ¡ch hÃ ng</th>
+                    <th>NgÃ y Ä‘áº·t</th>
+                    <th>Tá»•ng cá»™ng</th>
+                    <th>Tráº¡ng thÃ¡i</th>
+                    <th>HÃ nh Ä‘á»™ng</th>
                   </tr>
                 </thead>
                 <tbody id="orders-table-body">
@@ -175,23 +388,23 @@
           <div class="admin-card">
             
             <div class="admin-card__header">
-              <h3 class="admin-card__title">Quản lý sản phẩm</h3>
+              <h3 class="admin-card__title">Quáº£n lÃ½ sáº£n pháº©m</h3>
               <button class="btn btn-primary btn-sm" onclick="openProductModal()">
-                ➕ Thêm sản phẩm
+                âž• ThÃªm sáº£n pháº©m
               </button>
             </div>
 
             <div class="admin-table-wrapper">
-              <table class="admin-table" aria-label="Tất cả sản phẩm">
+              <table class="admin-table" aria-label="Táº¥t cáº£ sáº£n pháº©m">
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Ảnh</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Danh mục</th>
-                    <th>Giá bán</th>
-                    <th>Kho hàng</th>
-                    <th>Hành động</th>
+                    <th>áº¢nh</th>
+                    <th>TÃªn sáº£n pháº©m</th>
+                    <th>Danh má»¥c</th>
+                    <th>GiÃ¡ bÃ¡n</th>
+                    <th>Kho hÃ ng</th>
+                    <th>HÃ nh Ä‘á»™ng</th>
                   </tr>
                 </thead>
                 <tbody id="products-table-body">
@@ -205,17 +418,17 @@
         <!-- SECTION 4: CRM (CUSTOMERS) -->
         <section id="sec-customers" style="display:none">
           <div class="admin-card">
-            <h3 class="admin-card__title" style="margin-bottom:var(--sp-lg)">Quản lý khách hàng (CRM)</h3>
+            <h3 class="admin-card__title" style="margin-bottom:var(--sp-lg)">Quáº£n lÃ½ khÃ¡ch hÃ ng (CRM)</h3>
             <div class="admin-table-wrapper">
-              <table class="admin-table" aria-label="Tất cả khách hàng">
+              <table class="admin-table" aria-label="Táº¥t cáº£ khÃ¡ch hÃ ng">
                 <thead>
                   <tr>
-                    <th>Khách hàng</th>
+                    <th>KhÃ¡ch hÃ ng</th>
                     <th>Email</th>
-                    <th>Số điện thoại</th>
-                    <th>ShopVN Xu tích lũy</th>
-                    <th>Trạng thái tài khoản</th>
-                    <th>Hành động</th>
+                    <th>Sá»‘ Ä‘iá»‡n thoáº¡i</th>
+                    <th>ShopVN Xu tÃ­ch lÅ©y</th>
+                    <th>Tráº¡ng thÃ¡i tÃ i khoáº£n</th>
+                    <th>HÃ nh Ä‘á»™ng</th>
                   </tr>
                 </thead>
                 <tbody id="customers-table-body">
@@ -230,22 +443,22 @@
         <section id="sec-blog" style="display:none">
           <div class="admin-card">
             <div class="admin-card__header" style="margin-bottom:var(--sp-lg)">
-              <h3 class="admin-card__title">Quản lý bài viết (CMS)</h3>
+              <h3 class="admin-card__title">Quáº£n lÃ½ bÃ i viáº¿t (CMS)</h3>
               <button class="btn btn-primary btn-sm" onclick="openBlogModal()">
-                ➕ Viết bài mới
+                âž• Viáº¿t bÃ i má»›i
               </button>
             </div>
             <div class="admin-table-wrapper">
-              <table class="admin-table" aria-label="Tất cả bài viết">
+              <table class="admin-table" aria-label="Táº¥t cáº£ bÃ i viáº¿t">
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Biểu tượng</th>
-                    <th>Tiêu đề bài viết (VI)</th>
-                    <th>Danh mục</th>
-                    <th>Ngày đăng</th>
-                    <th>Tác giả</th>
-                    <th>Hành động</th>
+                    <th>Biá»ƒu tÆ°á»£ng</th>
+                    <th>TiÃªu Ä‘á» bÃ i viáº¿t (VI)</th>
+                    <th>Danh má»¥c</th>
+                    <th>NgÃ y Ä‘Äƒng</th>
+                    <th>TÃ¡c giáº£</th>
+                    <th>HÃ nh Ä‘á»™ng</th>
                   </tr>
                 </thead>
                 <tbody id="blog-table-body">
@@ -259,18 +472,18 @@
         <!-- SECTION 6: SHIPMENTS (WAYBILLS) -->
         <section id="sec-shipments" style="display:none">
           <div class="admin-card">
-            <h3 class="admin-card__title" style="margin-bottom:var(--sp-lg)">Quản lý vận đơn &amp; Giao hàng</h3>
+            <h3 class="admin-card__title" style="margin-bottom:var(--sp-lg)">Quáº£n lÃ½ váº­n Ä‘Æ¡n &amp; Giao hÃ ng</h3>
             <div class="admin-table-wrapper">
-              <table class="admin-table" aria-label="Tất cả vận đơn">
+              <table class="admin-table" aria-label="Táº¥t cáº£ váº­n Ä‘Æ¡n">
                 <thead>
                   <tr>
-                    <th>Mã vận đơn</th>
-                    <th>Mã đơn hàng</th>
-                    <th>Đơn vị vận chuyển</th>
-                    <th>Người nhận</th>
-                    <th>Tiền thu hộ</th>
-                    <th>Trạng thái vận chuyển</th>
-                    <th>Hành động</th>
+                    <th>MÃ£ váº­n Ä‘Æ¡n</th>
+                    <th>MÃ£ Ä‘Æ¡n hÃ ng</th>
+                    <th>ÄÆ¡n vá»‹ váº­n chuyá»ƒn</th>
+                    <th>NgÆ°á»i nháº­n</th>
+                    <th>Tiá»n thu há»™</th>
+                    <th>Tráº¡ng thÃ¡i váº­n chuyá»ƒn</th>
+                    <th>HÃ nh Ä‘á»™ng</th>
                   </tr>
                 </thead>
                 <tbody id="shipments-table-body">
@@ -284,57 +497,57 @@
         <!-- SECTION 7: SYSTEM CONFIGURATION -->
         <section id="sec-settings" style="display:none">
           <div class="admin-card">
-            <h3 class="admin-card__title" style="margin-bottom:var(--sp-lg)">Cấu hình hệ thống &amp; SEO</h3>
+            <h3 class="admin-card__title" style="margin-bottom:var(--sp-lg)">Cáº¥u hÃ¬nh há»‡ thá»‘ng &amp; SEO</h3>
             <form id="settings-form" onsubmit="saveSystemSettings(event)">
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-lg); margin-bottom:var(--sp-lg)">
                 
                 <div>
-                  <h4 style="margin-bottom:12px;color:var(--c-title);font-size:0.95rem">⚙️ Thuế &amp; Cửa hàng</h4>
+                  <h4 style="margin-bottom:12px;color:var(--c-title);font-size:0.95rem">âš™ï¸ Thuáº¿ &amp; Cá»­a hÃ ng</h4>
                   <div class="form-group" style="margin-bottom:10px">
-                    <label class="form-label" for="set-vat">Thuế VAT (%)</label>
+                    <label class="form-label" for="set-vat">Thuáº¿ VAT (%)</label>
                     <input class="form-control" type="number" id="set-vat" min="0" max="100" required />
                   </div>
                   <div class="form-group" style="margin-bottom:10px">
-                    <label class="form-label" for="set-freeship-threshold">Ngưỡng miễn phí vận chuyển (VND)</label>
+                    <label class="form-label" for="set-freeship-threshold">NgÆ°á»¡ng miá»…n phÃ­ váº­n chuyá»ƒn (VND)</label>
                     <input class="form-control" type="number" id="set-freeship-threshold" min="0" required />
                   </div>
                   <div class="form-group" style="margin-bottom:10px">
-                    <label class="form-label" for="set-backend-url">Địa chỉ Backend API (Ví dụ: render, railway...)</label>
-                    <input class="form-control" type="text" id="set-backend-url" placeholder="Ví dụ: http://localhost:3000/api" />
+                    <label class="form-label" for="set-backend-url">Äá»‹a chá»‰ Backend API (VÃ­ dá»¥: render, railway...)</label>
+                    <input class="form-control" type="text" id="set-backend-url" placeholder="VÃ­ dá»¥: http://localhost:3000/api" />
                   </div>
                 </div>
 
                 <div>
-                  <h4 style="margin-bottom:12px;color:var(--c-title);font-size:0.95rem">🚚 Phí ship mặc định của các Đơn vị</h4>
+                  <h4 style="margin-bottom:12px;color:var(--c-title);font-size:0.95rem">ðŸšš PhÃ­ ship máº·c Ä‘á»‹nh cá»§a cÃ¡c ÄÆ¡n vá»‹</h4>
                   <div class="form-group" style="margin-bottom:10px">
-                    <label class="form-label" for="set-fee-ghtk">Phí ship GHTK (VND)</label>
+                    <label class="form-label" for="set-fee-ghtk">PhÃ­ ship GHTK (VND)</label>
                     <input class="form-control" type="number" id="set-fee-ghtk" min="0" required />
                   </div>
                   <div class="form-group" style="margin-bottom:10px">
-                    <label class="form-label" for="set-fee-ghn">Phí ship GHN (VND)</label>
+                    <label class="form-label" for="set-fee-ghn">PhÃ­ ship GHN (VND)</label>
                     <input class="form-control" type="number" id="set-fee-ghn" min="0" required />
                   </div>
                   <div class="form-group" style="margin-bottom:10px">
-                    <label class="form-label" for="set-fee-viettel">Phí ship Viettel Post (VND)</label>
+                    <label class="form-label" for="set-fee-viettel">PhÃ­ ship Viettel Post (VND)</label>
                     <input class="form-control" type="number" id="set-fee-viettel" min="0" required />
                   </div>
                 </div>
               </div>
 
               <div style="border-top:1px solid var(--c-border); padding-top:var(--sp-lg); margin-bottom:var(--sp-lg)">
-                <h4 style="margin-bottom:12px;color:var(--c-title);font-size:0.95rem">🔍 Tích hợp Mã Theo dõi &amp; SEO Pixel (Tiêu chí 66)</h4>
+                <h4 style="margin-bottom:12px;color:var(--c-title);font-size:0.95rem">ðŸ” TÃ­ch há»£p MÃ£ Theo dÃµi &amp; SEO Pixel (TiÃªu chÃ­ 66)</h4>
                 <div class="form-group" style="margin-bottom:10px">
                   <label class="form-label" for="set-ga">Google Analytics Tracking ID / Script</label>
-                  <textarea class="form-control" id="set-ga" rows="3" placeholder="Ví dụ: UA-12345678-1 hoặc <script>...</script>"></textarea>
+                  <textarea class="form-control" id="set-ga" rows="3" placeholder="VÃ­ dá»¥: UA-12345678-1 hoáº·c <script>...</script>"></textarea>
                 </div>
                 <div class="form-group" style="margin-bottom:10px">
                   <label class="form-label" for="set-pixel">Facebook Pixel Code</label>
-                  <textarea class="form-control" id="set-pixel" rows="3" placeholder="Nhập thẻ script Facebook Pixel..."></textarea>
+                  <textarea class="form-control" id="set-pixel" rows="3" placeholder="Nháº­p tháº» script Facebook Pixel..."></textarea>
                 </div>
               </div>
 
               <div style="display:flex;justify-content:flex-end">
-                <button type="submit" class="btn btn-primary">Lưu cấu hình hệ thống</button>
+                <button type="submit" class="btn btn-primary">LÆ°u cáº¥u hÃ¬nh há»‡ thá»‘ng</button>
               </div>
             </form>
           </div>
@@ -347,14 +560,14 @@
   </div><!-- end container -->
 </div><!-- end admin-page -->
 
-<!-- ═══════════════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      PRODUCT ADD/EDIT MODAL
-════════════════════════════════════════════════════════════ -->
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="admin-modal-overlay" id="product-modal-overlay" onclick="if(event.target===this) closeProductModal()">
   <div class="admin-modal">
     
     <div class="admin-modal__header">
-      <h3 class="admin-modal__title" id="modal-title">Thêm sản phẩm mới</h3>
+      <h3 class="admin-modal__title" id="modal-title">ThÃªm sáº£n pháº©m má»›i</h3>
       <span class="admin-modal__close" onclick="closeProductModal()">&times;</span>
     </div>
 
@@ -364,70 +577,70 @@
         <div class="form-grid" style="grid-template-columns: 1fr;">
           <!-- Name -->
           <div class="form-group">
-            <label class="form-label" for="prod-name">Tên sản phẩm <span>*</span></label>
-            <input class="form-control" type="text" id="prod-name" required placeholder="Ví dụ: Tai nghe Gaming Z" />
+            <label class="form-label" for="prod-name">TÃªn sáº£n pháº©m <span>*</span></label>
+            <input class="form-control" type="text" id="prod-name" required placeholder="VÃ­ dá»¥: Tai nghe Gaming Z" />
           </div>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-md)">
             <!-- Category -->
             <div class="form-group">
-              <label class="form-label" for="prod-category">Danh mục <span>*</span></label>
+              <label class="form-label" for="prod-category">Danh má»¥c <span>*</span></label>
               <select class="form-control" id="prod-category" required style="padding:9px 12px">
                 <option value="Laptop">Laptop</option>
-                <option value="Điện thoại">Điện thoại</option>
-                <option value="Phụ kiện">Phụ kiện</option>
-                <option value="Màn hình">Màn hình</option>
+                <option value="Äiá»‡n thoáº¡i">Äiá»‡n thoáº¡i</option>
+                <option value="Phá»¥ kiá»‡n">Phá»¥ kiá»‡n</option>
+                <option value="MÃ n hÃ¬nh">MÃ n hÃ¬nh</option>
                 <option value="Wearable">Wearable</option>
               </select>
             </div>
 
             <!-- Icon -->
             <div class="form-group">
-              <label class="form-label" for="prod-icon">Biểu tượng (Emoji) <span>*</span></label>
-              <input class="form-control" type="text" id="prod-icon" required value="📦" placeholder="Ví dụ: 🎧" />
+              <label class="form-label" for="prod-icon">Biá»ƒu tÆ°á»£ng (Emoji) <span>*</span></label>
+              <input class="form-control" type="text" id="prod-icon" required value="ðŸ“¦" placeholder="VÃ­ dá»¥: ðŸŽ§" />
             </div>
           </div>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-md)">
             <!-- Price -->
             <div class="form-group">
-              <label class="form-label" for="prod-price">Giá bán (VND) <span>*</span></label>
-              <input class="form-control" type="number" id="prod-price" min="0" required placeholder="Ví dụ: 500000" />
+              <label class="form-label" for="prod-price">GiÃ¡ bÃ¡n (VND) <span>*</span></label>
+              <input class="form-control" type="number" id="prod-price" min="0" required placeholder="VÃ­ dá»¥: 500000" />
             </div>
 
             <!-- Old Price -->
             <div class="form-group">
-              <label class="form-label" for="prod-oldprice">Giá cũ (nếu có)</label>
-              <input class="form-control" type="number" id="prod-oldprice" min="0" placeholder="Ví dụ: 600000" />
+              <label class="form-label" for="prod-oldprice">GiÃ¡ cÅ© (náº¿u cÃ³)</label>
+              <input class="form-control" type="number" id="prod-oldprice" min="0" placeholder="VÃ­ dá»¥: 600000" />
             </div>
           </div>
 
           <!-- Stock -->
           <div class="form-group">
-            <label class="form-label" for="prod-stock">Số lượng trong kho <span>*</span></label>
-            <input class="form-control" type="number" id="prod-stock" min="0" required placeholder="Ví dụ: 10" />
+            <label class="form-label" for="prod-stock">Sá»‘ lÆ°á»£ng trong kho <span>*</span></label>
+            <input class="form-control" type="number" id="prod-stock" min="0" required placeholder="VÃ­ dá»¥: 10" />
           </div>
         </div>
 
       </div>
 
       <div class="admin-modal__footer">
-        <button type="button" class="btn btn-ghost btn-sm" onclick="closeProductModal()">Hủy bỏ</button>
-        <button type="submit" class="btn btn-primary btn-sm">Lưu lại</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeProductModal()">Há»§y bá»</button>
+        <button type="submit" class="btn btn-primary btn-sm">LÆ°u láº¡i</button>
       </div>
     </form>
 
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      BLOG ADD/EDIT MODAL
-════════════════════════════════════════════════════════════ -->
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="admin-modal-overlay" id="blog-modal-overlay" onclick="if(event.target===this) closeBlogModal()">
   <div class="admin-modal" style="max-width:700px">
     
     <div class="admin-modal__header">
-      <h3 class="admin-modal__title" id="blog-modal-title">Viết bài mới</h3>
+      <h3 class="admin-modal__title" id="blog-modal-title">Viáº¿t bÃ i má»›i</h3>
       <span class="admin-modal__close" onclick="closeBlogModal()">&times;</span>
     </div>
 
@@ -439,12 +652,12 @@
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-md)">
             <!-- Title VI -->
             <div class="form-group">
-              <label class="form-label" for="blog-title-vi">Tiêu đề (Tiếng Việt) <span>*</span></label>
+              <label class="form-label" for="blog-title-vi">TiÃªu Ä‘á» (Tiáº¿ng Viá»‡t) <span>*</span></label>
               <input class="form-control" type="text" id="blog-title-vi" required />
             </div>
             <!-- Title EN -->
             <div class="form-group">
-              <label class="form-label" for="blog-title-en">Tiêu đề (Tiếng Anh) <span>*</span></label>
+              <label class="form-label" for="blog-title-en">TiÃªu Ä‘á» (Tiáº¿ng Anh) <span>*</span></label>
               <input class="form-control" type="text" id="blog-title-en" required />
             </div>
           </div>
@@ -452,29 +665,29 @@
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-md)">
             <!-- Category -->
             <div class="form-group">
-              <label class="form-label" for="blog-cat">Danh mục <span>*</span></label>
+              <label class="form-label" for="blog-cat">Danh má»¥c <span>*</span></label>
               <select class="form-control" id="blog-cat" required style="padding:9px 12px">
-                <option value="technology">Xu hướng công nghệ</option>
-                <option value="guides">Tư vấn mua sắm</option>
-                <option value="reviews">Đánh giá chi tiết</option>
+                <option value="technology">Xu hÆ°á»›ng cÃ´ng nghá»‡</option>
+                <option value="guides">TÆ° váº¥n mua sáº¯m</option>
+                <option value="reviews">ÄÃ¡nh giÃ¡ chi tiáº¿t</option>
               </select>
             </div>
             <!-- Icon -->
             <div class="form-group">
               <label class="form-label" for="blog-icon">Icon (Emoji) <span>*</span></label>
-              <input class="form-control" type="text" id="blog-icon" required value="📝" />
+              <input class="form-control" type="text" id="blog-icon" required value="ðŸ“" />
             </div>
           </div>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-md)">
             <!-- Author -->
             <div class="form-group">
-              <label class="form-label" for="blog-author">Tác giả <span>*</span></label>
+              <label class="form-label" for="blog-author">TÃ¡c giáº£ <span>*</span></label>
               <input class="form-control" type="text" id="blog-author" value="Admin ShopVN" required />
             </div>
             <!-- Date -->
             <div class="form-group">
-              <label class="form-label" for="blog-date">Ngày đăng <span>*</span></label>
+              <label class="form-label" for="blog-date">NgÃ y Ä‘Äƒng <span>*</span></label>
               <input class="form-control" type="date" id="blog-date" required />
             </div>
           </div>
@@ -482,25 +695,25 @@
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-md)">
             <!-- Excerpt VI -->
             <div class="form-group">
-              <label class="form-label" for="blog-excerpt-vi">Mô tả ngắn (VI) <span>*</span></label>
+              <label class="form-label" for="blog-excerpt-vi">MÃ´ táº£ ngáº¯n (VI) <span>*</span></label>
               <textarea class="form-control" id="blog-excerpt-vi" rows="2" required></textarea>
             </div>
             <!-- Excerpt EN -->
             <div class="form-group">
-              <label class="form-label" for="blog-excerpt-en">Mô tả ngắn (EN) <span>*</span></label>
+              <label class="form-label" for="blog-excerpt-en">MÃ´ táº£ ngáº¯n (EN) <span>*</span></label>
               <textarea class="form-control" id="blog-excerpt-en" rows="2" required></textarea>
             </div>
           </div>
 
           <!-- Content VI -->
           <div class="form-group">
-            <label class="form-label" for="blog-content-vi">Nội dung bài viết (VI) <span>*</span></label>
+            <label class="form-label" for="blog-content-vi">Ná»™i dung bÃ i viáº¿t (VI) <span>*</span></label>
             <textarea class="form-control" id="blog-content-vi" rows="5" required></textarea>
           </div>
 
           <!-- Content EN -->
           <div class="form-group">
-            <label class="form-label" for="blog-content-en">Nội dung bài viết (EN) <span>*</span></label>
+            <label class="form-label" for="blog-content-en">Ná»™i dung bÃ i viáº¿t (EN) <span>*</span></label>
             <textarea class="form-control" id="blog-content-en" rows="5" required></textarea>
           </div>
 
@@ -509,66 +722,67 @@
       </div>
 
       <div class="admin-modal__footer">
-        <button type="button" class="btn btn-ghost btn-sm" onclick="closeBlogModal()">Hủy bỏ</button>
-        <button type="submit" class="btn btn-primary btn-sm">Lưu lại</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeBlogModal()">Há»§y bá»</button>
+        <button type="submit" class="btn btn-primary btn-sm">LÆ°u láº¡i</button>
       </div>
     </form>
 
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      FOOTER
-════════════════════════════════════════════════════════════ -->
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <footer class="footer" role="contentinfo">
   <div class="container">
     <div class="footer__grid">
       <div>
         <div class="footer__brand-name">Shop<span>VN</span></div>
         <p class="footer__desc">
-          Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị
-          điện tử, phụ kiện công nghệ chính hãng toàn quốc.
+          Ná»n táº£ng thÆ°Æ¡ng máº¡i Ä‘iá»‡n tá»­ uy tÃ­n â€” chuyÃªn cung cáº¥p thiáº¿t bá»‹
+          Ä‘iá»‡n tá»­, phá»¥ kiá»‡n cÃ´ng nghá»‡ chÃ­nh hÃ£ng toÃ n quá»‘c.
         </p>
       </div>
       <div>
-        <h3 class="footer__heading">Mua sắm</h3>
+        <h3 class="footer__heading">Mua sáº¯m</h3>
         <ul class="footer__links">
-          <li><a href="../products.html" class="footer__link">Tất cả sản phẩm</a></li>
-          <li><a href="../products.html?sort=sale"    class="footer__link">Khuyến mãi</a></li>
-          <li><a href="../products.html?sort=newest"  class="footer__link">Hàng mới về</a></li>
-          <li><a href="../products.html?sort=popular" class="footer__link">Bán chạy nhất</a></li>
+          <li><a href="../products.html" class="footer__link">Táº¥t cáº£ sáº£n pháº©m</a></li>
+          <li><a href="../products.html?sort=sale"    class="footer__link">Khuyáº¿n mÃ£i</a></li>
+          <li><a href="../products.html?sort=newest"  class="footer__link">HÃ ng má»›i vá»</a></li>
+          <li><a href="../products.html?sort=popular" class="footer__link">BÃ¡n cháº¡y nháº¥t</a></li>
         </ul>
       </div>
       <div>
-        <h3 class="footer__heading">Tài khoản</h3>
+        <h3 class="footer__heading">TÃ i khoáº£n</h3>
         <ul class="footer__links">
-          <li><a href="../login.html"    class="footer__link">Đăng nhập</a></li>
-          <li><a href="../register.html" class="footer__link">Đăng ký</a></li>
-          <li><a href="../orders.html"   class="footer__link">Đơn hàng</a></li>
-          <li><a href="../cart.html"     class="footer__link">Giỏ hàng</a></li>
+          <li><a href="../login.html"    class="footer__link">ÄÄƒng nháº­p</a></li>
+          <li><a href="../register.html" class="footer__link">ÄÄƒng kÃ½</a></li>
+          <li><a href="../orders.html"   class="footer__link">ÄÆ¡n hÃ ng</a></li>
+          <li><a href="../cart.html"     class="footer__link">Giá» hÃ ng</a></li>
         </ul>
       </div>
       <div>
-        <h3 class="footer__heading">Hỗ trợ</h3>
+        <h3 class="footer__heading">Há»— trá»£</h3>
         <ul class="footer__links">
-          <li><a href="../faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
-          <li><a href="../contact.html" class="footer__link">Liên hệ</a></li>
-          <li><a href="../faq.html#doi-tra" class="footer__link">Đổi trả hàng</a></li>
-          <li><a href="../faq.html#van-chuyen" class="footer__link">Chính sách vận chuyển</a></li>
+          <li><a href="../faq.html" class="footer__link">CÃ¢u há»i thÆ°á»ng gáº·p</a></li>
+          <li><a href="../contact.html" class="footer__link">LiÃªn há»‡</a></li>
+          <li><a href="../faq.html#doi-tra" class="footer__link">Äá»•i tráº£ hÃ ng</a></li>
+          <li><a href="../faq.html#van-chuyen" class="footer__link">ChÃ­nh sÃ¡ch váº­n chuyá»ƒn</a></li>
         </ul>
       </div>
     </div>
 
     <div class="footer__bottom">
-      <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
-      <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+      <span>Â© 2024 ShopVN. Báº£o lÆ°u má»i quyá»n.</span>
+      <span>Made with â™¥ in ÄÃ  Náºµng, Viá»‡t Nam</span>
     </div>
   </div>
 </footer>
 
-<!-- ═══════════════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      SCRIPTS
-════════════════════════════════════════════════════════════ -->
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<script src="../js/config.js"></script>
 <script src="../js/api.js"></script>
 <script src="../js/utils.js"></script>
 <script src="../js/auth.js"></script>
@@ -576,3 +790,5 @@
 
 </body>
 </html>
+
+

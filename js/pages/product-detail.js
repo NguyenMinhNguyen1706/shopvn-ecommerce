@@ -183,6 +183,90 @@ function renderProduct(product) {
 
   // Initialize 3D product visualizer toggle button
   Product3DViewer.init(product);
+  renderPdpMediaContext(product);
+  renderPdpShippingCard(product);
+}
+
+function renderPdpMediaContext(product) {
+  const panel = document.querySelector('.detail-img-panel');
+  if (!panel) return;
+
+  let wrap = document.getElementById('product-media-context');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'product-media-context';
+    wrap.className = 'pdp-media-context';
+    wrap.setAttribute('aria-label', 'Ảnh theo ngữ cảnh sử dụng');
+    panel.appendChild(wrap);
+  }
+
+  const isLaptop = /laptop/i.test(product.category || product.name || '');
+  const isPhone = /điện thoại|phone/i.test(product.category || product.name || '');
+  const contexts = isLaptop
+    ? [
+        ['Trên bàn làm việc', 'Ước lượng kích thước khi đặt cạnh màn hình/phụ kiện.'],
+        ['Mang theo hằng ngày', 'Gợi ý độ gọn khi bỏ balo và di chuyển.'],
+        ['Cổng kết nối', 'Nhắc khách kiểm tra nhu cầu HDMI, USB-C, tai nghe.']
+      ]
+    : isPhone
+      ? [
+          ['Cầm một tay', 'Giúp ước lượng kích thước thân máy khi dùng hằng ngày.'],
+          ['Camera sau', 'Dễ đánh giá cụm camera và độ lồi khi đặt trên bàn.'],
+          ['Trong túi quần', 'Gợi ý độ gọn khi mang theo.']
+        ]
+      : [
+          ['Kích thước thực tế', 'Giúp khách hình dung sản phẩm trong đời sống.'],
+          ['Chi tiết hoàn thiện', 'Tập trung vào chất liệu, cổng kết nối và phụ kiện.'],
+          ['Khi sử dụng', 'Mô tả bối cảnh dùng phổ biến nhất.']
+        ];
+
+  wrap.innerHTML = `
+    <div class="pdp-media-context__header">
+      <strong>Ảnh nên có để khách tự tin hơn</strong>
+      <span>Theo video Baymard: ảnh theo tỷ lệ và bối cảnh giúp khách đánh giá sản phẩm nhanh hơn.</span>
+    </div>
+    <div class="pdp-media-context__grid">
+      ${contexts.map(([title, desc]) => `
+        <div class="pdp-media-context__item">
+          <span>${product.icon || '📦'}</span>
+          <div>
+            <strong>${title}</strong>
+            <small>${desc}</small>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderPdpShippingCard(product) {
+  const decisionPanel = document.querySelector('.pdp-decision-panel') || document.querySelector('.detail-stock');
+  if (!decisionPanel) return;
+
+  let card = document.getElementById('product-shipping-card');
+  if (!card) {
+    card = document.createElement('div');
+    card.id = 'product-shipping-card';
+    card.className = 'pdp-shipping-card';
+    decisionPanel.after(card);
+  }
+
+  const threshold = 500000;
+  const isFreeShip = product.price >= threshold;
+  card.innerHTML = `
+    <div class="pdp-shipping-card__row">
+      <span>Phí vận chuyển dự kiến</span>
+      <strong>${isFreeShip ? 'Miễn phí' : '25.000đ - 35.000đ'}</strong>
+    </div>
+    <div class="pdp-shipping-card__row">
+      <span>Đổi trả</span>
+      <strong>30 ngày nếu còn nguyên điều kiện</strong>
+    </div>
+    <div class="pdp-shipping-card__row">
+      <span>Trước khi đặt</span>
+      <strong>Xem tổng tiền cuối ở giỏ hàng/checkout</strong>
+    </div>
+  `;
 }
 
 function renderDescription(product) {
@@ -210,6 +294,68 @@ function renderDescription(product) {
   `;
 }
 
+function renderProductStory(product) {
+  document.getElementById('tab-desc').innerHTML = `
+    <div class="pdp-story">
+      <div class="pdp-description-wrap">
+        <div class="pdp-description-copy is-collapsed" id="pdp-description-copy">
+        <p class="pdp-story__lead">
+          <strong>${product.name}</strong> thuộc nhóm ${product.category}, phù hợp cho khách cần một lựa chọn rõ giá,
+          dễ so sánh và có chính sách hậu mãi minh bạch.
+        </p>
+        <div class="pdp-benefit-grid">
+          <div>
+            <strong>Hiệu năng ổn định</strong>
+            <span>Xử lý tốt nhu cầu học tập, làm việc và giải trí hằng ngày.</span>
+          </div>
+          <div>
+            <strong>Dễ mua, dễ đổi trả</strong>
+            <span>Bảo hành 12 tháng, đổi trả 30 ngày theo chính sách ShopVN.</span>
+          </div>
+          <div>
+            <strong>Chi phí rõ ràng</strong>
+            <span>Giá, phí vận chuyển và voucher được thể hiện trước khi đặt hàng.</span>
+          </div>
+        </div>
+        <div class="pdp-ugc-strip">
+          <strong>Khách thường kiểm tra trước khi mua</strong>
+          <span>Ảnh thực tế, kích thước khi dùng, phí ship, đổi trả, bảo hành và đánh giá gần đây.</span>
+        </div>
+      </div>
+        </div>
+        <button class="btn btn-outline btn-sm pdp-read-more-btn" id="pdp-read-more-btn" onclick="toggleProductDescription()">
+          Đọc thêm mô tả
+        </button>
+      </div>
+      <div class="pdp-faq-card">
+        <h3>Câu hỏi nhanh</h3>
+        <details open>
+          <summary>Sản phẩm có phù hợp để mua online không?</summary>
+          <p>Có. ShopVN hiển thị giá, tồn kho, bảo hành và chính sách đổi trả ngay trên trang để bạn kiểm tra trước khi thanh toán.</p>
+        </details>
+        <details>
+          <summary>Khi nào nên chọn sản phẩm này?</summary>
+          <p>Khi bạn cần một sản phẩm chính hãng, giao nhanh, có hỗ trợ sau mua và có thể so sánh với sản phẩm liên quan.</p>
+        </details>
+        <details>
+          <summary>Có phí nào cần biết trước không?</summary>
+          <p>Phí vận chuyển và tổng tiền cuối được hiển thị rõ ở giỏ hàng/checkout trước khi bạn xác nhận đặt hàng.</p>
+        </details>
+      </div>
+    </div>
+  `;
+}
+
+function toggleProductDescription() {
+  const copy = document.getElementById('pdp-description-copy');
+  const button = document.getElementById('pdp-read-more-btn');
+  if (!copy || !button) return;
+
+  const isExpanded = copy.classList.toggle('is-expanded');
+  copy.classList.toggle('is-collapsed', !isExpanded);
+  button.textContent = isExpanded ? 'Thu gọn mô tả' : 'Đọc thêm mô tả';
+}
+
 function renderSpecs(product) {
   const specs = MOCK_SPECS[product.id] || [
     ['Danh mục',  product.category],
@@ -217,7 +363,22 @@ function renderSpecs(product) {
     ['Bảo hành',  '12 tháng'],
   ];
 
+  const highlights = specs.slice(0, 4);
+
   document.getElementById('tab-specs').innerHTML = `
+    <div class="pdp-section-heading">
+      <span>Thông số dễ scan</span>
+      <h2>Những điểm cần biết nhanh</h2>
+      <p>Đưa thông tin quan trọng lên trước, bảng đầy đủ để khách tra cứu khi cần.</p>
+    </div>
+    <div class="spec-highlights">
+      ${highlights.map(([k, v]) => `
+        <div class="spec-highlight">
+          <span>${k}</span>
+          <strong>${v}</strong>
+        </div>
+      `).join('')}
+    </div>
     <table class="spec-table" aria-label="Thông số kỹ thuật">
       <tbody>
         ${specs.map(([k, v]) => `
@@ -283,7 +444,9 @@ function renderRelated(currentProduct) {
             </div>
             <button class="product-card__add"
                     onclick="event.stopPropagation(); LocalCart.add(getProducts().find(pp=>pp.id===${p.id}), 1)"
-                    aria-label="Thêm vào giỏ">+</button>
+                    aria-label="Thêm ${p.name} vào giỏ hàng">
+              <span>Thêm</span>
+            </button>
           </div>
         </div>
       </article>
@@ -510,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderBreadcrumb(product);
   renderProduct(product);
-  renderDescription(product);
+  renderProductStory(product);
   renderSpecs(product);
   renderRelated(product);
   updateQtyDisplay();
@@ -549,6 +712,7 @@ async function renderReviews() {
   
   // Update schema structured data with new review stats
   injectSchemaMarkup(state.product, reviews);
+  renderReviewSummary(reviews);
 
   // 2. Render reviews list
   const listContainer = document.getElementById('reviews-list');
@@ -594,11 +758,49 @@ async function renderReviews() {
         `).join('')}
       </div>
       <div class="form-group" style="margin-bottom:var(--sp-md)">
-        <textarea class="form-control" id="review-content-input" placeholder="Viết cảm nhận của bạn về sản phẩm này... (tối thiểu 10 ký tự)" style="min-height:90px"></textarea>
+        <label class="form-label" for="review-content-input">Nội dung đánh giá</label>
+        <textarea class="form-control" id="review-content-input" placeholder="Ví dụ: sản phẩm giao nhanh, đóng gói chắc chắn..." style="min-height:90px"></textarea>
       </div>
       <button class="btn btn-primary btn-sm" onclick="submitReview()">Gửi đánh giá</button>
     `;
   }
+}
+
+function renderReviewSummary(reviews) {
+  const section = document.querySelector('.reviews-section');
+  if (!section) return;
+
+  let summary = document.getElementById('reviews-summary');
+  if (!summary) {
+    summary = document.createElement('div');
+    summary.id = 'reviews-summary';
+    section.prepend(summary);
+  }
+
+  const count = reviews.length;
+  const avg = count
+    ? reviews.reduce((sum, rev) => sum + Number(rev.rating || 0), 0) / count
+    : 4.8;
+  const rating = Math.max(0, Math.min(5, avg));
+
+  summary.innerHTML = `
+    <div class="review-summary-card">
+      <div class="review-summary-score">
+        <strong>${rating.toFixed(1)}</strong>
+        <span>${'★'.repeat(Math.round(rating))}${'☆'.repeat(5 - Math.round(rating))}</span>
+        <small>${count ? `${count} đánh giá đã xác thực` : 'Chưa có đánh giá mới'}</small>
+      </div>
+      <div class="review-summary-insights">
+        <h3>Khách thường quan tâm</h3>
+        <div>
+          <span>Độ bền</span>
+          <span>Giao hàng</span>
+          <span>Bảo hành</span>
+          <span>Đúng mô tả</span>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function updateRatingUI(reviews) {
@@ -738,7 +940,7 @@ function initStickyAtcBar(product) {
         </div>
         <div class="sticky-atc-bar__actions">
           <button class="btn btn-outline btn-sm" onclick="addToCart()">
-            🛒 Thêm vào giỏ
+            Thêm vào giỏ hàng
           </button>
           <button class="btn btn-primary btn-sm" onclick="buyNow()">
             Mua ngay →
