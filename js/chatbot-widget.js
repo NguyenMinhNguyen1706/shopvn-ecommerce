@@ -22,6 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.insertAdjacentHTML('beforeend', chatHTML);
 });
 
+function getChatbotApiBaseUrl() {
+  const runtimeConfig = window.SHOPVN_CONFIG || {};
+  const settingsConfig = JSON.parse(localStorage.getItem('system_settings') || '{}');
+  return runtimeConfig.backendApiUrl
+    || settingsConfig.backendApiUrl
+    || 'http://localhost:3000/api';
+}
+
 window.toggleChat = function() {
   const chatContainer = document.getElementById('shopvn-chatbot');
   chatContainer?.classList.toggle('open');
@@ -39,7 +47,7 @@ window.sendChatMessage = async function() {
   appendMessage('bot', '...', loadingId);
 
   try {
-    const response = await fetch('http://localhost:3000/api/chatbot/ask', {
+    const response = await fetch(`${getChatbotApiBaseUrl()}/chatbot/ask`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
