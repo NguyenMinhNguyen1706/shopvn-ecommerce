@@ -21,6 +21,9 @@ require('./src/models/ActionPlan');
 const app = express();
 app.set('trust proxy', 1);
 
+let startupDatabaseReady = false;
+let startupDatabaseError = null;
+
 function getAllowedOrigins() {
   const origins = [
     process.env.FRONTEND_URL,
@@ -117,6 +120,16 @@ app.get('/health', (req, res) => {
 app.get('/ready', async (req, res) => {
   try {
     await sequelize.authenticate();
+    if (!startupDatabaseReady) {
+      return res.status(503).json({
+        status: 'starting',
+        database: 'connected',
+        redis: redisClient.isReady ? 'connected' : 'disconnected',
+        message: startupDatabaseError ? startupDatabaseError.message : 'Database initialization is still running',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     res.json({
       status: 'ready',
       database: 'connected',
@@ -145,26 +158,31 @@ app.use((err, req, res, next) => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
-sequelize
-  .authenticate()
-  .then(() => {
+async function initializeDatabase() {
+  try {
+    await sequelize.authenticate();
     console.log('\x1b[32m✅ Database connected\x1b[0m');
-    return sequelize.sync();
-  })
-  .then(async () => {
-    // Seed sản phẩm mẫu nếu DB trống
+
+    await sequelize.sync();
+
     const productService = require('./src/services/product.service');
     await productService.seedIfEmpty();
     await productService.ensureMasterInventory();
 
-    app.listen(PORT, () => {
-      console.log(`\x1b[32m🚀 Server running → http://localhost:${PORT}\x1b[0m`);
-    });
-  })
-  .catch((err) => {
+    startupDatabaseReady = true;
+    startupDatabaseError = null;
+    console.log('\x1b[32m✅ Database initialization complete\x1b[0m');
+  } catch (err) {
+    startupDatabaseReady = false;
+    startupDatabaseError = err;
     console.error('\x1b[31m❌ Cannot connect to database:\x1b[0m', err.message);
-    process.exit(1);
-  });
+  }
+}
+
+app.listen(PORT, () => {
+  console.log(`\x1b[32m🚀 Server running → http://localhost:${PORT}\x1b[0m`);
+  initializeDatabase();
+});
 
 
 
