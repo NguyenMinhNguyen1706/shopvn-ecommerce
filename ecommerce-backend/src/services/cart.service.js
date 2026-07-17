@@ -97,15 +97,39 @@ async function syncCart(userId, items) {
   // Clear cart first
   await CartItem.destroy({ where: { userId } });
   
-  // Add new items
+  if (!items || items.length === 0) return;
+
+  // Extract all product IDs and filter invalid ones
+  const productIds = items.map(item => item.id).filter(id => Number.isInteger(Number(id)));
+  if (productIds.length === 0) return;
+
+  // Bulk query all products to avoid N+1 queries
+  const products = await Product.findAll({
+    where: { id: productIds }
+  });
+
+  // Create a product map for O(1) lookups
+  const productMap = new Map(products.map(p => [p.id, p]));
+
+  // Build items list to insert
+  const itemsToCreate = [];
   for (const item of items) {
-    const product = await Product.findByPk(item.id);
+    const product = productMap.get(Number(item.id));
     if (product) {
       const qty = Math.min(item.quantity, product.stock);
       if (qty > 0) {
-        await CartItem.create({ userId, productId: item.id, quantity: qty });
+        itemsToCreate.push({
+          userId,
+          productId: item.id,
+          quantity: qty
+        });
       }
     }
+  }
+
+  // Bulk insert new cart items
+  if (itemsToCreate.length > 0) {
+    await CartItem.bulkCreate(itemsToCreate);
   }
 }
 

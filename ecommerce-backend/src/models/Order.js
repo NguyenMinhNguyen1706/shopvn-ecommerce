@@ -86,6 +86,7 @@ const Order = sequelize.define('Order', {
 }, {
   tableName:  'orders',
   timestamps: true,
+  version:    true, // Enables Optimistic Locking
 });
 
 Order.belongsTo(User, { foreignKey: 'userId' });

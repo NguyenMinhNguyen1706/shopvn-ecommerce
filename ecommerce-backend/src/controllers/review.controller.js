@@ -74,7 +74,10 @@ exports.createReview = asyncHandler(async (req, res) => {
   });
 
   // Clear reviews cache for this product
-  await clearCache.productReviews(productId);
+  await Promise.all([
+    clearCache.productReviews(productId),
+    clearCache.product(productId),
+  ]);
 
   res.status(201).json({
     success: true,

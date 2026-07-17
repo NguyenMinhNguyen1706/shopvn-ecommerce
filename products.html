@@ -11,7 +11,7 @@
 
   <title>Sản phẩm — ShopVN</title>
 
-  <meta name="description" content="Khám phá hàng ngàn sản phẩm điện tử chính hãng tại ShopVN." />
+  <meta name="description" content="Tìm kiếm, lọc và so sánh sản phẩm công nghệ tại ShopVN." />
 
 
 
@@ -21,11 +21,11 @@
 
   <link rel="stylesheet" href="css/pages/products.css" />
 
-  <link rel="stylesheet" href="css/lucky-wheel.css" />
   <link rel="stylesheet" href="css/mobile-nav.css" />
+  <link rel="stylesheet" href="css/redesign.css" />
 </head>
 
-<body>
+<body class="page-products">
 
 
 
@@ -197,7 +197,7 @@
 
         <p style="font-size:.9rem;color:var(--c-muted)">
 
-          Khám phá hàng ngàn sản phẩm điện tử chính hãng
+          Tìm sản phẩm theo danh mục, mức giá và tình trạng tồn kho
 
         </p>
 
@@ -236,7 +236,7 @@
 
             <p class="filter-group__title">Danh mục</p>
 
-            <div id="cat-list" role="list" aria-label="Lọc theo danh mục">
+            <div id="cat-list" role="group" aria-label="Lọc theo danh mục">
 
               <!-- ========================================== -->
 
@@ -288,7 +288,7 @@
           <!-- ========================================== -->
           <div class="filter-group">
             <p class="filter-group__title">Đánh giá (từ)</p>
-            <div id="rating-list" role="list" aria-label="Lọc theo đánh giá">
+            <div id="rating-list" role="group" aria-label="Lọc theo đánh giá">
               <!-- Rendered by JS -->
             </div>
           </div>
@@ -297,30 +297,51 @@
 
           <div class="filter-group">
 
-            <p class="filter-group__title">Tình trạng</p>
+            <div class="premium-multiselect" id="status-multiselect">
+              <button type="button" class="premium-multiselect__trigger" id="status-multi-trigger"
+                aria-haspopup="listbox" aria-expanded="false">
+                <span class="premium-multiselect__label">Tình trạng</span>
+                <span class="premium-multiselect__chips" id="status-selected-chips">
+                  <span class="premium-multiselect__placeholder">Chọn trạng thái</span>
+                </span>
+                <span class="premium-multiselect__chevron" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.4">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </span>
+              </button>
 
-            <div class="filter-option" id="filter-instock" onclick="toggleStatusFilter('inStock')">
+              <div class="premium-multiselect__menu" id="status-multi-menu" role="listbox"
+                aria-label="Tình trạng sản phẩm" aria-multiselectable="true">
+                <button type="button" class="filter-option premium-option" id="filter-instock"
+                  onclick="toggleStatusFilter('inStock')" role="option" aria-selected="false">
+                  <span class="premium-option__icon">✓</span>
+                  <span class="filter-option__name">Còn hàng</span>
+                  <span class="filter-option__count" id="count-instock">0</span>
+                </button>
 
-              <span class="filter-option__name">Còn hàng</span>
+                <button type="button" class="filter-option premium-option" id="filter-isnew"
+                  onclick="toggleStatusFilter('isNew')" role="option" aria-selected="false">
+                  <span class="premium-option__icon">★</span>
+                  <span class="filter-option__name">Hàng mới</span>
+                  <span class="filter-option__count" id="count-isnew">0</span>
+                </button>
 
-              <span class="filter-option__count" id="count-instock">0</span>
+                <button type="button" class="filter-option premium-option" id="filter-onsale"
+                  onclick="toggleStatusFilter('onSale')" role="option" aria-selected="false">
+                  <span class="premium-option__icon">%</span>
+                  <span class="filter-option__name">Đang giảm giá</span>
+                  <span class="filter-option__count" id="count-onsale">0</span>
+                </button>
 
-            </div>
-
-            <div class="filter-option" id="filter-isnew" onclick="toggleStatusFilter('isNew')">
-
-              <span class="filter-option__name">Hàng mới</span>
-
-              <span class="filter-option__count" id="count-isnew">0</span>
-
-            </div>
-
-            <div class="filter-option" id="filter-onsale" onclick="toggleStatusFilter('onSale')">
-
-              <span class="filter-option__name">Đang giảm giá</span>
-
-              <span class="filter-option__count" id="count-onsale">0</span>
-
+                <div class="premium-multiselect__footer">
+                  <button type="button" class="premium-multiselect__clear" onclick="clearStatusFilters()">Xóa chọn</button>
+                  <button type="button" class="premium-multiselect__apply" onclick="closeStatusMultiselect()">
+                    Áp dụng
+                  </button>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -376,7 +397,53 @@
 
               <label for="sort-select">Sắp xếp:</label>
 
-              <select class="sort-select" id="sort-select" aria-label="Sắp xếp sản phẩm">
+              <div class="premium-select" id="sort-dropdown">
+                <button type="button" class="premium-select__trigger" id="sort-trigger"
+                  aria-haspopup="listbox" aria-expanded="false">
+                  <span class="premium-select__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2">
+                      <path d="M4 7h16M7 12h10M10 17h4" />
+                    </svg>
+                  </span>
+                  <span id="sort-trigger-label">Phổ biến nhất</span>
+                  <span class="premium-select__chevron" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.4">
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </span>
+                </button>
+
+                <div class="premium-select__menu" id="sort-menu" role="listbox" aria-label="Sắp xếp sản phẩm">
+                  <button type="button" class="premium-select__option" data-sort-value="popular" role="option">
+                    <span class="premium-select__option-icon">⌁</span>
+                    <span>Phổ biến nhất</span>
+                    <span class="premium-select__check">✓</span>
+                  </button>
+                  <button type="button" class="premium-select__option" data-sort-value="newest" role="option">
+                    <span class="premium-select__option-icon">✦</span>
+                    <span>Mới nhất</span>
+                    <span class="premium-select__check">✓</span>
+                  </button>
+                  <button type="button" class="premium-select__option" data-sort-value="price-asc" role="option">
+                    <span class="premium-select__option-icon">↑</span>
+                    <span>Giá: Thấp → Cao</span>
+                    <span class="premium-select__check">✓</span>
+                  </button>
+                  <button type="button" class="premium-select__option" data-sort-value="price-desc" role="option">
+                    <span class="premium-select__option-icon">↓</span>
+                    <span>Giá: Cao → Thấp</span>
+                    <span class="premium-select__check">✓</span>
+                  </button>
+                  <button type="button" class="premium-select__option" data-sort-value="rating-desc" role="option">
+                    <span class="premium-select__option-icon">★</span>
+                    <span>Đánh giá cao nhất</span>
+                    <span class="premium-select__check">✓</span>
+                  </button>
+                </div>
+
+              <select class="sort-select native-sort-select" id="sort-select" aria-label="Sắp xếp sản phẩm">
 
                 <option value="popular">Phổ biến nhất</option>
 
@@ -389,6 +456,7 @@
                 <option value="rating-desc">Đánh giá cao nhất</option>
 
               </select>
+              </div>
 
             </div>
 
@@ -470,7 +538,7 @@
 
             Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị
 
-            điện tử, phụ kiện công nghệ chính hãng toàn quốc.
+            thiết bị điện tử và phụ kiện công nghệ với thông tin mua hàng rõ ràng.
 
           </p>
 
@@ -543,7 +611,7 @@
 
         <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
 
-        <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+        <span>ShopVN, Đà Nẵng, Việt Nam</span>
 
       </div>
 
@@ -563,7 +631,6 @@
   <script src="js/utils.js"></script>
 
   <script src="js/auth.js"></script>
-  <script src="js/lucky-wheel.js"></script>
 
   <script src="js/pages/products.js"></script>
 

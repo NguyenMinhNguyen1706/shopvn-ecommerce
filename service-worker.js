@@ -4,7 +4,7 @@
  * Implements Stale-While-Revalidate, Cache-First, and Network-First strategies.
  */
 
-const CACHE_NAME = 'shopvn-cache-v3';
+const CACHE_NAME = 'shopvn-cache-v5';
 
 // App Shell Assets - Pre-cached on install
 const ASSETS_TO_CACHE = [
@@ -25,9 +25,9 @@ const ASSETS_TO_CACHE = [
   './admin/index.html',
   './css/variables.css',
   './css/components.css',
-  './css/lucky-wheel.css',
   './css/compare.css',
   './css/style.css',
+  './css/redesign.css',
   './css/pages/home.css',
   './css/pages/admin.css',
   './css/pages/auth.css',
@@ -39,7 +39,6 @@ const ASSETS_TO_CACHE = [
   './js/api.js',
   './js/utils.js',
   './js/auth.js',
-  './js/lucky-wheel.js',
   './js/compare.js',
   './js/i18n.js',
   './js/locales/vi.js',
@@ -63,7 +62,8 @@ self.addEventListener('install', event => {
         // Using Map/Promise.all to ensure single failures do not block the entire SW registration
         return Promise.allSettled(
           ASSETS_TO_CACHE.map(url => {
-            return cache.add(url).catch(err => {
+            const request = new Request(url, { cache: 'reload' });
+            return cache.add(request).catch(err => {
               console.warn(`[Service Worker] Failed to cache asset during install: ${url}`, err);
             });
           })
@@ -129,7 +129,17 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 5. App Shell & Static Assets Strategy (Stale-While-Revalidate)
+  // 5. Documents and executable assets must stay on the same release.
+  // Network-first prevents a new HTML shell from running stale JS/CSS.
+  if (
+    request.mode === 'navigate' ||
+    ['document', 'script', 'style', 'worker'].includes(request.destination)
+  ) {
+    event.respondWith(networkFirst(request, 5000));
+    return;
+  }
+
+  // 6. Fonts and other non-critical static assets can refresh in background.
   event.respondWith(staleWhileRevalidate(request));
 });
 

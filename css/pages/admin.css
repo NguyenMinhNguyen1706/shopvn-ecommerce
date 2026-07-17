@@ -56,7 +56,7 @@
   color: var(--c-muted);
   border-radius: var(--r-md);
   cursor: pointer;
-  transition: all var(--dur) var(--ease);
+  transition: color var(--dur) var(--ease), background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
   white-space: nowrap;
 }
 
@@ -200,7 +200,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--dur);
+  transition: color var(--dur), background-color var(--dur), border-color var(--dur), box-shadow var(--dur), transform var(--dur), opacity var(--dur);
 }
 
 .admin-btn-edit {
@@ -1253,5 +1253,185 @@
   }
 }
 
+/* Taste redesign layer: admin */
+.admin-page {
+  background: var(--c-page);
+}
 
+.admin-layout {
+  gap: var(--sp-xl);
+}
+
+.admin-sidebar,
+.admin-card,
+.stat-card,
+.trend-meta-card,
+.trend-score-card,
+.trend-panel,
+.trend-topic-card,
+.trend-action-card,
+.trend-voice-card,
+.source-panel,
+.action-score-card,
+.action-board,
+.action-side,
+.admin-modal {
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: var(--c-white);
+  box-shadow: var(--shadow-xs);
+}
+
+.admin-sidebar {
+  top: calc(var(--nav-h) + var(--sp-md));
+}
+
+.admin-sidebar__title,
+.admin-card__title,
+.stat-card__value {
+  color: var(--c-title);
+  letter-spacing: -.02em;
+}
+
+.admin-menu__item {
+  border-radius: var(--r-md);
+  color: var(--c-muted);
+  font-weight: 800;
+}
+
+.admin-menu__item:hover {
+  background: var(--c-blue-light);
+  color: var(--c-blue);
+}
+
+.admin-menu__item.active {
+  background: var(--c-blue);
+  color: #fff;
+}
+
+.stat-card {
+  padding: var(--sp-lg);
+}
+
+.stat-card__label {
+  color: var(--c-muted);
+  letter-spacing: .04em;
+}
+
+.admin-table-wrapper {
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: var(--c-white);
+}
+
+.admin-table th {
+  background: var(--c-panel-soft);
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
+  letter-spacing: .04em;
+}
+
+.admin-table td {
+  color: var(--c-text);
+}
+
+.admin-table tr:hover td {
+  background: var(--c-blue-light);
+}
+
+.admin-btn {
+  min-height: 34px;
+  border-radius: var(--r-md);
+}
+
+.trend-hero,
+.briefing-hero,
+.source-hero,
+.action-hero {
+  background:
+    linear-gradient(135deg, rgba(21, 94, 239, .08), transparent 54%),
+    var(--c-white);
+}
+
+.trend-eyebrow {
+  color: var(--c-blue);
+  letter-spacing: .04em;
+}
+
+.action-column,
+.source-adapter-card,
+.source-signal-card,
+.source-cluster-card,
+.briefing-kpi-grid div,
+.briefing-mini-card,
+.briefing-row {
+  border-radius: var(--r-lg);
+  background: var(--c-panel-soft);
+}
+
+@media (max-width: 850px) {
+  .admin-card {
+    padding: var(--sp-md);
+  }
+
+  .admin-table-wrapper {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+/* Dark mode: keep admin dense but comfortable */
+[data-theme="dark"] .admin-page {
+  background: var(--c-page);
+}
+
+[data-theme="dark"] .admin-sidebar,
+[data-theme="dark"] .admin-card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .trend-meta-card,
+[data-theme="dark"] .trend-score-card,
+[data-theme="dark"] .trend-panel,
+[data-theme="dark"] .trend-topic-card,
+[data-theme="dark"] .trend-action-card,
+[data-theme="dark"] .trend-voice-card,
+[data-theme="dark"] .source-panel,
+[data-theme="dark"] .action-score-card,
+[data-theme="dark"] .action-board,
+[data-theme="dark"] .action-side,
+[data-theme="dark"] .admin-modal,
+[data-theme="dark"] .admin-table-wrapper {
+  background: var(--c-panel);
+  border-color: var(--c-border);
+  color: var(--c-text);
+}
+
+[data-theme="dark"] .admin-sidebar__title,
+[data-theme="dark"] .admin-card__title,
+[data-theme="dark"] .stat-card__value {
+  color: var(--c-title);
+}
+
+[data-theme="dark"] .admin-table th {
+  background: var(--c-panel-soft);
+  color: var(--c-muted);
+}
+
+[data-theme="dark"] .admin-table tr:hover td {
+  background: rgba(96, 165, 250, .1);
+}
+
+[data-theme="dark"] .trend-hero,
+[data-theme="dark"] .briefing-hero,
+[data-theme="dark"] .source-hero,
+[data-theme="dark"] .action-hero,
+[data-theme="dark"] .action-column,
+[data-theme="dark"] .source-adapter-card,
+[data-theme="dark"] .source-signal-card,
+[data-theme="dark"] .source-cluster-card,
+[data-theme="dark"] .briefing-kpi-grid div,
+[data-theme="dark"] .briefing-mini-card,
+[data-theme="dark"] .briefing-row {
+  background: var(--c-panel-soft);
+  border-color: var(--c-border);
+}
 

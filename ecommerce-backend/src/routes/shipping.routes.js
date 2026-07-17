@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { shippingService } = require('../services/shipping.service');
+const Order = require('../models/Order');
+const { authenticate } = require('../middlewares/auth.middleware');
 const logger = console;
 
 /**
  * Shipping Routes
  * Real-time integration with GHN (Giao Hàng Nhanh)
  */
+router.use(authenticate);
 
 /**
  * GET /api/shipping/provinces
@@ -156,6 +159,19 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Thiếu thông tin giao hàng bắt buộc'
+      });
+    }
+
+    const order = await Order.findOne({
+      where: req.user.role === 'admin'
+        ? { id: orderId }
+        : { id: orderId, userId: req.user.id }
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy đơn hàng của bạn'
       });
     }
 

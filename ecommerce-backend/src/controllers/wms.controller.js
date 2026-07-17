@@ -4,12 +4,22 @@ const Order = require('../models/Order');
 const generateBarcode = async (req, res) => {
   try {
     const { orderId } = req.params;
-    
-    // Bỏ qua check Order DB để test Barcode
+    const order = await Order.findOne({
+      where: req.user.role === 'admin'
+        ? { id: orderId }
+        : { id: orderId, userId: req.user.id }
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy đơn hàng của bạn'
+      });
+    }
 
     // Tạo mã vạch chuẩn Code128 với tiền tố SHOPVN
     const text = `SHOPVN-${orderId}`;
-    
+
     bwipjs.toBuffer({
       bcid:        'code128',       // Barcode type
       text:        text,            // Text to encode

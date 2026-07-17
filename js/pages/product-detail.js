@@ -19,41 +19,6 @@ const getProducts = () => {
   return JSON.parse(localStorage.getItem('admin_products'));
 };
 
-// ── Mock specs (dữ liệu thông số kỹ thuật theo từng sản phẩm) ────────────────
-
-const MOCK_SPECS = {
-  1: [ // Laptop
-    ['CPU',          'Intel Core i7-13700H'],
-    ['RAM',          '16GB DDR5 4800MHz'],
-    ['Ổ cứng',       'SSD NVMe 512GB'],
-    ['Màn hình',     '15.6" FHD IPS 144Hz'],
-    ['Card đồ họa',  'NVIDIA RTX 4060 8GB'],
-    ['Pin',          '72Wh, sạc 140W'],
-    ['Hệ điều hành', 'Windows 11 Home'],
-    ['Trọng lượng',  '1.9 kg'],
-  ],
-  2: [ // Phone
-    ['CPU',          'Snapdragon 8 Gen 3'],
-    ['RAM',          '12GB LPDDR5X'],
-    ['Bộ nhớ',       '256GB UFS 4.0'],
-    ['Màn hình',     '6.7" AMOLED 120Hz'],
-    ['Camera sau',   '50MP + 12MP + 10MP'],
-    ['Camera trước', '12MP'],
-    ['Pin',          '5000mAh, sạc 45W'],
-    ['Hệ điều hành', 'Android 14'],
-  ],
-  3: [ // Headphones
-    ['Driver',       '40mm Dynamic'],
-    ['Đáp tần',      '20Hz – 20kHz'],
-    ['Trở kháng',    '32Ω'],
-    ['Kết nối',      'Bluetooth 5.3 / 3.5mm'],
-    ['Pin',          '30 giờ nghe nhạc'],
-    ['Sạc',          'USB-C, 10 phút = 3 giờ'],
-    ['Trọng lượng',  '250g'],
-    ['Màu sắc',      'Đen, Trắng, Xanh Navy'],
-  ],
-};
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getProductIdFromURL() {
@@ -68,7 +33,7 @@ function toggleWishlist(id) {
   const idx = state.wishlist.indexOf(id);
   if (idx === -1) {
     state.wishlist.push(id);
-    showToast('Đã thêm vào danh sách yêu thích ❤️', 'success');
+    showToast('Đã thêm vào danh sách yêu thích', 'success');
   } else {
     state.wishlist.splice(idx, 1);
     showToast('Đã xóa khỏi danh sách yêu thích', 'info');
@@ -95,32 +60,41 @@ function renderBreadcrumb(product) {
 
 function renderProduct(product) {
   const disc = calcDiscount(product.price, product.oldPrice);
+  const category = escapeHtml(product.category || 'Sản phẩm');
 
-  // Icon / image
-  document.getElementById('product-icon').textContent = product.icon || '📦';
+  const mediaRoot = document.querySelector('.detail-img-main');
+  if (mediaRoot) mediaRoot.innerHTML = productMediaMarkup(product, { eager: true });
 
-  // Thumbnails — dùng cùng icon, demo 4 góc nhìn
   const thumbWrap = document.getElementById('product-thumbs');
   if (thumbWrap) {
-    thumbWrap.innerHTML = [product.icon, product.icon, product.icon, product.icon]
-      .map((icon, i) => `
-        <div class="detail-thumb ${i === 0 ? 'active' : ''}"
-             onclick="selectThumb(this, '${icon}')"
-             aria-label="Ảnh ${i + 1}">
-          ${icon}
-        </div>
-      `).join('');
+    thumbWrap.innerHTML = getSafeProductImageUrl(product)
+      ? `<button type="button" class="detail-thumb active" aria-label="Ảnh sản phẩm chính">${productMediaMarkup(product, { eager: true })}</button>`
+      : '';
   }
 
   // Badges
   document.getElementById('product-badges').innerHTML = `
-    <span class="badge badge-blue">${product.category}</span>
+    <span class="badge badge-blue">${category}</span>
     ${product.isNew  ? `<span class="badge badge-green">Mới về</span>` : ''}
     ${disc           ? `<span class="badge badge-accent">-${disc}%</span>` : ''}
   `;
 
   // Name
   document.getElementById('product-name').textContent = product.name;
+
+  const ratingSummary = getProductRatingSummary(product);
+  const ratingWrap = document.getElementById('product-rating-summary');
+  if (ratingWrap) {
+    ratingWrap.hidden = !ratingSummary;
+    if (ratingSummary) {
+      const stars = document.getElementById('product-rating-stars');
+      const text = document.getElementById('product-rating-text');
+      if (stars) stars.textContent = `${ratingSummary.rating.toFixed(1)} / 5`;
+      if (text) text.textContent = ratingSummary.count
+        ? `${ratingSummary.count} đánh giá đã xác minh`
+        : 'Điểm đánh giá sản phẩm';
+    }
+  }
 
   // Price
   document.getElementById('product-price').textContent = formatPrice(product.price);
@@ -141,27 +115,26 @@ function renderProduct(product) {
   if (product.stock > 10) {
     stockEl.textContent = `Còn hàng (${product.stock} sản phẩm)`;
   } else if (product.stock > 0) {
-    stockEl.textContent = `Sắp hết hàng (còn ${product.stock})`;
+    stockEl.textContent = `Còn ${product.stock} sản phẩm`;
     dotEl?.classList.add('low');
   } else {
     stockEl.textContent = 'Hết hàng';
     dotEl?.classList.add('out');
   }
 
-  // ── Urgency Indicators ──
-  renderUrgencyIndicators(product);
-
   // Meta
+  const brand = escapeHtml(product.brand || 'Chưa cập nhật');
+  const warranty = escapeHtml(product.warranty || 'Theo chính sách sản phẩm');
   document.getElementById('product-meta').innerHTML = `
     <div class="detail-meta-row">
       <span class="detail-meta-key">Thương hiệu</span>
-      <span class="detail-meta-val">ShopVN Official</span>
+      <span class="detail-meta-val">${brand}</span>
     </div>
     <div class="detail-meta-row">
       <span class="detail-meta-key">Danh mục</span>
       <span class="detail-meta-val">
         <a href="products.html?category=${encodeURIComponent(product.category)}"
-           style="color:var(--c-blue)">${product.category}</a>
+           style="color:var(--c-blue)">${category}</a>
       </span>
     </div>
     <div class="detail-meta-row">
@@ -170,7 +143,7 @@ function renderProduct(product) {
     </div>
     <div class="detail-meta-row">
       <span class="detail-meta-key">Bảo hành</span>
-      <span class="detail-meta-val">12 tháng chính hãng</span>
+      <span class="detail-meta-val">${warranty}</span>
     </div>
   `;
 
@@ -181,62 +154,7 @@ function renderProduct(product) {
   // Page title
   document.title = `${product.name} — ShopVN`;
 
-  // Initialize 3D product visualizer toggle button
-  Product3DViewer.init(product);
-  renderPdpMediaContext(product);
   renderPdpShippingCard(product);
-}
-
-function renderPdpMediaContext(product) {
-  const panel = document.querySelector('.detail-img-panel');
-  if (!panel) return;
-
-  let wrap = document.getElementById('product-media-context');
-  if (!wrap) {
-    wrap = document.createElement('div');
-    wrap.id = 'product-media-context';
-    wrap.className = 'pdp-media-context';
-    wrap.setAttribute('aria-label', 'Ảnh theo ngữ cảnh sử dụng');
-    panel.appendChild(wrap);
-  }
-
-  const isLaptop = /laptop/i.test(product.category || product.name || '');
-  const isPhone = /điện thoại|phone/i.test(product.category || product.name || '');
-  const contexts = isLaptop
-    ? [
-        ['Trên bàn làm việc', 'Ước lượng kích thước khi đặt cạnh màn hình/phụ kiện.'],
-        ['Mang theo hằng ngày', 'Gợi ý độ gọn khi bỏ balo và di chuyển.'],
-        ['Cổng kết nối', 'Nhắc khách kiểm tra nhu cầu HDMI, USB-C, tai nghe.']
-      ]
-    : isPhone
-      ? [
-          ['Cầm một tay', 'Giúp ước lượng kích thước thân máy khi dùng hằng ngày.'],
-          ['Camera sau', 'Dễ đánh giá cụm camera và độ lồi khi đặt trên bàn.'],
-          ['Trong túi quần', 'Gợi ý độ gọn khi mang theo.']
-        ]
-      : [
-          ['Kích thước thực tế', 'Giúp khách hình dung sản phẩm trong đời sống.'],
-          ['Chi tiết hoàn thiện', 'Tập trung vào chất liệu, cổng kết nối và phụ kiện.'],
-          ['Khi sử dụng', 'Mô tả bối cảnh dùng phổ biến nhất.']
-        ];
-
-  wrap.innerHTML = `
-    <div class="pdp-media-context__header">
-      <strong>Ảnh nên có để khách tự tin hơn</strong>
-      <span>Theo video Baymard: ảnh theo tỷ lệ và bối cảnh giúp khách đánh giá sản phẩm nhanh hơn.</span>
-    </div>
-    <div class="pdp-media-context__grid">
-      ${contexts.map(([title, desc]) => `
-        <div class="pdp-media-context__item">
-          <span>${product.icon || '📦'}</span>
-          <div>
-            <strong>${title}</strong>
-            <small>${desc}</small>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
 }
 
 function renderPdpShippingCard(product) {
@@ -251,16 +169,14 @@ function renderPdpShippingCard(product) {
     decisionPanel.after(card);
   }
 
-  const threshold = 500000;
-  const isFreeShip = product.price >= threshold;
   card.innerHTML = `
     <div class="pdp-shipping-card__row">
       <span>Phí vận chuyển dự kiến</span>
-      <strong>${isFreeShip ? 'Miễn phí' : '25.000đ - 35.000đ'}</strong>
+      <strong>Tính tại bước thanh toán</strong>
     </div>
     <div class="pdp-shipping-card__row">
       <span>Đổi trả</span>
-      <strong>30 ngày nếu còn nguyên điều kiện</strong>
+      <strong>Theo điều kiện áp dụng của ShopVN</strong>
     </div>
     <div class="pdp-shipping-card__row">
       <span>Trước khi đặt</span>
@@ -269,81 +185,20 @@ function renderPdpShippingCard(product) {
   `;
 }
 
-function renderDescription(product) {
-  document.getElementById('tab-desc').innerHTML = `
-    <div style="font-size:.92rem;color:var(--c-text);line-height:1.9;
-                max-width:680px">
-      <p style="margin-bottom:var(--sp-md)">
-        <strong>${product.name}</strong> là sản phẩm cao cấp thuộc dòng
-        ${product.category} của ShopVN — được trang bị công nghệ tiên tiến
-        nhất, mang đến hiệu năng vượt trội cho công việc và giải trí.
-      </p>
-      <p style="margin-bottom:var(--sp-md)">
-        Với thiết kế hiện đại, chắc chắn cùng chất lượng được kiểm định
-        nghiêm ngặt, sản phẩm phù hợp cho cả người dùng chuyên nghiệp
-        lẫn người dùng phổ thông đang tìm kiếm trải nghiệm tốt nhất.
-      </p>
-      <ul style="padding-left:var(--sp-lg);display:flex;
-                 flex-direction:column;gap:6px">
-        <li>✅ Hiệu năng mạnh mẽ, xử lý mượt mà mọi tác vụ</li>
-        <li>✅ Thiết kế tinh tế, trọng lượng nhẹ dễ mang theo</li>
-        <li>✅ Pin trâu, sử dụng cả ngày không lo hết pin</li>
-        <li>✅ Bảo hành 12 tháng tại trung tâm bảo hành toàn quốc</li>
-      </ul>
-    </div>
-  `;
-}
-
 function renderProductStory(product) {
-  document.getElementById('tab-desc').innerHTML = `
-    <div class="pdp-story">
-      <div class="pdp-description-wrap">
-        <div class="pdp-description-copy is-collapsed" id="pdp-description-copy">
-        <p class="pdp-story__lead">
-          <strong>${product.name}</strong> thuộc nhóm ${product.category}, phù hợp cho khách cần một lựa chọn rõ giá,
-          dễ so sánh và có chính sách hậu mãi minh bạch.
-        </p>
-        <div class="pdp-benefit-grid">
-          <div>
-            <strong>Hiệu năng ổn định</strong>
-            <span>Xử lý tốt nhu cầu học tập, làm việc và giải trí hằng ngày.</span>
-          </div>
-          <div>
-            <strong>Dễ mua, dễ đổi trả</strong>
-            <span>Bảo hành 12 tháng, đổi trả 30 ngày theo chính sách ShopVN.</span>
-          </div>
-          <div>
-            <strong>Chi phí rõ ràng</strong>
-            <span>Giá, phí vận chuyển và voucher được thể hiện trước khi đặt hàng.</span>
-          </div>
-        </div>
-        <div class="pdp-ugc-strip">
-          <strong>Khách thường kiểm tra trước khi mua</strong>
-          <span>Ảnh thực tế, kích thước khi dùng, phí ship, đổi trả, bảo hành và đánh giá gần đây.</span>
-        </div>
+  const container = document.getElementById('tab-desc');
+  if (!container) return;
+
+  const description = String(product.description || '').trim();
+  container.innerHTML = description
+    ? `<div class="pdp-description-copy"><p>${escapeHtml(description).replaceAll('\n', '<br>')}</p></div>`
+    : `
+      <div class="empty-state empty-state--compact">
+        <div class="empty-state__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg></div>
+        <h2>Mô tả đang được cập nhật</h2>
+        <p>ShopVN chưa có nội dung mô tả chi tiết cho sản phẩm này. Bạn vẫn có thể kiểm tra giá, tồn kho và thông tin kỹ thuật đã xác nhận.</p>
       </div>
-        </div>
-        <button class="btn btn-outline btn-sm pdp-read-more-btn" id="pdp-read-more-btn" onclick="toggleProductDescription()">
-          Đọc thêm mô tả
-        </button>
-      </div>
-      <div class="pdp-faq-card">
-        <h3>Câu hỏi nhanh</h3>
-        <details open>
-          <summary>Sản phẩm có phù hợp để mua online không?</summary>
-          <p>Có. ShopVN hiển thị giá, tồn kho, bảo hành và chính sách đổi trả ngay trên trang để bạn kiểm tra trước khi thanh toán.</p>
-        </details>
-        <details>
-          <summary>Khi nào nên chọn sản phẩm này?</summary>
-          <p>Khi bạn cần một sản phẩm chính hãng, giao nhanh, có hỗ trợ sau mua và có thể so sánh với sản phẩm liên quan.</p>
-        </details>
-        <details>
-          <summary>Có phí nào cần biết trước không?</summary>
-          <p>Phí vận chuyển và tổng tiền cuối được hiển thị rõ ở giỏ hàng/checkout trước khi bạn xác nhận đặt hàng.</p>
-        </details>
-      </div>
-    </div>
-  `;
+    `;
 }
 
 function toggleProductDescription() {
@@ -357,34 +212,31 @@ function toggleProductDescription() {
 }
 
 function renderSpecs(product) {
-  const specs = MOCK_SPECS[product.id] || [
-    ['Danh mục',  product.category],
-    ['Tình trạng', 'Còn hàng'],
-    ['Bảo hành',  '12 tháng'],
+  const providedSpecs = Array.isArray(product.specs)
+    ? product.specs
+    : product.specs && typeof product.specs === 'object'
+      ? Object.entries(product.specs)
+      : [];
+  const specs = [
+    ['Danh mục', product.category || 'Chưa cập nhật'],
+    ['Tồn kho', Number(product.stock) > 0 ? `${Number(product.stock)} sản phẩm` : 'Hết hàng'],
+    ...(product.brand ? [['Thương hiệu', product.brand]] : []),
+    ...(product.warranty ? [['Bảo hành', product.warranty]] : []),
+    ...providedSpecs,
   ];
-
-  const highlights = specs.slice(0, 4);
 
   document.getElementById('tab-specs').innerHTML = `
     <div class="pdp-section-heading">
-      <span>Thông số dễ scan</span>
-      <h2>Những điểm cần biết nhanh</h2>
-      <p>Đưa thông tin quan trọng lên trước, bảng đầy đủ để khách tra cứu khi cần.</p>
-    </div>
-    <div class="spec-highlights">
-      ${highlights.map(([k, v]) => `
-        <div class="spec-highlight">
-          <span>${k}</span>
-          <strong>${v}</strong>
-        </div>
-      `).join('')}
+      <span>Thông tin đã xác nhận</span>
+      <h2>Thông tin sản phẩm</h2>
+      <p>Các thuộc tính dưới đây lấy từ dữ liệu sản phẩm hiện có.</p>
     </div>
     <table class="spec-table" aria-label="Thông số kỹ thuật">
       <tbody>
         ${specs.map(([k, v]) => `
           <tr>
-            <td>${k}</td>
-            <td>${v}</td>
+            <td>${escapeHtml(k)}</td>
+            <td>${escapeHtml(v)}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -419,11 +271,15 @@ function renderRelated(currentProduct) {
   grid.innerHTML = related.map((p, i) => {
     const disc = calcDiscount(p.price, p.oldPrice);
     const inWish = LocalWishlist.has(p.id);
+    const name = escapeHtml(p.name);
+    const category = escapeHtml(p.category || 'Sản phẩm');
+    const detailUrl = `product-detail.html?id=${encodeURIComponent(p.id)}`;
     return `
-      <article class="product-card fade-up" style="animation-delay:${i * 0.06}s"
-               onclick="window.location.href='product-detail.html?id=${p.id}'">
+      <article class="product-card fade-up" role="listitem" style="animation-delay:${i * 0.06}s">
         <div class="product-card__img">
-          <span class="product-card__img-icon">${p.icon || '📦'}</span>
+          <a class="product-card__media-link" href="${detailUrl}" aria-label="Xem ${name}, ${category}">
+            ${productMediaMarkup(p)}
+          </a>
           ${disc ? `<span class="badge badge-accent product-card__badge">-${disc}%</span>` : ''}
           ${p.isNew && !disc ? `<span class="badge badge-green product-card__badge">Mới</span>` : ''}
           <button class="product-card__wish ${inWish ? 'active' : ''}"
@@ -435,8 +291,8 @@ function renderRelated(currentProduct) {
           </button>
         </div>
         <div class="product-card__body">
-          <p class="product-card__cat">${p.category}</p>
-          <h3 class="product-card__name">${p.name}</h3>
+          <p class="product-card__cat">${category}</p>
+          <h3 class="product-card__name"><a href="${detailUrl}">${name}</a></h3>
           <div class="product-card__price-row">
             <div>
               <span class="product-card__price">${formatPrice(p.price)}</span>
@@ -452,9 +308,6 @@ function renderRelated(currentProduct) {
       </article>
     `;
   }).join('');
-
-  // Also render bundle
-  renderBundle(currentProduct, allProducts);
 }
 
 function toggleWishlistCard(productId) {
@@ -467,72 +320,6 @@ function toggleWishlistCard(productId) {
       btn.classList.toggle('active', isNowInWish);
     }
   });
-}
-
-function renderBundle(currentProduct, allProducts) {
-  const grid = document.getElementById('bundle-grid');
-  const section = document.getElementById('bundle-section');
-  if (!grid || !section) return;
-
-  // Pick 2 complementary products (different category)
-  const bundleItems = allProducts
-    .filter(p => p.id !== currentProduct.id && p.category !== currentProduct.category)
-    .slice(0, 2);
-
-  if (bundleItems.length === 0) {
-    section.style.display = 'none';
-    return;
-  }
-
-  const allBundleProducts = [currentProduct, ...bundleItems];
-  const totalPrice = allBundleProducts.reduce((s, p) => s + p.price, 0);
-  const bundlePrice = Math.round(totalPrice * 0.95); // 5% discount
-  const saved = totalPrice - bundlePrice;
-
-  grid.innerHTML = `
-    <div style="display:flex;align-items:center;gap:var(--sp-md);flex-wrap:wrap;flex:1">
-      ${allBundleProducts.map((p, i) => `
-        ${i > 0 ? '<span style="font-size:1.5rem;color:var(--c-muted);font-weight:300">+</span>' : ''}
-        <div style="background:var(--c-off);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:var(--sp-md);text-align:center;min-width:120px;cursor:pointer;transition:all var(--dur) var(--ease)"
-             onclick="window.location.href='product-detail.html?id=${p.id}'"
-             onmouseover="this.style.borderColor='var(--c-blue)';this.style.transform='translateY(-2px)'"
-             onmouseout="this.style.borderColor='var(--c-border)';this.style.transform='none'">
-          <div style="font-size:2rem;margin-bottom:6px">${p.icon || '📦'}</div>
-          <div style="font-size:.78rem;font-weight:600;color:var(--c-text);margin-bottom:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">${p.name}</div>
-          <div style="font-size:.78rem;color:var(--c-blue);font-weight:700">${formatPrice(p.price)}</div>
-        </div>
-      `).join('')}
-    </div>
-    <div style="background:linear-gradient(135deg,var(--c-navy),var(--c-blue));border-radius:var(--r-lg);padding:var(--sp-lg) var(--sp-xl);color:white;text-align:center;min-width:200px">
-      <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:4px">Mua combo tiết kiệm 5%</div>
-      <div style="font-size:.85rem;text-decoration:line-through;opacity:.5;margin-bottom:2px">${formatPrice(totalPrice)}</div>
-      <div style="font-family:var(--f-display);font-size:1.4rem;font-weight:800;margin-bottom:4px">${formatPrice(bundlePrice)}</div>
-      <div style="font-size:.78rem;color:#4CAF50;font-weight:600;margin-bottom:var(--sp-md)">Tiết kiệm ${formatPrice(saved)}</div>
-      <button class="btn btn-accent btn-full" style="justify-content:center;font-size:.85rem"
-              onclick="addBundleToCart([${allBundleProducts.map(p => p.id).join(',')}])">
-        🛒 Thêm cả ${allBundleProducts.length} vào giỏ
-      </button>
-    </div>
-  `;
-}
-
-function addBundleToCart(ids) {
-  const allProducts = getProducts();
-  ids.forEach(id => {
-    const p = allProducts.find(pp => pp.id === id);
-    if (p) {
-      const items = LocalCart.get();
-      const existing = items.find(i => i.id === p.id);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        items.push({ ...p, quantity: 1 });
-      }
-      LocalCart.save(items);
-    }
-  });
-  showToast(`Đã thêm ${ids.length} sản phẩm combo vào giỏ hàng! 🎉`);
-  openCartDrawer();
 }
 
 // ── Quantity control ──────────────────────────────────────────────────────────
@@ -563,19 +350,6 @@ function switchTab(tabId) {
   });
 }
 
-// ── Thumbnail select ──────────────────────────────────────────────────────────
-
-function selectThumb(el, icon) {
-  document.querySelectorAll('.detail-thumb')
-    .forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-
-  if (Product3DViewer.active) {
-    Product3DViewer.resetToStatic(state.product);
-  }
-  document.getElementById('product-icon').textContent = icon;
-}
-
 // ── Add to cart ───────────────────────────────────────────────────────────────
 
 function addToCart() {
@@ -604,10 +378,7 @@ function injectSchemaMarkup(product, reviews = []) {
     "@context": "https://schema.org/",
     "@type": "Product",
     "name": product.name,
-    "image": [
-      window.location.origin + "/favicon.ico"
-    ],
-    "description": `${product.name} chính hãng tại ShopVN - thuộc danh mục ${product.category}.`,
+    "description": product.description || `${product.name} thuộc danh mục ${product.category} tại ShopVN.`,
     "sku": `SKU-${product.id}`,
     "offers": {
       "@type": "Offer",
@@ -623,6 +394,9 @@ function injectSchemaMarkup(product, reviews = []) {
       }
     }
   };
+
+  const imageUrl = getSafeProductImageUrl(product);
+  if (imageUrl) schema.image = [imageUrl];
   
   if (reviews.length > 0) {
     const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
@@ -652,18 +426,35 @@ function injectSchemaMarkup(product, reviews = []) {
   script.text = JSON.stringify(schema, null, 2);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   updateNavbarAuth();
   updateCartBadge();
 
   const id = getProductIdFromURL();
-  const product = getProducts().find(p => p.id === id);
+  const localProduct = getProducts().find(product => Number(product.id) === id);
+  let product = localProduct;
+  let usingOfflineData = false;
+
+  try {
+    const response = await ProductAPI.getById(id);
+    usingOfflineData = Boolean(response?.fromOfflineDB);
+    product = usingOfflineData ? (localProduct || response?.product) : response?.product;
+  } catch {
+    usingOfflineData = true;
+  }
 
   if (!product) {
-    // Sản phẩm không tồn tại → về trang products
-    showToast('Không tìm thấy sản phẩm!', 'error');
+    showToast('Không tìm thấy sản phẩm', 'error');
     setTimeout(() => window.location.href = 'products.html', 1500);
     return;
+  }
+
+  if (usingOfflineData) {
+    const status = document.createElement('div');
+    status.className = 'data-status data-status--warning';
+    status.setAttribute('role', 'status');
+    status.textContent = 'Không thể kết nối máy chủ. Thông tin dưới đây được lấy từ dữ liệu tạm trên thiết bị.';
+    document.querySelector('.detail-grid')?.before(status);
   }
 
   state.product = product;
@@ -692,9 +483,6 @@ state.reviewRating = 5;
 async function initReviews() {
   await renderReviews();
 }
-
-// State for review inputs
-state.reviewRating = 5;
 
 async function renderReviews() {
   const productId = state.product.id;
@@ -725,16 +513,22 @@ async function renderReviews() {
       </div>
     `;
   } else {
-    listContainer.innerHTML = reviews.map(rev => `
+    listContainer.innerHTML = reviews.map(rev => {
+      const rating = Math.round(Math.max(0, Math.min(5, Number(rev.rating) || 0)));
+      const author = escapeHtml(rev.user?.name || 'Ẩn danh');
+      const date = escapeHtml(formatDate(rev.createdAt || new Date()));
+      const comment = escapeHtml(rev.comment || '');
+      return `
       <div class="review-item">
         <div class="review-header">
-          <span class="review-user">${rev.user ? rev.user.name : 'Ẩn danh'}</span>
-          <span class="review-date">${formatDate(rev.createdAt || new Date())}</span>
+          <span class="review-user">${author}</span>
+          <span class="review-date">${date}</span>
         </div>
-        <div class="review-stars">${'★'.repeat(rev.rating)}${'☆'.repeat(5 - rev.rating)}</div>
-        <p class="review-content">${rev.comment}</p>
+        <div class="review-stars" aria-label="${rating} trên 5 sao">${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</div>
+        <p class="review-content">${comment}</p>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   // 3. Render review form
@@ -744,7 +538,7 @@ async function renderReviews() {
   if (!Auth.isLoggedIn()) {
     formContainer.innerHTML = `
       <div style="text-align:center;padding:var(--sp-xs);color:var(--c-muted);font-size:.88rem">
-        🔒 Vui lòng <a href="login.html" style="color:var(--c-blue);font-weight:600">đăng nhập</a> để gửi đánh giá sản phẩm.
+        Vui lòng <a href="login.html" style="color:var(--c-blue);font-weight:600">đăng nhập</a> để gửi đánh giá sản phẩm.
       </div>
     `;
   } else {
@@ -752,9 +546,11 @@ async function renderReviews() {
       <h4 class="review-form-title">Gửi đánh giá của bạn</h4>
       <div class="star-rating-selector" role="group" aria-label="Chọn số sao">
         ${[1, 2, 3, 4, 5].map(star => `
-          <span class="star-rating-selector__btn ${star <= state.reviewRating ? 'active' : ''}" 
-                onclick="setReviewRating(${star})" 
-                id="rating-star-${star}">★</span>
+          <button type="button" class="star-rating-selector__btn ${star <= state.reviewRating ? 'active' : ''}"
+                  onclick="setReviewRating(${star})"
+                  aria-label="Chọn ${star} sao"
+                  aria-pressed="${star <= state.reviewRating}"
+                  id="rating-star-${star}">★</button>
         `).join('')}
       </div>
       <div class="form-group" style="margin-bottom:var(--sp-md)">
@@ -778,9 +574,19 @@ function renderReviewSummary(reviews) {
   }
 
   const count = reviews.length;
+  if (!count) {
+    summary.innerHTML = `
+      <div class="review-summary-card review-summary-card--empty">
+        <strong>Chưa có đánh giá</strong>
+        <p>Điểm trung bình sẽ xuất hiện sau khi khách hàng gửi đánh giá đầu tiên.</p>
+      </div>
+    `;
+    return;
+  }
+
   const avg = count
     ? reviews.reduce((sum, rev) => sum + Number(rev.rating || 0), 0) / count
-    : 4.8;
+    : 0;
   const rating = Math.max(0, Math.min(5, avg));
 
   summary.innerHTML = `
@@ -788,16 +594,7 @@ function renderReviewSummary(reviews) {
       <div class="review-summary-score">
         <strong>${rating.toFixed(1)}</strong>
         <span>${'★'.repeat(Math.round(rating))}${'☆'.repeat(5 - Math.round(rating))}</span>
-        <small>${count ? `${count} đánh giá đã xác thực` : 'Chưa có đánh giá mới'}</small>
-      </div>
-      <div class="review-summary-insights">
-        <h3>Khách thường quan tâm</h3>
-        <div>
-          <span>Độ bền</span>
-          <span>Giao hàng</span>
-          <span>Bảo hành</span>
-          <span>Đúng mô tả</span>
-        </div>
+        <small>${count} đánh giá</small>
       </div>
     </div>
   `;
@@ -832,6 +629,7 @@ function setReviewRating(rating) {
   const stars = document.querySelectorAll('.star-rating-selector__btn');
   stars.forEach((star, idx) => {
     star.classList.toggle('active', idx < rating);
+    star.setAttribute('aria-pressed', String(idx < rating));
   });
 }
 
@@ -853,71 +651,13 @@ async function submitReview() {
     });
     
     if (res.success) {
-      showToast('Đã gửi đánh giá thành công! Cảm ơn bạn 🎉', 'success');
+      showToast('Đã gửi đánh giá thành công. Cảm ơn bạn', 'success');
       state.reviewRating = 5;
       await renderReviews();
     }
   } catch (err) {
     showToast(err.message || 'Lỗi khi gửi đánh giá.', 'error');
   }
-}
-
-// ── Urgency Indicators ────────────────────────────────────────────────────────
-
-function renderUrgencyIndicators(product) {
-  const stockSection = document.querySelector('.detail-stock');
-  if (!stockSection) return;
-
-  // Remove existing urgency box if any
-  const existing = document.getElementById('urgency-box');
-  if (existing) existing.remove();
-
-  const viewerCount = Math.floor(Math.random() * 35) + 15;
-  const soldCount = Math.floor(Math.random() * 500) + 100;
-
-  const urgencyBox = document.createElement('div');
-  urgencyBox.id = 'urgency-box';
-  urgencyBox.className = 'urgency-box';
-
-  let html = '';
-
-  // Low stock warning
-  if (product.stock > 0 && product.stock <= 10) {
-    html += `
-      <div class="urgency-item urgency-item--hot">
-        <span class="urgency-item__dot"></span>
-        🔥 Chỉ còn <strong>${product.stock} sản phẩm</strong> — Mua ngay kẻo hết!
-      </div>
-    `;
-  }
-
-  // Viewers count
-  html += `
-    <div class="urgency-item">
-      👁 <strong>${viewerCount}</strong> người đang xem sản phẩm này
-    </div>
-  `;
-
-  // Sold count
-  html += `
-    <div class="urgency-item">
-      📦 Đã bán <strong>${soldCount}+</strong> sản phẩm
-    </div>
-  `;
-
-  urgencyBox.innerHTML = html;
-  stockSection.after(urgencyBox);
-
-  // Simulate viewer count changes
-  setInterval(() => {
-    const viewerEl = urgencyBox.querySelector('.urgency-item:nth-child(2) strong');
-    if (viewerEl) {
-      const delta = Math.floor(Math.random() * 5) - 2;
-      const current = parseInt(viewerEl.textContent);
-      const newVal = Math.max(8, current + delta);
-      viewerEl.textContent = newVal;
-    }
-  }, 5000);
 }
 
 // ── Sticky Add-to-Cart Bar ────────────────────────────────────────────────────
@@ -932,9 +672,9 @@ function initStickyAtcBar(product) {
     bar.innerHTML = `
       <div class="sticky-atc-bar__inner">
         <div class="sticky-atc-bar__product">
-          <div class="sticky-atc-bar__icon">${product.icon || '📦'}</div>
+          <div class="sticky-atc-bar__icon">${productMediaMarkup(product)}</div>
           <div class="sticky-atc-bar__info">
-            <div class="sticky-atc-bar__name">${product.name}</div>
+            <div class="sticky-atc-bar__name">${escapeHtml(product.name)}</div>
             <div class="sticky-atc-bar__price">${formatPrice(product.price)}</div>
           </div>
         </div>
@@ -943,7 +683,7 @@ function initStickyAtcBar(product) {
             Thêm vào giỏ hàng
           </button>
           <button class="btn btn-primary btn-sm" onclick="buyNow()">
-            Mua ngay →
+            Mua ngay
           </button>
         </div>
       </div>
@@ -956,7 +696,9 @@ function initStickyAtcBar(product) {
   if (!actionsEl) return;
 
   const observer = new IntersectionObserver(([entry]) => {
-    bar.classList.toggle('visible', !entry.isIntersecting);
+    const isVisible = !entry.isIntersecting;
+    bar.classList.toggle('visible', isVisible);
+    document.body.classList.toggle('has-sticky-atc', isVisible);
   }, { threshold: 0, rootMargin: '-80px 0px 0px 0px' });
 
   observer.observe(actionsEl);
@@ -993,236 +735,3 @@ function initCompareButton(product) {
   actionsDiv.appendChild(compareBtn);
 }
 
-// ── Interactive Drag-to-Rotate 3D Product Viewer ──────────────────────────────
-
-const Product3DViewer = {
-  active: false,
-  card: null,
-  shadow: null,
-  hint: null,
-  
-  // Drag state
-  isDragging: false,
-  startX: 0,
-  startY: 0,
-  rotY: 0,
-  rotX: 0,
-  
-  // Inertia state
-  velX: 0,
-  velY: 0,
-  timer: null,
-
-  init(product) {
-    const mainImg = document.querySelector('.detail-img-main');
-    if (!mainImg) return;
-
-    // Check if toggle button already exists
-    let btn = mainImg.querySelector('.btn-3d-toggle');
-    if (btn) btn.remove();
-
-    btn = document.createElement('button');
-    btn.className = 'btn-3d-toggle';
-    btn.id = 'btn-3d-toggle';
-    btn.setAttribute('data-i18n', 'product.rotate3d');
-    btn.innerHTML = `🔄 ${window.i18n.t('product.rotate3d')}`;
-    
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      this.toggle(product);
-    };
-
-    mainImg.appendChild(btn);
-  },
-
-  toggle(product) {
-    const mainImg = document.querySelector('.detail-img-main');
-    const btn = document.getElementById('btn-3d-toggle');
-    if (!mainImg || !btn) return;
-
-    this.active = !this.active;
-    btn.classList.toggle('active', this.active);
-
-    if (this.active) {
-      btn.innerHTML = `📴 ${window.i18n.t('product.rotate3d_active')}`;
-      
-      // Inject 3D markup
-      // Keep the btn! We need to keep btn as a child of mainImg, so clear everything except the button
-      const elementsToKeep = [btn];
-      Array.from(mainImg.childNodes).forEach(node => {
-        if (!elementsToKeep.includes(node)) node.remove();
-      });
-
-      const viewport = document.createElement('div');
-      viewport.className = 'product-3d-viewport';
-      viewport.id = 'product-3d-viewport';
-      viewport.innerHTML = `
-        <div class="product-3d-hint visible" data-i18n="product.rotate_hint">${window.i18n.t('product.rotate_hint')}</div>
-        <div class="product-3d-card" id="product-3d-card">
-          <div class="product-3d-card__inner">${product.icon}</div>
-        </div>
-        <div class="product-3d-shadow" id="product-3d-shadow"></div>
-      `;
-
-      mainImg.insertBefore(viewport, btn);
-
-      this.card = document.getElementById('product-3d-card');
-      this.shadow = document.getElementById('product-3d-shadow');
-      this.hint = viewport.querySelector('.product-3d-hint');
-
-      // Reset coordinates
-      this.rotY = 0;
-      this.rotX = 0;
-      this.velX = 0;
-      this.velY = 0;
-      this.isDragging = false;
-
-      this.bindEvents();
-      this.startAutoRotation();
-    } else {
-      btn.innerHTML = `🔄 ${window.i18n.t('product.rotate3d')}`;
-      this.resetToStatic(product);
-    }
-  },
-
-  resetToStatic(product) {
-    const mainImg = document.querySelector('.detail-img-main');
-    const btn = document.getElementById('btn-3d-toggle');
-    if (!mainImg) return;
-
-    this.active = false;
-    if (btn) btn.classList.remove('active');
-
-    // Remove viewport and restore static icon
-    const vp = document.getElementById('product-3d-viewport');
-    if (vp) vp.remove();
-
-    // Check if product-icon already exists
-    let iconSpan = document.getElementById('product-icon');
-    if (!iconSpan) {
-      iconSpan = document.createElement('span');
-      iconSpan.id = 'product-icon';
-      iconSpan.style.lineHeight = '1';
-      mainImg.insertBefore(iconSpan, btn);
-    }
-    iconSpan.textContent = product.icon || '📦';
-
-    // Stop animation frame
-    if (this.timer) {
-      cancelAnimationFrame(this.timer);
-      this.timer = null;
-    }
-  },
-
-  bindEvents() {
-    if (!this.card) return;
-
-    const startDrag = (e) => {
-      this.isDragging = true;
-      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-      this.startX = clientX;
-      this.startY = clientY;
-      
-      // Stop auto-rotation/inertia when manual drag starts
-      this.velX = 0;
-      this.velY = 0;
-
-      if (this.hint) {
-        this.hint.classList.remove('visible');
-      }
-    };
-
-    const moveDrag = (e) => {
-      if (!this.isDragging) return;
-
-      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-      
-      const deltaX = clientX - this.startX;
-      const deltaY = clientY - this.startY;
-
-      this.startX = clientX;
-      this.startY = clientY;
-
-      // Track velocity
-      this.velX = deltaX * 0.4;
-      this.velY = deltaY * 0.4;
-
-      this.rotY += deltaX * 0.6;
-      this.rotX = Math.max(-30, Math.min(30, this.rotX - deltaY * 0.6));
-
-      this.updateTransforms();
-    };
-
-    const stopDrag = () => {
-      this.isDragging = false;
-      this.startInertia();
-    };
-
-    // Mouse events
-    this.card.addEventListener('mousedown', startDrag);
-    window.addEventListener('mousemove', moveDrag);
-    window.addEventListener('mouseup', stopDrag);
-
-    // Touch events
-    this.card.addEventListener('touchstart', startDrag, { passive: true });
-    window.addEventListener('touchmove', moveDrag, { passive: true });
-    window.addEventListener('touchend', stopDrag);
-  },
-
-  updateTransforms() {
-    if (!this.card || !this.shadow) return;
-
-    this.card.style.setProperty('--rot-y', `${this.rotY}deg`);
-    this.card.style.setProperty('--rot-x', `${this.rotX}deg`);
-
-    // Glare coordinates matching rotation angle
-    const glareX = 50 + (this.rotY % 360) / 10;
-    const glareY = 50 - this.rotX;
-    this.card.style.setProperty('--glare-x', `${glareX}%`);
-    this.card.style.setProperty('--glare-y', `${glareY}%`);
-
-    // Shadow scaling
-    const shadowScale = 1 - (this.rotX / 120);
-    const shadowOpacity = 1 - Math.abs(this.rotX / 60);
-    this.shadow.style.setProperty('--shadow-scale', shadowScale);
-    this.shadow.style.setProperty('--shadow-opacity', shadowOpacity);
-  },
-
-  startAutoRotation() {
-    const run = () => {
-      if (!this.active) return;
-      if (!this.isDragging && Math.abs(this.velX) < 0.05 && Math.abs(this.velY) < 0.05) {
-        // Slow auto rotation if idle
-        this.rotY += 0.2;
-        this.updateTransforms();
-      }
-      this.timer = requestAnimationFrame(run);
-    };
-    this.timer = requestAnimationFrame(run);
-  },
-
-  startInertia() {
-    const decay = 0.95; // Friction
-    const run = () => {
-      if (!this.active || this.isDragging) return;
-      
-      this.rotY += this.velX;
-      this.rotX = Math.max(-30, Math.min(30, this.rotX - this.velY));
-
-      this.velX *= decay;
-      this.velY *= decay;
-
-      this.updateTransforms();
-
-      if (Math.abs(this.velX) > 0.05 || Math.abs(this.velY) > 0.05) {
-        this.timer = requestAnimationFrame(run);
-      } else {
-        this.velX = 0;
-        this.velY = 0;
-      }
-    };
-    this.timer = requestAnimationFrame(run);
-  }
-};

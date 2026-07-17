@@ -21,7 +21,9 @@ function renderCompareTable() {
     wrapper.style.background = 'transparent';
     wrapper.innerHTML = `
       <div class="compare-empty">
-        <div class="compare-empty__icon">⚖️</div>
+        <div class="compare-empty__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m16 16 3-8 3 8a5 5 0 0 1-6 0ZM2 16l3-8 3 8a5 5 0 0 1-6 0ZM7 21h10M12 3v18M3 7h18"/></svg>
+        </div>
         <h2 class="compare-empty__title">Chưa có sản phẩm nào để so sánh</h2>
         <p class="compare-empty__desc">Vui lòng thêm ít nhất một sản phẩm vào danh sách so sánh từ trang sản phẩm.</p>
         <a href="products.html" class="btn btn-primary">
@@ -40,6 +42,8 @@ function renderCompareTable() {
   // Các thuộc tính cần so sánh
   const attributes = [
     { key: 'category', label: 'Danh mục' },
+    { key: 'brand', label: 'Thương hiệu' },
+    { key: 'warranty', label: 'Bảo hành' },
     { key: 'stock', label: 'Tình trạng kho' },
     { key: 'isNew', label: 'Hàng mới' },
     { key: 'description', label: 'Mô tả ngắn' }
@@ -53,12 +57,15 @@ function renderCompareTable() {
         ${items.map(p => `
           <th class="compare-table__product-col">
             <div class="compare-product-header">
-              <button class="compare-product-header__remove" onclick="removeCompareItem(${p.id})" title="Xóa khỏi so sánh">×</button>
-              <div class="compare-product-header__icon" onclick="window.location.href='product-detail.html?id=${p.id}'" style="cursor:pointer">${p.icon || '📦'}</div>
-              <div class="compare-product-header__name" onclick="window.location.href='product-detail.html?id=${p.id}'" style="cursor:pointer" title="${p.name}">${p.name}</div>
+              <button class="compare-product-header__remove" onclick="removeCompareItem(${p.id})" title="Xóa khỏi so sánh" aria-label="Xóa ${escapeHtml(p.name)} khỏi so sánh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+              <a class="compare-product-header__icon" href="product-detail.html?id=${encodeURIComponent(p.id)}" aria-label="Xem ${escapeHtml(p.name)}">${productMediaMarkup(p)}</a>
+              <a class="compare-product-header__name" href="product-detail.html?id=${encodeURIComponent(p.id)}" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</a>
               <div class="compare-product-header__price">${formatPrice(p.price)}</div>
-              <button class="btn btn-primary btn-sm btn-full" style="justify-content:center" onclick="LocalCart.add(${JSON.stringify(p).replace(/"/g, '&quot;')}, 1); showToast('Đã thêm vào giỏ hàng', 'success'); updateCartBadge();">
-                🛒 Thêm giỏ hàng
+              <button class="btn btn-primary btn-sm btn-full" style="justify-content:center" onclick="addCompareItemToCart(${p.id})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h7.84a2 2 0 0 0 2-1.61L20.2 7H5.12"/></svg>
+                Thêm vào giỏ
               </button>
             </div>
           </th>
@@ -94,27 +101,7 @@ function renderCompareTable() {
             isMissing = true;
           }
 
-          return `<td class="compare-attr ${isMissing ? 'compare-attr--missing' : ''}">${displayVal}</td>`;
-        }).join('')}
-      </tr>
-    `;
-  });
-
-  // Dummy specs for showcase
-  const mockSpecs = [
-    { label: 'Thương hiệu', values: ['Apple', 'Samsung', 'Sony', 'Asus', 'Dell'] },
-    { label: 'Bảo hành', values: ['12 tháng chính hãng', '24 tháng', '6 tháng'] },
-    { label: 'Trọng lượng', values: ['1.2 kg', '180 g', '2.5 kg', '500 g'] }
-  ];
-
-  mockSpecs.forEach((spec, index) => {
-    tbodyHtml += `
-      <tr>
-        <th class="compare-table__label-col">${spec.label}</th>
-        ${items.map(p => {
-           // Giả lập specs dựa trên ID để có tính nhất quán
-           const valIndex = (p.id + index) % spec.values.length;
-           return `<td class="compare-attr">${spec.values[valIndex]}</td>`;
+          return `<td class="compare-attr ${isMissing ? 'compare-attr--missing' : ''}">${escapeHtml(displayVal)}</td>`;
         }).join('')}
       </tr>
     `;
@@ -128,6 +115,13 @@ function renderCompareTable() {
       ${tbodyHtml}
     </table>
   `;
+}
+
+function addCompareItemToCart(productId) {
+  const product = CompareList.get().find(item => item.id === productId);
+  if (!product) return;
+  LocalCart.add(product, 1);
+  updateCartBadge();
 }
 
 function removeCompareItem(productId) {

@@ -1,4 +1,6 @@
 const orderService = require('../services/order.service');
+const EmailService = require('../services/email.service');
+const { enqueueOrderConfirmationEmail } = require('../queues/background.queue');
 
 const asyncHandler = fn => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -20,14 +22,20 @@ const createOrder = asyncHandler(async (req, res) => {
   });
 
   // Gửi email xác nhận bất đồng bộ (Non-blocking)
-  setImmediate(async () => {
-    try {
-      const EmailService = require('../services/email.service');
-      await EmailService.sendOrderConfirmation(req.user.email, order);
-    } catch (err) {
-      console.error('[Async Order Email Error]', err);
-    }
-  });
+  const orderData = order.toJSON ? order.toJSON() : order;
+  const { logger } = require('../config/logger');
+  try {
+    await enqueueOrderConfirmationEmail(req.user.email, orderData);
+  } catch (err) {
+    logger.error({ err, orderId: orderData.id }, '[Queue Order Email Error]');
+    setImmediate(async () => {
+      try {
+        await EmailService.sendOrderConfirmation(req.user.email, orderData);
+      } catch (fallbackErr) {
+        logger.error({ err: fallbackErr, orderId: orderData.id }, '[Fallback Order Email Error]');
+      }
+    });
+  }
 
   res.status(201).json({ success: true, order });
 });

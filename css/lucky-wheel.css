@@ -87,7 +87,7 @@
   border-radius: 50%;
   cursor: pointer;
   color: var(--c-muted);
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s, opacity 0.2s;
 }
 
 .lucky-wheel-close:hover {
@@ -201,7 +201,7 @@
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: 1px;
-  transition: all 0.3s;
+  transition: color 0.3s, background-color 0.3s, border-color 0.3s, box-shadow 0.3s, transform 0.3s, opacity 0.3s;
   box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
 }
 

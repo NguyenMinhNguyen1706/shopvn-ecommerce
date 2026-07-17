@@ -1,15 +1,32 @@
 require('dotenv').config();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ✨ NEW 2026: Validate critical secrets at startup
+// ═══════════════════════════════════════════════════════════════════════════════
+const { validateSecrets } = require('./src/config/secrets');
+validateSecrets(); // Throws and aborts startup if required envs are missing
+
 const express    = require('express');
 const cors       = require('cors');
 const morgan     = require('morgan');
 const compression = require('compression');
 const sequelize  = require('./src/config/database');
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ✨ NEW 2026: Initialize Redis caching layer
-// ═══════════════════════════════════════════════════════════════════════════════
-const { redisClient, cacheUtils } = require('./src/config/redis');
+// ── Observability & Infrastructure imports ────────────────────────────────────
+const { logger } = require('./src/config/logger');
+const { redisClient } = require('./src/config/redis');
+const { apiRateLimit } = require('./src/middlewares/security.middleware');
+const metrics = require('./src/config/metrics');
 
+// Middleware imports
+const requestId = require('./src/middlewares/request-id.middleware');
+const { backpressure } = require('./src/middlewares/backpressure.middleware');
+const idempotency = require('./src/middlewares/idempotency.middleware');
+const httpMetrics = require('./src/middlewares/metrics.middleware');
+const { securityHeaders } = require('./src/middlewares/security.middleware');
+const { sanitize } = require('./src/middlewares/validation.middleware');
+
+// Models
 require('./src/models/Order');
 require('./src/models/OrderItem');
 require('./src/models/Review');
@@ -36,24 +53,30 @@ function getAllowedOrigins() {
   return [...new Set(origins)];
 }
 
-// ── Performance Middleware ────────────────────────────────────────────────────
-// GZIP compression - reduces response size by ~60%
-app.use(compression());
-app.disable('x-powered-by');
+// ── Infrastructure Middleware ──────────────────────────────────────────────────
+app.use(requestId); // Attach X-Request-ID early for tracing
+app.use(httpMetrics); // HTTP instrumentation for Prometheus
+app.use(backpressure()); // Overload protection (CPU/memory/concurrency)
+app.use(compression()); // GZIP compression
 
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  next();
-});
+// Security Headers (CSP, XSS, HSTS)
+app.use(securityHeaders());
+
+// XSS Sanitizer for all inputs
+app.use(sanitize);
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 const allowedOrigins = getAllowedOrigins();
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    // Rigid CORS check to prevent origin reflection attacks
+    if (!origin) {
+      if (process.env.NODE_ENV === 'production') {
+        return callback(new Error('CORS blocked: request lacks Origin header.'));
+      }
+      return callback(null, true);
+    }
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     return callback(new Error(`CORS blocked origin: ${origin}`));
@@ -62,11 +85,18 @@ app.use(cors({
 }));
 
 // ── Logging ───────────────────────────────────────────────────────────────────
-app.use(morgan('dev'));
+// Structured Morgan logs that pipe into our Pinot logger
+const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
+app.use(morgan(morganFormat, {
+  stream: {
+    write: (message) => logger.info({ type: 'http_log' }, message.trim())
+  }
+}));
 
-// ── Body Parsing ──────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// ── Body Parsing & Idempotency ────────────────────────────────────────────────
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: process.env.FORM_BODY_LIMIT || '2mb' }));
+app.use(idempotency()); // Idempotency keys for mutations
 
 // ── Swagger Docs ──────────────────────────────────────────────────────────────
 const swaggerUi   = require('swagger-ui-express');
@@ -74,6 +104,12 @@ const swaggerSpec = require('./src/config/swagger');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'ShopVN API Docs',
 }));
+
+// ── Prometheus Metrics Endpoint ────────────────────────────────────────────────
+app.get('/metrics', (req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+  res.send(metrics.serialize());
+});
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const authRoutes    = require('./src/routes/auth.routes');
@@ -85,30 +121,36 @@ const uploadRoutes  = require('./src/routes/upload.routes');
 const paymentRoutes = require('./src/routes/payment.routes');
 const reviewRoutes  = require('./src/routes/review.routes');
 
-// ✨ NEW 2026: Shipping routes (GHN/GHTK integration)
+// Shipping, webhooks, wms, chatbot
 const shippingRoutes = require('./src/routes/shipping.routes');
 const webhooksRoutes = require('./src/routes/webhooks.routes');
 const wmsRoutes = require('./src/routes/wms.routes');
 const chatbotRoutes = require('./src/routes/chatbot.routes');
 
-// ✨ NEW 2026: Cache middleware for product list
-const { productListCache, categoriesCache, trendingProductsCache } = require('./src/middlewares/cache.middleware');
+// Rate limiting for API requests
+app.use('/api', apiRateLimit());
 
-app.use('/api/auth',     authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/cart',     cartRoutes);
-app.use('/api/orders',   orderRoutes);
-app.use('/api/admin',    adminRoutes);
-app.use('/api/upload',   uploadRoutes);
-app.use('/api/payment',  paymentRoutes);
-app.use('/api/reviews',  reviewRoutes);
+// Mount API version 1 routes - Concept: API Versioning
+app.use('/api/v1/auth',     authRoutes);
+app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/cart',     cartRoutes);
+app.use('/api/v1/orders',   orderRoutes);
+app.use('/api/v1/admin',    adminRoutes);
+app.use('/api/v1/upload',   uploadRoutes);
+app.use('/api/v1/payment',  paymentRoutes);
+app.use('/api/v1/reviews',  reviewRoutes);
+app.use('/api/v1/shipping', shippingRoutes);
+app.use('/api/v1/webhooks', webhooksRoutes);
+app.use('/api/v1/wms',      wmsRoutes);
+app.use('/api/v1/chatbot',  chatbotRoutes);
 
-// ✨ NEW 2026: Shipping routes
-app.use('/api/shipping', shippingRoutes);
-app.use('/api/webhooks', webhooksRoutes);
-app.use('/api/wms', wmsRoutes);
-app.use('/api/chatbot', chatbotRoutes);
+// Backward compatibility redirect /api -> /api/v1
+app.use(/^\/api\/(.*)/, (req, res) => {
+  const targetPath = req.originalUrl.replace('/api/', '/api/v1/');
+  res.redirect(307, targetPath);
+});
 
+// Health & Readiness Probes
 app.get('/health', (req, res) => {
   res.json({
     status:    'OK',
@@ -120,11 +162,12 @@ app.get('/health', (req, res) => {
 app.get('/ready', async (req, res) => {
   try {
     await sequelize.authenticate();
+    const isRedisReady = redisClient.isReady();
     if (!startupDatabaseReady) {
       return res.status(503).json({
         status: 'starting',
         database: 'connected',
-        redis: redisClient.isReady ? 'connected' : 'disconnected',
+        redis: isRedisReady ? 'connected' : 'disconnected',
         message: startupDatabaseError ? startupDatabaseError.message : 'Database initialization is still running',
         timestamp: new Date().toISOString(),
       });
@@ -133,7 +176,7 @@ app.get('/ready', async (req, res) => {
     res.json({
       status: 'ready',
       database: 'connected',
-      redis: redisClient.isReady ? 'connected' : 'disconnected',
+      redis: isRedisReady ? 'connected' : 'disconnected',
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
@@ -148,45 +191,121 @@ app.get('/ready', async (req, res) => {
 
 // ── Global error handler ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error('\x1b[31m[ERROR]\x1b[0m', err.message);
+  // Use structured logger instead of console.error
+  logger.error({ err, path: req.path, requestId: req.requestId }, 'Request processing error');
   res.status(err.status || 500).json({
     success: false,
     message: err.message || 'Internal Server Error',
+    requestId: req.requestId
   });
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
-async function initializeDatabase() {
+function envFlag(name, defaultValue = true) {
+  const value = process.env[name];
+  if (value === undefined) return defaultValue;
+  return !['0', 'false', 'no', 'off'].includes(String(value).toLowerCase());
+}
+
+async function withDatabaseBootstrapLock(task) {
+  const lockId = Number(process.env.DB_BOOTSTRAP_LOCK_ID || 20260704);
+
+  await sequelize.query('SELECT pg_advisory_lock(:lockId)', {
+    replacements: { lockId },
+  });
+
   try {
-    await sequelize.authenticate();
-    console.log('\x1b[32m✅ Database connected\x1b[0m');
-
-    await sequelize.sync();
-
-    const productService = require('./src/services/product.service');
-    await productService.seedIfEmpty();
-    await productService.ensureMasterInventory();
-
-    startupDatabaseReady = true;
-    startupDatabaseError = null;
-    console.log('\x1b[32m✅ Database initialization complete\x1b[0m');
-  } catch (err) {
-    startupDatabaseReady = false;
-    startupDatabaseError = err;
-    console.error('\x1b[31m❌ Cannot connect to database:\x1b[0m', err.message);
+    await task();
+  } finally {
+    await sequelize.query('SELECT pg_advisory_unlock(:lockId)', {
+      replacements: { lockId },
+    });
   }
 }
 
-app.listen(PORT, () => {
-  console.log(`\x1b[32m🚀 Server running → http://localhost:${PORT}\x1b[0m`);
+async function runDatabaseBootstrap() {
+  const syncOnStartup = envFlag('DB_SYNC_ON_STARTUP', false); // Default false for CLI migrations
+  const seedOnStartup = envFlag('SEED_ON_STARTUP', true);
+  const ensureInventoryOnStartup = envFlag('ENSURE_INVENTORY_ON_STARTUP', true);
+
+  if (!syncOnStartup && !seedOnStartup && !ensureInventoryOnStartup) {
+    logger.info('[DB] Startup bootstrap disabled');
+    return;
+  }
+
+  await withDatabaseBootstrapLock(async () => {
+    if (syncOnStartup) {
+      logger.warn('[DB] DB_SYNC_ON_STARTUP is enabled, running sync...');
+      await sequelize.sync();
+    }
+
+    const productService = require('./src/services/product.service');
+    if (seedOnStartup) {
+      await productService.seedIfEmpty();
+    }
+
+    if (ensureInventoryOnStartup) {
+      await productService.ensureMasterInventory();
+    }
+  });
+}
+
+async function initializeDatabase() {
+  try {
+    await sequelize.authenticate();
+    logger.info('✅ Database connected');
+
+    await runDatabaseBootstrap();
+
+    startupDatabaseReady = true;
+    startupDatabaseError = null;
+    logger.info('✅ Database initialization complete');
+  } catch (err) {
+    startupDatabaseReady = false;
+    startupDatabaseError = err;
+    logger.error({ err }, '❌ Cannot connect to database');
+  }
+}
+
+const server = app.listen(PORT, () => {
+  logger.info(`🚀 Server running → http://localhost:${PORT}`);
   initializeDatabase();
 });
 
+// ── Graceful Shutdown ─────────────────────────────────────────────────────────
+// Concept: Graceful Shutdown, Production Operations
+async function gracefulShutdown(signal) {
+  logger.warn(`[App] Received ${signal}. Starting graceful shutdown...`);
 
+  // 1. Stop accepting new connections
+  server.close(async () => {
+    logger.info('[App] HTTP server closed. Draining active connections...');
 
+    try {
+      // 2. Close database connection pool
+      await sequelize.close();
+      logger.info('[App] Database connection pool closed.');
 
+      // 3. Close Redis connection
+      await redisClient.quit();
+      logger.info('[App] Redis connection closed.');
 
+      logger.info('[App] Graceful shutdown complete. Exiting.');
+      process.exit(0);
+    } catch (err) {
+      logger.error({ err }, '[App] Error during graceful shutdown');
+      process.exit(1);
+    }
+  });
 
+  // Force exit after 10s if connections fail to drain
+  setTimeout(() => {
+    logger.fatal('[App] Graceful shutdown timed out. Force exiting...');
+    process.exit(1);
+  }, 10000).unref();
+}
 
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

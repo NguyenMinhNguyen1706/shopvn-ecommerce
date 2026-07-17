@@ -26,16 +26,33 @@ const state = {
   perPage:  9,        // số SP mỗi trang
 };
 
-const CATEGORIES = [
-  { name: 'Tất cả',     count: 573 },
-  { name: 'Laptop',     count: 48  },
-  { name: 'Điện thoại', count: 126 },
-  { name: 'Phụ kiện',   count: 312 },
-  { name: 'Màn hình',   count: 54  },
-  { name: 'Wearable',   count: 33  },
+// ── Read / Write URL params ───────────────────────────────────────────────────
+
+const CATEGORY_ORDER = ['Laptop', 'Điện thoại', 'Phụ kiện', 'Màn hình', 'Tablet', 'Wearable'];
+
+function getCategoryOptions() {
+  const products = getProducts();
+  const names = [...new Set([...CATEGORY_ORDER, ...products.map(product => product.category).filter(Boolean)])];
+  return [
+    { name: 'Tất cả', count: products.length },
+    ...names.map(name => ({ name, count: products.filter(product => product.category === name).length }))
+      .filter(item => item.count > 0),
+  ];
+}
+
+const SORT_OPTIONS = [
+  { value: 'popular', label: 'Phổ biến nhất' },
+  { value: 'newest', label: 'Mới nhất' },
+  { value: 'price-asc', label: 'Giá: Thấp → Cao' },
+  { value: 'price-desc', label: 'Giá: Cao → Thấp' },
+  { value: 'rating-desc', label: 'Đánh giá cao nhất' },
 ];
 
-// ── Read / Write URL params ───────────────────────────────────────────────────
+const STATUS_FILTERS = [
+  { field: 'inStock', label: 'Còn hàng', icon: '✓' },
+  { field: 'isNew', label: 'Hàng mới', icon: '★' },
+  { field: 'onSale', label: 'Đang giảm giá', icon: '%' },
+];
 
 const PRICE_FILTER = {
   min: 0,
@@ -111,13 +128,7 @@ function getFilteredProducts() {
       result.sort((a, b) => b.price - a.price);
       break;
     case 'rating-desc':
-      result.sort((a, b) => {
-        const revA = JSON.parse(localStorage.getItem(`reviews_${a.id}`) || '[]');
-        const avgA = revA.length > 0 ? revA.reduce((sum, r) => sum + r.rating, 0) / revA.length : 4.8;
-        const revB = JSON.parse(localStorage.getItem(`reviews_${b.id}`) || '[]');
-        const avgB = revB.length > 0 ? revB.reduce((sum, r) => sum + r.rating, 0) / revB.length : 4.8;
-        return avgB - avgA;
-      });
+      result.sort((a, b) => (getProductRatingSummary(b)?.rating || 0) - (getProductRatingSummary(a)?.rating || 0));
       break;
     case 'popular':
     default:
@@ -139,33 +150,43 @@ function getFilteredProducts() {
     result = result.filter(p => p.oldPrice && p.oldPrice > p.price);
   }
 
+  if (state.rating > 0) {
+    result = result.filter(product => (getProductRatingSummary(product)?.rating || 0) >= state.rating);
+  }
+
   return result;
 }
 
-// Thêm hàm này — dùng khi backend sẵn sàng
 async function fetchProductsFromAPI() {
-  try {
-    const params = {
-      q:        state.q        || undefined,
-      category: state.category || undefined,
-      sort:     state.sort     || undefined,
-      minPrice: state.minPrice || undefined,
-      maxPrice: state.maxPrice || undefined,
-      rating:   state.rating > 0 ? state.rating : undefined,
-      page:     state.page,
-      limit:    state.perPage,
-    };
-    // Xóa key undefined
-    Object.keys(params).forEach(k => params[k] === undefined && delete params[k]);
+  const params = {
+    q:        state.q        || undefined,
+    category: state.category || undefined,
+    sort:     state.sort     || undefined,
+    minPrice: state.minPrice || undefined,
+    maxPrice: state.maxPrice || undefined,
+    rating:   state.rating > 0 ? state.rating : undefined,
+    page:     state.page,
+    limit:    state.perPage,
+  };
+  Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
+  return ProductAPI.getAll(params);
+}
 
-    const data = await ProductAPI.getAll(params);
-    return data; // { items, total, page, totalPages }
-  } catch {
-    // Fallback MOCK
-    const filtered = getFilteredProducts();
-    const { items, total, totalPages } = getPaginatedProducts(filtered);
-    return { items, total, totalPages };
+function setCatalogDataStatus(message = '') {
+  let status = document.getElementById('catalog-data-status');
+  if (!message) {
+    status?.remove();
+    return;
   }
+
+  if (!status) {
+    status = document.createElement('div');
+    status.id = 'catalog-data-status';
+    status.className = 'data-status data-status--warning';
+    status.setAttribute('role', 'status');
+    document.querySelector('.products-toolbar')?.before(status);
+  }
+  status.textContent = message;
 }
 
 function getPaginatedProducts(allFiltered) {
@@ -261,164 +282,25 @@ function applyPriceFilterFromControls() {
   applyFilters();
 }
 
-function getProductRating(product) {
-  const reviews = JSON.parse(localStorage.getItem(`reviews_${product.id}`) || '[]');
-  if (reviews.length) {
-    const avg = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length;
-    return Math.max(0, Math.min(5, avg));
-  }
-  return Number(product.rating || 4.8);
-}
-
-function getProductSoldCount(product) {
-  if (product.soldCount || product.sold) return product.soldCount || product.sold;
-  return Math.max(24, ((Number(product.id) || 1) * 37) % 900);
-}
-
-// ── Render: Sidebar ───────────────────────────────────────────────────────────
-
-function renderSidebar() {
-  // Categories
-  const catList = document.getElementById('cat-list');
-  if (catList) {
-    catList.innerHTML = CATEGORIES.map(cat => `
-      <div class="filter-option ${state.category === cat.name || (cat.name === 'Tất cả' && !state.category) ? 'active' : ''}"
-           onclick="setCategory('${cat.name}')">
-        <span class="filter-option__name">${cat.name}</span>
-        <span class="filter-option__count">${cat.count}</span>
-      </div>
-    `).join('');
-  }
-
-  // Ratings
-  const ratingList = document.getElementById('rating-list');
-  if (ratingList) {
-    ratingList.innerHTML = [5, 4, 3].map(stars => `
-      <div class="filter-option ${state.rating === stars ? 'active' : ''}"
-           onclick="setRating(${stars})">
-        <span class="filter-option__name">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)} & up</span>
-      </div>
-    `).join('');
-  }
-
-  // Price inputs
-  const minEl = document.getElementById('price-min');
-  const maxEl = document.getElementById('price-max');
-  if (minEl) minEl.value = state.minPrice;
-  if (maxEl) maxEl.value = state.maxPrice;
-  updatePriceRangeUI();
-
-  // Show/hide clear button
-  const hasFilter = state.q || state.category || state.minPrice || state.maxPrice || state.rating || state.inStock || state.isNew || state.onSale;
-  document.getElementById('filter-clear')
-    ?.classList.toggle('show', !!hasFilter);
-
-  // Update status filter counts
-  updateStatusCounts();
-}
-
-function updateStatusCounts() {
-  const allProds = getProducts();
-  
-  // Filter by category first to make the counts context-specific
-  let contextProds = allProds;
-  if (state.category && state.category !== 'Tất cả') {
-    contextProds = allProds.filter(p => p.category === state.category);
-  }
-
-  const instockCount = contextProds.filter(p => p.stock > 0).length;
-  const isnewCount = contextProds.filter(p => p.isNew).length;
-  const onsaleCount = contextProds.filter(p => p.oldPrice && p.oldPrice > p.price).length;
-
-  const countInstockEl = document.getElementById('count-instock');
-  const countIsnewEl = document.getElementById('count-isnew');
-  const countOnsaleEl = document.getElementById('count-onsale');
-
-  if (countInstockEl) countInstockEl.textContent = instockCount;
-  if (countIsnewEl) countIsnewEl.textContent = isnewCount;
-  if (countOnsaleEl) countOnsaleEl.textContent = onsaleCount;
-
-  // Toggle active class on sidebar items
-  document.getElementById('filter-instock')?.classList.toggle('active', state.inStock);
-  document.getElementById('filter-isnew')?.classList.toggle('active', state.isNew);
-  document.getElementById('filter-onsale')?.classList.toggle('active', state.onSale);
-}
-
-// ── Render: Toolbar ───────────────────────────────────────────────────────────
-
-function renderToolbar(total) {
-  // Search input
-  const searchEl = document.getElementById('search-input');
-  if (searchEl && searchEl.value !== state.q) searchEl.value = state.q;
-
-  // Sort select
-  const sortEl = document.getElementById('sort-select');
-  if (sortEl) sortEl.value = state.sort;
-
-  // Count
-  const countEl = document.getElementById('result-count');
-  if (countEl) countEl.textContent = `${total} sản phẩm`;
-}
-
-// ── Render: Active filter tags ────────────────────────────────────────────────
-
-function renderActiveTags() {
-  const wrap = document.getElementById('active-filters');
-  if (!wrap) return;
-
-  const tags = [];
-  if (state.q)
-    tags.push({ label: `"${state.q}"`, onRemove: () => { state.q = ''; applyFilters(); } });
-  if (state.category && state.category !== 'Tất cả')
-    tags.push({ label: state.category, onRemove: () => { state.category = ''; applyFilters(); } });
-  if (state.minPrice || state.maxPrice) {
-    const label = [
-      state.minPrice ? `từ ${formatPrice(+state.minPrice)}` : '',
-      state.maxPrice ? `đến ${formatPrice(+state.maxPrice)}` : '',
-    ].filter(Boolean).join(' ');
-    tags.push({ label, onRemove: () => { state.minPrice = ''; state.maxPrice = ''; applyFilters(); } });
-  }
-  if (state.inStock)
-    tags.push({ label: 'Còn hàng', onRemove: () => { state.inStock = false; applyFilters(); } });
-  if (state.isNew)
-    tags.push({ label: 'Hàng mới', onRemove: () => { state.isNew = false; applyFilters(); } });
-  if (state.onSale)
-    tags.push({ label: 'Đang giảm giá', onRemove: () => { state.onSale = false; applyFilters(); } });
-
-  if (state.rating > 0)
-    tags.push({ label: `Từ ${state.rating} sao`, onRemove: () => { state.rating = 0; applyFilters(); } });
-
-  // Render tags — dùng onclick string vì innerHTML không giữ closure
-  // Mỗi tag có index để gọi removeTag(index)
-  window._tagRemoveHandlers = tags.map(t => t.onRemove);
-
-  wrap.innerHTML = tags.map((t, i) => `
-    <span class="filter-tag">
-      ${t.label}
-      <button class="filter-tag__remove" onclick="window._tagRemoveHandlers[${i}]()"
-              aria-label="Xóa filter ${t.label}">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </span>
-  `).join('');
-}
-
-// ── Render: Product grid ──────────────────────────────────────────────────────
-
 function renderProductCard(product, delay = 0) {
   const disc = calcDiscount(product.price, product.oldPrice);
   const inWish = LocalWishlist.has(product.id);
-  const rating = getProductRating(product);
-  const sold = getProductSoldCount(product);
+  const rating = getProductRatingSummary(product);
+  const sold = Math.max(0, Number(product.soldCount || product.sold || 0));
+  const stock = Math.max(0, Number(product.stock || 0));
+  const name = escapeHtml(product.name);
+  const category = escapeHtml(product.category || 'Sản phẩm');
+  const detailUrl = `product-detail.html?id=${encodeURIComponent(product.id)}`;
+  const meta = [
+    rating ? `<span class="product-card__rating">${rating.rating.toFixed(1)} / 5${rating.count ? ` (${rating.count})` : ''}</span>` : '',
+    sold ? `<span class="product-card__sold">Đã bán ${sold}</span>` : `<span class="product-card__sold">${stock ? `Còn ${stock}` : 'Hết hàng'}</span>`,
+  ].filter(Boolean).join('');
   return `
-    <article class="product-card fade-up" style="animation-delay:${delay}s"
-             onclick="window.location.href='product-detail.html?id=${product.id}'">
+    <article class="product-card fade-up" role="listitem" style="animation-delay:${delay}s">
       <div class="product-card__img">
-        <span class="product-card__img-icon">${product.icon || '📦'}</span>
+        <a class="product-card__media-link" href="${detailUrl}" aria-label="Xem ${name}, ${category}">
+          ${productMediaMarkup(product)}
+        </a>
         ${disc ? `<span class="badge badge-accent product-card__badge">-${disc}%</span>` : ''}
         ${product.isNew && !disc ? `<span class="badge badge-green product-card__badge">Mới</span>` : ''}
         <button class="product-card__wish ${inWish ? 'active' : ''}"
@@ -429,16 +311,14 @@ function renderProductCard(product, delay = 0) {
           </svg>
         </button>
         <button class="product-card__quickview" onclick="event.stopPropagation(); QuickView.open(${product.id})" aria-label="Xem nhanh" data-i18n="product.quickview">
-          👁 Xem nhanh
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+          Xem nhanh
         </button>
       </div>
       <div class="product-card__body">
-        <p class="product-card__cat">${product.category}</p>
-        <h3 class="product-card__name">${product.name}</h3>
-        <div class="product-card__meta" aria-label="${rating.toFixed(1)} sao, đã bán ${sold}">
-          <span class="product-card__rating">★ ${rating.toFixed(1)}</span>
-          <span class="product-card__sold">Đã bán ${sold}+</span>
-        </div>
+        <p class="product-card__cat">${category}</p>
+        <h3 class="product-card__name"><a href="${detailUrl}">${name}</a></h3>
+        <div class="product-card__meta">${meta}</div>
         <div class="product-card__price-row">
           <div>
             <span class="product-card__price">${formatPrice(product.price)}</span>
@@ -497,7 +377,7 @@ function renderGrid(items) {
   if (items.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state__icon">🔍</div>
+        <div class="empty-state__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
         <h3 class="empty-state__title">Không tìm thấy sản phẩm</h3>
         <p class="empty-state__desc">Thử thay đổi từ khóa hoặc bỏ bớt bộ lọc nhé.</p>
         <button class="btn btn-outline" onclick="clearAllFilters()">Xóa tất cả bộ lọc</button>
@@ -582,16 +462,14 @@ async function renderAll() {
     items = res.items || [];
     total = res.total || 0;
     totalPages = res.totalPages || 1;
-
-    if (items.length === 0 && localPaginated.total > 0) {
-      items = localPaginated.items;
-      total = localPaginated.total;
-      totalPages = localPaginated.totalPages;
-    }
+    setCatalogDataStatus(res.fromOfflineDB
+      ? 'Không thể kết nối máy chủ. ShopVN đang hiển thị dữ liệu tạm được lưu trên thiết bị này.'
+      : '');
   } catch (err) {
     items = localPaginated.items;
     total = localPaginated.total;
     totalPages = localPaginated.totalPages;
+    setCatalogDataStatus('Không thể kết nối máy chủ. ShopVN đang hiển thị dữ liệu tạm được lưu trên thiết bị này.');
   }
 
   renderToolbar(total);
@@ -703,36 +581,261 @@ function initMobileFilter() {
     document.body.appendChild(overlay);
   }
 
+  const closeBtn = document.getElementById('filter-close-btn');
+
+  // Close drawer helper
+  const closeDrawer = () => {
+    if (!sidebar.classList.contains('mobile-open')) return;
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    trigger.setAttribute('aria-expanded', 'false');
+    sidebar.setAttribute('aria-hidden', 'true');
+    trigger.focus();
+  };
+
   // Open drawer
   trigger.addEventListener('click', () => {
     sidebar.classList.add('mobile-open');
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
+    trigger.setAttribute('aria-expanded', 'true');
+    sidebar.setAttribute('aria-hidden', 'false');
+    closeBtn?.focus();
   });
-
-  // Close drawer helper
-  const closeDrawer = () => {
-    sidebar.classList.remove('mobile-open');
-    overlay.classList.remove('active');
-    document.body.style.overflow = '';
-  };
 
   // Close triggers
   overlay.addEventListener('click', closeDrawer);
-  
-  const closeBtn = document.getElementById('filter-close-btn');
   if (closeBtn) {
     closeBtn.addEventListener('click', closeDrawer);
   }
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeDrawer();
+  });
+
+  const syncDrawerForViewport = () => {
+    if (window.innerWidth > 900) {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+      trigger.setAttribute('aria-expanded', 'false');
+      sidebar.removeAttribute('aria-hidden');
+      return;
+    }
+
+    if (!sidebar.classList.contains('mobile-open')) {
+      sidebar.setAttribute('aria-hidden', 'true');
+    }
+  };
+
+  window.addEventListener('resize', syncDrawerForViewport);
+  syncDrawerForViewport();
+}
+
+function renderSidebar() {
+  const catList = document.getElementById('cat-list');
+  if (catList) {
+    catList.innerHTML = getCategoryOptions().map(cat => `
+      <button type="button"
+              class="filter-option ${state.category === cat.name || (cat.name === 'Tất cả' && !state.category) ? 'active' : ''}"
+              onclick="setCategory('${cat.name}')">
+        <span class="filter-option__name">${cat.name}</span>
+        <span class="filter-option__count">${cat.count}</span>
+      </button>
+    `).join('');
+  }
+
+  const ratingList = document.getElementById('rating-list');
+  if (ratingList) {
+    ratingList.innerHTML = [5, 4, 3].map(stars => `
+      <button type="button" class="filter-option ${state.rating === stars ? 'active' : ''}"
+              onclick="setRating(${stars})">
+        <span class="filter-option__name">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)} & up</span>
+      </button>
+    `).join('');
+  }
+
+  const minEl = document.getElementById('price-min');
+  const maxEl = document.getElementById('price-max');
+  if (minEl) minEl.value = state.minPrice;
+  if (maxEl) maxEl.value = state.maxPrice;
+  updatePriceRangeUI();
+
+  const hasFilter = state.q || state.category || state.minPrice || state.maxPrice || state.rating || state.inStock || state.isNew || state.onSale;
+  document.getElementById('filter-clear')?.classList.toggle('show', !!hasFilter);
+  updateStatusCounts();
+}
+
+function updateStatusCounts() {
+  const allProds = getProducts();
+  let contextProds = allProds;
+  if (state.category && state.category !== 'Tất cả') {
+    contextProds = allProds.filter(p => p.category === state.category);
+  }
+
+  const counts = {
+    inStock: contextProds.filter(p => p.stock > 0).length,
+    isNew: contextProds.filter(p => p.isNew).length,
+    onSale: contextProds.filter(p => p.oldPrice && p.oldPrice > p.price).length,
+  };
+
+  const countInstockEl = document.getElementById('count-instock');
+  const countIsnewEl = document.getElementById('count-isnew');
+  const countOnsaleEl = document.getElementById('count-onsale');
+  if (countInstockEl) countInstockEl.textContent = counts.inStock;
+  if (countIsnewEl) countIsnewEl.textContent = counts.isNew;
+  if (countOnsaleEl) countOnsaleEl.textContent = counts.onSale;
+
+  STATUS_FILTERS.forEach(item => {
+    const active = Boolean(state[item.field]);
+    const id = item.field === 'inStock' ? 'filter-instock' : item.field === 'isNew' ? 'filter-isnew' : 'filter-onsale';
+    const el = document.getElementById(id);
+    el?.classList.toggle('active', active);
+    el?.setAttribute('aria-selected', String(active));
+  });
+
+  updatePremiumStatusUI();
+}
+
+function renderToolbar(total) {
+  const searchEl = document.getElementById('search-input');
+  if (searchEl && searchEl.value !== state.q) searchEl.value = state.q;
+
+  const sortEl = document.getElementById('sort-select');
+  if (sortEl) sortEl.value = state.sort;
+  updatePremiumSortUI();
+
+  const countEl = document.getElementById('result-count');
+  if (countEl) countEl.textContent = `${total} sản phẩm`;
+}
+
+function renderActiveTags() {
+  const wrap = document.getElementById('active-filters');
+  if (!wrap) return;
+
+  const tags = [];
+  if (state.q) tags.push({ label: `"${state.q}"`, onRemove: () => { state.q = ''; applyFilters(); } });
+  if (state.category && state.category !== 'Tất cả') tags.push({ label: state.category, onRemove: () => { state.category = ''; applyFilters(); } });
+  if (state.minPrice || state.maxPrice) {
+    const label = [
+      state.minPrice ? `từ ${formatPrice(+state.minPrice)}` : '',
+      state.maxPrice ? `đến ${formatPrice(+state.maxPrice)}` : '',
+    ].filter(Boolean).join(' ');
+    tags.push({ label, onRemove: () => { state.minPrice = ''; state.maxPrice = ''; applyFilters(); } });
+  }
+  STATUS_FILTERS.forEach(item => {
+    if (state[item.field]) {
+      tags.push({ label: item.label, onRemove: () => { state[item.field] = false; applyFilters(); } });
+    }
+  });
+  if (state.rating > 0) tags.push({ label: `Từ ${state.rating} sao`, onRemove: () => { state.rating = 0; applyFilters(); } });
+
+  window._tagRemoveHandlers = tags.map(t => t.onRemove);
+  wrap.innerHTML = tags.map((t, i) => `
+    <span class="filter-tag">
+      ${t.label}
+      <button class="filter-tag__remove" onclick="window._tagRemoveHandlers[${i}]()"
+              aria-label="Xóa filter ${t.label}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </span>
+  `).join('');
+}
+
+function updatePremiumSortUI() {
+  const option = SORT_OPTIONS.find(item => item.value === state.sort) || SORT_OPTIONS[0];
+  const label = document.getElementById('sort-trigger-label');
+  if (label) label.textContent = option.label;
+  document.querySelectorAll('.premium-select__option').forEach(btn => {
+    const active = btn.dataset.sortValue === option.value;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', String(active));
+  });
+}
+
+function updatePremiumStatusUI() {
+  const chips = document.getElementById('status-selected-chips');
+  if (!chips) return;
+  const selected = STATUS_FILTERS.filter(item => state[item.field]);
+  chips.innerHTML = selected.length
+    ? selected.map(item => `<span class="premium-chip"><span>${item.icon}</span>${item.label}</span>`).join('')
+    : '<span class="premium-multiselect__placeholder">Chọn trạng thái</span>';
+}
+
+function closeStatusMultiselect() {
+  const root = document.getElementById('status-multiselect');
+  const trigger = document.getElementById('status-multi-trigger');
+  root?.classList.remove('open');
+  trigger?.setAttribute('aria-expanded', 'false');
+}
+
+function clearStatusFilters() {
+  state.inStock = false;
+  state.isNew = false;
+  state.onSale = false;
+  closeStatusMultiselect();
+  applyFilters();
+}
+
+function initPremiumSelects() {
+  const sortRoot = document.getElementById('sort-dropdown');
+  const sortTrigger = document.getElementById('sort-trigger');
+  sortTrigger?.addEventListener('click', () => {
+    const next = !sortRoot.classList.contains('open');
+    sortRoot.classList.toggle('open', next);
+    sortTrigger.setAttribute('aria-expanded', String(next));
+  });
+
+  document.querySelectorAll('.premium-select__option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sortEl = document.getElementById('sort-select');
+      state.sort = btn.dataset.sortValue || 'popular';
+      if (sortEl) sortEl.value = state.sort;
+      sortRoot?.classList.remove('open');
+      sortTrigger?.setAttribute('aria-expanded', 'false');
+      applyFilters();
+    });
+  });
+
+  const statusRoot = document.getElementById('status-multiselect');
+  const statusTrigger = document.getElementById('status-multi-trigger');
+  statusTrigger?.addEventListener('click', () => {
+    const next = !statusRoot.classList.contains('open');
+    statusRoot.classList.toggle('open', next);
+    statusTrigger.setAttribute('aria-expanded', String(next));
+  });
+
+  document.addEventListener('click', event => {
+    if (sortRoot && !sortRoot.contains(event.target)) {
+      sortRoot.classList.remove('open');
+      sortTrigger?.setAttribute('aria-expanded', 'false');
+    }
+    if (statusRoot && !statusRoot.contains(event.target)) {
+      closeStatusMultiselect();
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      sortRoot?.classList.remove('open');
+      sortTrigger?.setAttribute('aria-expanded', 'false');
+      closeStatusMultiselect();
+    }
+  });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
 document.addEventListener('DOMContentLoaded', () => {
   updateNavbarAuth();
   updateCartBadge();
   readParamsFromURL();
   bindEvents();
   initMobileFilter();
+  initPremiumSelects();
   renderAll();
 });

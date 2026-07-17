@@ -1,0 +1,113 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# GitHub Actions CI/CD Pipeline
+# Concepts: CI/CD, Blue-Green Deployments, Canary Releases, Rollbacks
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: ShopVN Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ── CI STAGE (Lint & Test & Security Audit) ─────────────────────────────────
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Security Audit
+        run: npm audit --audit-level=high
+
+      - name: Run Tests
+        run: npm test
+
+  # ── CD STAGE (Docker Build & Canary Deployment to Kubernetes) ───────────────
+  cd:
+    name: Continuous Delivery (Canary Release)
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Configure Docker for GCP GCR
+        run: gcloud auth configure-docker --quiet
+
+      # Docker build caching - Concept: Build Caching
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: gcr.io/${{ secrets.GCP_PROJECT_ID }}/backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set GKE Context
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: shopvn-gke-cluster
+          location: us-central1
+
+      # Canary Rollout Strategy - Concept: Canary Releases, Rollbacks
+      - name: Deploy Canary Pods (10% Traffic)
+        run: |
+          # Set new image tag
+          helm upgrade --install shopvn-ecom ./helm \
+            --namespace shopvn-ecom \
+            --set image.tag=${{ github.sha }} \
+            --set autoscaling.minReplicas=1 \
+            --set replicaCount=1 \
+            --set canary.enabled=true # Canary active
+
+      - name: Smoke Tests on Canary
+        run: |
+          echo "Running smoke tests on canary deployment..."
+          # Poll health check
+          for i in {1..10}; do
+            curl -f -s https://api.shopvn-ecommerce.com/health && break
+            echo "Canary not ready, retrying..."
+            sleep 5
+          done
+
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          echo "Canary failed! Rolling back to previous stable release..."
+          helm rollback shopvn-ecom --namespace shopvn-ecom 0 # Rollback to last revision
+
+      - name: Complete Full Rolling Release (100% Traffic)
+        if: success()
+        run: |
+          echo "Canary passed smoke tests. Proceeding with full rollout..."
+          helm upgrade --install shopvn-ecom ./helm \
+            --namespace shopvn-ecom \
+            --set image.tag=${{ github.sha }} \
+            --set canary.enabled=false \
+            --set replicaCount=3 # Deploy full replicas

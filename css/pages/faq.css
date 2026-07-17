@@ -17,7 +17,7 @@
   background: rgba(255,255,255,.15); backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,.2);
   border-radius: 99px; padding: 12px 20px;
-  transition: all var(--dur) var(--ease);
+  transition: color var(--dur) var(--ease), background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
 }
 .faq-search:focus-within {
   background: rgba(255,255,255,.25);
@@ -40,7 +40,7 @@
   font-size: .82rem; font-weight: 600;
   background: var(--c-off); border: 1px solid var(--c-border);
   color: var(--c-muted); cursor: pointer;
-  transition: all var(--dur) var(--ease);
+  transition: color var(--dur) var(--ease), background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
 }
 .faq-cat-btn:hover { border-color: var(--c-blue); color: var(--c-blue); }
 .faq-cat-btn.active {
@@ -59,7 +59,7 @@
 .faq-item {
   border: 1px solid var(--c-border); border-radius: var(--r-lg);
   margin-bottom: var(--sp-sm); overflow: hidden;
-  transition: all var(--dur) var(--ease);
+  transition: color var(--dur) var(--ease), background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
 }
 .faq-item:hover { border-color: var(--c-blue); }
 .faq-item.open { border-color: var(--c-blue); box-shadow: var(--shadow-sm); }
@@ -70,7 +70,7 @@
   font-size: .92rem; font-weight: 600; color: var(--c-text);
   background: none; border: none; width: 100%; text-align: left;
   font-family: var(--f-body);
-  transition: all var(--dur) var(--ease);
+  transition: color var(--dur) var(--ease), background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
 }
 .faq-question:hover { background: var(--c-off); }
 .faq-item.open .faq-question { color: var(--c-blue); background: var(--c-blue-light); }

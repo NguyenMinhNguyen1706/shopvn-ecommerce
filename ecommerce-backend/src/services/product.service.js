@@ -1,97 +1,91 @@
-const { Op, fn, col, literal } = require('sequelize');
+const { Op, literal } = require('sequelize');
+const sequelize = require('../config/database');
 const Product = require('../models/Product');
-const Review = require('../models/Review');
 const MasterInventory = require('../models/MasterInventory');
-
-// ── Get all (filter + sort + pagination) ──────────────────────────────────────
 
 async function getAll({ q, category, sort, minPrice, maxPrice, rating, page, limit }) {
   const where = {};
+  const andConditions = [];
+  const avgRatingSql = '(SELECT COALESCE(AVG("rating"), 5) FROM "reviews" WHERE "reviews"."productId" = "Product"."id")';
+  const totalReviewsSql = '(SELECT COUNT(*) FROM "reviews" WHERE "reviews"."productId" = "Product"."id")';
+  const avgRatingExpr = literal(avgRatingSql);
+  const totalReviewsExpr = literal(totalReviewsSql);
 
-  // Search theo tên
   if (q) {
-    where.name = { [Op.iLike]: `%${q}%` }; // iLike = case-insensitive (PostgreSQL)
+    where.name = { [Op.iLike]: `%${q}%` };
   }
 
-  // Filter danh mục
   if (category && category !== 'Tất cả') {
     where.category = category;
   }
 
-  // Filter giá
   if (minPrice || maxPrice) {
     where.price = {};
-    if (minPrice) where.price[Op.gte] = parseInt(minPrice);
-    if (maxPrice) where.price[Op.lte] = parseInt(maxPrice);
+    if (minPrice) where.price[Op.gte] = Number(minPrice);
+    if (maxPrice) where.price[Op.lte] = Number(maxPrice);
   }
 
-  // Sort
-  let order = [['createdAt', 'DESC']]; // mặc định mới nhất
-  let subQuery = true;
+  if (rating) {
+    const minRating = Number(rating);
+    if (!Number.isNaN(minRating)) {
+      andConditions.push(sequelize.where(avgRatingExpr, { [Op.gte]: minRating }));
+    }
+  }
+
+  if (andConditions.length) {
+    where[Op.and] = andConditions;
+  }
+
+  let order = [['createdAt', 'DESC'], ['id', 'ASC']];
   switch (sort) {
-    case 'price-asc':  order = [['price', 'ASC']];       break;
-    case 'price-desc': order = [['price', 'DESC']];      break;
-    case 'newest':     order = [['createdAt', 'DESC']];  break;
-    case 'popular':    order = [['featured', 'DESC'], ['id', 'ASC']]; break;
+    case 'price-asc':
+      order = [['price', 'ASC'], ['id', 'ASC']];
+      break;
+    case 'price-desc':
+      order = [['price', 'DESC'], ['id', 'ASC']];
+      break;
+    case 'newest':
+      order = [['createdAt', 'DESC'], ['id', 'ASC']];
+      break;
+    case 'popular':
+      order = [['featured', 'DESC'], ['id', 'ASC']];
+      break;
     case 'rating-desc':
-      // Since we compute rating manually below for simplicity, we will handle sort in-memory for MVP
+      order = [[avgRatingExpr, 'DESC'], ['id', 'ASC']];
       break;
   }
 
-  let { count, rows } = await Product.findAndCountAll({
+  const pageNum = Math.max(1, Number.parseInt(page, 10) || 1);
+  const pageSize = Math.min(50, Math.max(1, Number.parseInt(limit, 10) || 9));
+  const offset = (pageNum - 1) * pageSize;
+
+  const { count, rows } = await Product.findAndCountAll({
     where,
-    include: [{ model: Review, as: 'reviews', attributes: ['rating'] }],
-    distinct: true,
+    attributes: {
+      include: [
+        [avgRatingExpr, 'avgRating'],
+        [totalReviewsExpr, 'totalReviews'],
+      ],
+    },
+    order,
+    limit: pageSize,
+    offset,
   });
 
-  // Tính rating trung bình
-  let products = rows.map(p => {
-    const pJson = p.toJSON();
-    const totalReviews = pJson.reviews.length;
-    const avgRating = totalReviews > 0 
-      ? pJson.reviews.reduce((s, r) => s + r.rating, 0) / totalReviews 
-      : 5; // Default 5 cho sản phẩm chưa có đánh giá
-    pJson.avgRating = avgRating;
-    pJson.totalReviews = totalReviews;
-    return pJson;
+  const products = rows.map((product) => {
+    const data = product.toJSON();
+    data.avgRating = Number(data.avgRating || 5);
+    data.totalReviews = Number(data.totalReviews || 0);
+    return data;
   });
-
-  // Filter by rating (từ X sao trở lên)
-  if (rating) {
-    products = products.filter(p => p.avgRating >= parseInt(rating));
-  }
-
-  // Handle rating-desc sort in memory (vì sequelize GROUP BY AVG phức tạp với findAndCountAll)
-  if (sort === 'rating-desc') {
-    products.sort((a, b) => b.avgRating - a.avgRating);
-  } else {
-    // Other sorts are already applied by DB, but we need to re-apply if we filtered in memory?
-    // Actually we skipped limit/offset in DB query so we must do it in memory.
-  }
-
-  // Handle memory sort if needed for price/newest etc when rating filter is on
-  if (sort === 'price-asc') products.sort((a,b) => a.price - b.price);
-  if (sort === 'price-desc') products.sort((a,b) => b.price - a.price);
-  if (sort === 'newest') products.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-  if (sort === 'popular') products.sort((a,b) => (b.featured?1:0) - (a.featured?1:0));
-
-  // Memory Pagination
-  count = products.length;
-  const pageNum  = Math.max(1, parseInt(page)  || 1);
-  const pageSize = Math.min(50, parseInt(limit) || 9);
-  const offset   = (pageNum - 1) * pageSize;
-  
-  products = products.slice(offset, offset + pageSize);
 
   return {
-    items:      products,
-    total:      count,
-    page:       pageNum,
+    items: products,
+    total: count,
+    page: pageNum,
     totalPages: Math.ceil(count / pageSize),
   };
 }
-
-// ── Get by ID ──────────────────────────────────────────────────────────────────
 
 async function getById(id) {
   const product = await Product.findByPk(id);
@@ -103,25 +97,23 @@ async function getById(id) {
   return product;
 }
 
-// ── Seed mock data (chạy 1 lần khi DB trống) ─────────────────────────────────
-
 async function seedIfEmpty() {
   const count = await Product.count();
   if (count > 0) return;
 
   const mockProducts = [
-    { name: 'Laptop ABC Pro 2024',  price: 15990000, oldPrice: 18500000, category: 'Laptop',     stock: 12, featured: true,  isNew: false, icon: '💻' },
-    { name: 'Phone XYZ 15 Pro',     price: 8490000,  oldPrice: null,     category: 'Điện thoại', stock: 8,  featured: true,  isNew: true,  icon: '📱' },
-    { name: 'Tai nghe K Pro Max',   price: 1290000,  oldPrice: 1590000,  category: 'Phụ kiện',   stock: 25, featured: true,  isNew: false, icon: '🎧' },
-    { name: 'Bàn phím Mech TKL',    price: 890000,   oldPrice: null,     category: 'Phụ kiện',   stock: 30, featured: true,  isNew: true,  icon: '⌨️' },
-    { name: 'Màn hình 4K 27"',      price: 6490000,  oldPrice: 7200000,  category: 'Màn hình',   stock: 6,  featured: true,  isNew: false, icon: '🖥️' },
-    { name: 'Chuột G Pro X',        price: 690000,   oldPrice: null,     category: 'Phụ kiện',   stock: 45, featured: true,  isNew: true,  icon: '🖱️' },
-    { name: 'Tablet S8 Ultra',      price: 12900000, oldPrice: 14500000, category: 'Tablet',     stock: 4,  featured: false, isNew: true,  icon: '📟' },
-    { name: 'Đồng hồ Watch 4',      price: 3290000,  oldPrice: null,     category: 'Wearable',   stock: 15, featured: false, isNew: true,  icon: '⌚' },
+    { name: 'Laptop ABC Pro 2024', price: 15990000, oldPrice: 18500000, category: 'Laptop', stock: 12, featured: true, isNew: false, icon: '💻' },
+    { name: 'Phone XYZ 15 Pro', price: 8490000, oldPrice: null, category: 'Điện thoại', stock: 8, featured: true, isNew: true, icon: '📱' },
+    { name: 'Tai nghe K Pro Max', price: 1290000, oldPrice: 1590000, category: 'Phụ kiện', stock: 25, featured: true, isNew: false, icon: '🎧' },
+    { name: 'Bàn phím Mech TKL', price: 890000, oldPrice: null, category: 'Phụ kiện', stock: 30, featured: true, isNew: true, icon: '⌨️' },
+    { name: 'Màn hình 4K 27"', price: 6490000, oldPrice: 7200000, category: 'Màn hình', stock: 6, featured: true, isNew: false, icon: '🖥️' },
+    { name: 'Chuột G Pro X', price: 690000, oldPrice: null, category: 'Phụ kiện', stock: 45, featured: true, isNew: true, icon: '🖱️' },
+    { name: 'Tablet S8 Ultra', price: 12900000, oldPrice: 14500000, category: 'Tablet', stock: 4, featured: false, isNew: true, icon: '📟' },
+    { name: 'Đồng hồ Watch 4', price: 3290000, oldPrice: null, category: 'Wearable', stock: 15, featured: false, isNew: true, icon: '⌚' },
   ];
 
   await Product.bulkCreate(mockProducts);
-  console.log('\x1b[33m[Seed]\x1b[0m Đã tạo 8 sản phẩm mẫu.');
+  console.log('[Seed] Created 8 sample products.');
 }
 
 async function ensureMasterInventory() {
@@ -130,26 +122,58 @@ async function ensureMasterInventory() {
     order: [['id', 'ASC']],
   });
 
-  let created = 0;
+  if (products.length === 0) return;
+
+  // Fetch all existing master inventories for MAIN_WH to avoid N+1 queries
+  const existingInventories = await MasterInventory.findAll({
+    where: { warehouseId: 'MAIN_WH' },
+    attributes: ['productId', 'availableStock', 'id']
+  });
+
+  // Map existing inventories by productId
+  const inventoryMap = new Map(existingInventories.map(inv => [inv.productId, inv]));
+
+  const toCreate = [];
+  const toUpdate = [];
+
   for (const product of products) {
-    const [inventory, wasCreated] = await MasterInventory.findOrCreate({
-      where: { productId: product.id, warehouseId: 'MAIN_WH' },
-      defaults: {
+    const existing = inventoryMap.get(product.id);
+    if (!existing) {
+      toCreate.push({
+        productId: product.id,
+        warehouseId: 'MAIN_WH',
         availableStock: product.stock,
         reservedStock: 0,
         lockedStock: 0,
-      },
-    });
-
-    if (wasCreated) {
-      created += 1;
-    } else if (inventory.availableStock === null || inventory.availableStock === undefined) {
-      await inventory.update({ availableStock: product.stock });
+      });
+    } else if (existing.availableStock === null || existing.availableStock === undefined) {
+      toUpdate.push({
+        id: existing.id,
+        availableStock: product.stock
+      });
     }
   }
 
-  if (created > 0) {
-    console.log(`\x1b[33m[Seed]\x1b[0m Created ${created} master inventory rows.`);
+  // Bulk create missing inventories
+  if (toCreate.length > 0) {
+    await MasterInventory.bulkCreate(toCreate);
+    console.log(`[Seed] Bulk created ${toCreate.length} master inventory rows.`);
+  }
+
+  // Bulk update incorrect inventories (if any)
+  if (toUpdate.length > 0) {
+    // Sequelize does not have a native bulkUpdate, we can use a transaction or execute updates
+    // Since this is a startup seed running once, individual updates for small numbers is fine,
+    // or we can use a query if it's large.
+    await sequelize.transaction(async (t) => {
+      for (const inv of toUpdate) {
+        await MasterInventory.update(
+          { availableStock: inv.availableStock },
+          { where: { id: inv.id }, transaction: t }
+        );
+      }
+    });
+    console.log(`[Seed] Updated ${toUpdate.length} master inventory rows.`);
   }
 }
 

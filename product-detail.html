@@ -10,6 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <meta name="description" content="Xem chi tiết sản phẩm điện tử tại ShopVN, bao gồm giá bán, tồn kho, ưu đãi, đánh giá và thông tin giao hàng." />
   <title>Chi tiết sản phẩm — ShopVN</title>
 
 
@@ -20,14 +21,14 @@
 
   <link rel="stylesheet" href="css/pages/product-detail.css" />
 
-  <link rel="stylesheet" href="css/lucky-wheel.css" />
 
   <link rel="stylesheet" href="css/mobile-nav.css" />
+  <link rel="stylesheet" href="css/redesign.css" />
 </head>
 
 
 
-<body>
+<body class="page-product-detail">
 
 
 
@@ -137,6 +138,8 @@
 
   </header>
 
+  <main id="main-content">
+
 
 
 
@@ -219,7 +222,7 @@
 
           <div class="detail-img-main" aria-label="Ảnh sản phẩm">
 
-            <span id="product-icon" style="line-height:1">📦</span>
+            <div class="product-media-skeleton" aria-hidden="true"></div>
 
           </div>
 
@@ -257,33 +260,23 @@
 
           <!-- ========================================== -->
 
-          <div class="detail-rating">
-            <div class="detail-stars" aria-label="4.8 sao">
-
-              ★★★★★
-
-            </div>
-
-            <span class="detail-rating-text">4.8 (128 đánh giá)</span>
-
-            <span style="color:var(--c-border)">|</span>
-
-            <span class="detail-rating-text">Đã bán 320+</span>
-
+          <div class="detail-rating" id="product-rating-summary" hidden>
+            <div class="detail-stars" id="product-rating-stars"></div>
+            <span class="detail-rating-text" id="product-rating-text"></span>
           </div>
 
           <div class="pdp-confidence-strip" aria-label="Lý do nên mua tại ShopVN">
             <div class="pdp-confidence-item">
-              <strong>Chính hãng</strong>
-              <span>Bảo hành 12 tháng</span>
+              <strong>Thông tin rõ ràng</strong>
+              <span>Giá và tồn kho hiện tại</span>
             </div>
             <div class="pdp-confidence-item">
-              <strong>Đổi trả 30 ngày</strong>
-              <span>Hỗ trợ nhanh</span>
+              <strong>Đổi trả</strong>
+              <span>Theo điều kiện áp dụng</span>
             </div>
             <div class="pdp-confidence-item">
-              <strong>Giao nhanh</strong>
-              <span>Toàn quốc</span>
+              <strong>Giao hàng</strong>
+              <span>Xác nhận khi thanh toán</span>
             </div>
           </div>
 
@@ -313,16 +306,16 @@
 
           <div class="pdp-decision-panel" aria-label="Thông tin hỗ trợ quyết định mua">
             <div class="pdp-decision-row">
-              <span>Ưu đãi hôm nay</span>
-              <strong>Nhập SHOPVN50 giảm 50.000đ</strong>
+              <span>Mã giảm giá</span>
+              <strong>Được kiểm tra trực tiếp tại giỏ hàng</strong>
             </div>
             <div class="pdp-decision-row">
               <span>Giao dự kiến</span>
-              <strong>1-4 ngày tùy đơn vị vận chuyển</strong>
+              <strong>Hiển thị theo đơn vị vận chuyển khi thanh toán</strong>
             </div>
             <div class="pdp-decision-row">
               <span>Hỗ trợ mua hàng</span>
-              <strong>Chat hoặc gọi 1800 9999</strong>
+              <strong>Chat với trợ lý mua sắm hoặc liên hệ ShopVN</strong>
             </div>
           </div>
 
@@ -508,32 +501,6 @@
 
       <!-- ========================================== -->
 
-      <section class="related" id="bundle-section" aria-label="Thường được mua cùng" style="margin-bottom:var(--sp-xl)">
-
-        <div class="section-header">
-
-          <div class="section-header__left">
-
-            <p class="section-label">📦 Combo tiết kiệm</p>
-
-            <h2 class="section-title">Thường được mua cùng</h2>
-
-          </div>
-
-        </div>
-
-        <div id="bundle-grid" style="display:flex;gap:var(--sp-md);align-items:center;flex-wrap:wrap">
-
-          <!-- ========================================== -->
-
-        </div>
-
-      </section>
-
-
-
-      <!-- ========================================== -->
-
       <section class="related" id="related-section" aria-label="Sản phẩm liên quan">
 
         <div class="section-header">
@@ -568,6 +535,8 @@
 
   <!-- ========================================== -->
 
+  </main>
+
   <footer class="footer" role="contentinfo">
 
     <div class="container">
@@ -582,7 +551,7 @@
 
             Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị
 
-            điện tử, phụ kiện công nghệ chính hãng toàn quốc.
+            thiết bị điện tử và phụ kiện công nghệ với thông tin mua hàng rõ ràng.
 
           </p>
 
@@ -600,7 +569,7 @@
 
             <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
 
-            <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy nhất</span></a></li>
+            <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Sản phẩm nổi bật</span></a></li>
 
           </ul>
 
@@ -650,7 +619,7 @@
 
         <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
 
-        <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+        <span>ShopVN, Đà Nẵng, Việt Nam</span>
 
       </div>
 
@@ -671,7 +640,6 @@
 
   <script src="js/auth.js"></script>
 
-  <script src="js/lucky-wheel.js"></script>
 
   <script src="js/pages/product-detail.js"></script>
 

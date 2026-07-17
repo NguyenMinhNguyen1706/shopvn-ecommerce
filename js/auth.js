@@ -53,31 +53,31 @@ function updateNavbarAuth() {
     actionsEl.innerHTML = `
       <div class="user-profile-dropdown" id="user-profile-dropdown">
         <button class="user-profile-btn" id="user-menu-btn" aria-label="Menu tài khoản" aria-haspopup="true" aria-expanded="false">
-          <div class="user-avatar">${user.name.charAt(0).toUpperCase()}</div>
-          <span class="user-name">${user.name}</span>
+          <div class="user-avatar">${escapeHtml(user.name.charAt(0).toUpperCase())}</div>
+          <span class="user-name">${escapeHtml(user.name)}</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="chevron-icon"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="dropdown-menu" id="user-dropdown-menu" role="menu" aria-label="Tùy chọn tài khoản">
           <div class="dropdown-header">
-            <div class="user-avatar-large">${user.name.charAt(0).toUpperCase()}</div>
-            <div class="user-name-large">${user.name}</div>
+            <div class="user-avatar-large">${escapeHtml(user.name.charAt(0).toUpperCase())}</div>
+            <div class="user-name-large">${escapeHtml(user.name)}</div>
             <div class="user-role-badge">${user.role === 'admin' ? 'Quản trị viên' : 'Khách hàng'}</div>
           </div>
           <div class="dropdown-divider"></div>
           ${Auth.isAdmin() ? `
             <a href="${prefix}admin/index.html" class="dropdown-item" role="menuitem">
-              <span class="dropdown-icon">📊</span> Admin Panel
+              <span class="dropdown-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16v-5M12 16V8M17 16v-3"/></svg></span> Admin Panel
             </a>
           ` : ''}
           <a href="${prefix}orders.html" class="dropdown-item" role="menuitem">
-            <span class="dropdown-icon">📦</span> Đơn hàng của tôi
+            <span class="dropdown-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 8 9 5 9-5v8l-9 5-9-5V8Z"/></svg></span> Đơn hàng của tôi
           </a>
           <a href="${prefix}cart.html" class="dropdown-item" role="menuitem">
-            <span class="dropdown-icon">🛒</span> Giỏ hàng
+            <span class="dropdown-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h7.84a2 2 0 0 0 2-1.61L20.2 7H5.12"/></svg></span> Giỏ hàng
           </a>
           <div class="dropdown-divider"></div>
           <button onclick="handleLogout()" class="dropdown-item logout-item" role="menuitem">
-            <span class="dropdown-icon">🚪</span> Đăng xuất
+            <span class="dropdown-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg></span> Đăng xuất
           </button>
         </div>
       </div>
@@ -132,7 +132,10 @@ function initResponsiveNavbar(prefix) {
     const hamburger = document.createElement('button');
     hamburger.className = 'mobile-menu-toggle';
     hamburger.id = 'mobile-menu-toggle';
+    hamburger.type = 'button';
     hamburger.setAttribute('aria-label', 'Mở menu di động');
+    hamburger.setAttribute('aria-controls', 'mobile-drawer');
+    hamburger.setAttribute('aria-expanded', 'false');
     hamburger.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="4" y1="12" x2="20" y2="12"/>
@@ -148,17 +151,23 @@ function initResponsiveNavbar(prefix) {
     const overlay = document.createElement('div');
     overlay.className = 'mobile-drawer-overlay';
     overlay.id = 'mobile-drawer-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
     document.body.appendChild(overlay);
 
     const drawer = document.createElement('div');
     drawer.className = 'mobile-drawer';
     drawer.id = 'mobile-drawer';
+    drawer.setAttribute('role', 'dialog');
+    drawer.setAttribute('aria-modal', 'true');
+    drawer.setAttribute('aria-label', 'Menu điều hướng');
+    drawer.setAttribute('aria-hidden', 'true');
+    drawer.tabIndex = -1;
     drawer.innerHTML = `
       <div class="mobile-drawer__header">
         <a href="${prefix}index.html" class="mobile-drawer__logo">
           Shop<span>VN</span>
         </a>
-        <button class="mobile-drawer__close" id="mobile-drawer-close" aria-label="Đóng menu di động">
+        <button type="button" class="mobile-drawer__close" id="mobile-drawer-close" aria-label="Đóng menu di động">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
@@ -216,27 +225,45 @@ function setupMobileDrawer() {
   const toggleBtn = document.getElementById('mobile-menu-toggle');
   const overlay = document.getElementById('mobile-drawer-overlay');
   const closeBtn = document.getElementById('mobile-drawer-close');
+  const drawer = document.getElementById('mobile-drawer');
   
-  if (!toggleBtn || !overlay || !closeBtn) return;
+  if (!toggleBtn || !overlay || !closeBtn || !drawer || toggleBtn.dataset.drawerBound === 'true') return;
   
-  // Định nghĩa handler
   const openDrawer = () => {
     document.body.classList.add('drawer-open');
+    toggleBtn.setAttribute('aria-expanded', 'true');
+    toggleBtn.setAttribute('aria-label', 'Đóng menu di động');
+    drawer.setAttribute('aria-hidden', 'false');
+    closeBtn.focus();
   };
   
-  const closeDrawer = () => {
+  const closeDrawer = ({ restoreFocus = true } = {}) => {
+    if (!document.body.classList.contains('drawer-open')) return;
     document.body.classList.remove('drawer-open');
+    toggleBtn.setAttribute('aria-expanded', 'false');
+    toggleBtn.setAttribute('aria-label', 'Mở menu di động');
+    drawer.setAttribute('aria-hidden', 'true');
+    if (restoreFocus) toggleBtn.focus();
   };
-  
-  // Xóa listener cũ trước để tránh duplicate
-  toggleBtn.removeEventListener('click', openDrawer);
+
   toggleBtn.addEventListener('click', openDrawer);
-  
-  overlay.removeEventListener('click', closeDrawer);
-  overlay.addEventListener('click', closeDrawer);
-  
-  closeBtn.removeEventListener('click', closeDrawer);
-  closeBtn.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', () => closeDrawer());
+  closeBtn.addEventListener('click', () => closeDrawer());
+  drawer.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => closeDrawer({ restoreFocus: false }));
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !document.body.classList.contains('drawer-open')) return;
+    event.preventDefault();
+    closeDrawer();
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1024) closeDrawer({ restoreFocus: false });
+  });
+
+  toggleBtn.dataset.drawerBound = 'true';
 }
 
 function highlightMobileLinks() {
@@ -270,9 +297,9 @@ function updateMobileAuth(prefix) {
     footerEl.innerHTML = `
       <div class="mobile-drawer__user">
         <div class="mobile-drawer__user-header">
-          <div class="user-avatar">${user.name.charAt(0).toUpperCase()}</div>
+          <div class="user-avatar">${escapeHtml(user.name.charAt(0).toUpperCase())}</div>
           <div class="mobile-drawer__user-info">
-            <span class="mobile-drawer__user-name">${user.name}</span>
+            <span class="mobile-drawer__user-name">${escapeHtml(user.name)}</span>
             <span class="mobile-drawer__user-role">${user.role === 'admin' ? 'Quản trị viên' : 'Khách hàng'}</span>
           </div>
         </div>
@@ -280,17 +307,17 @@ function updateMobileAuth(prefix) {
         <nav class="mobile-drawer__nav" style="gap: 4px" aria-label="Menu tài khoản di động dọc">
           ${Auth.isAdmin() ? `
             <a href="${prefix}admin/index.html" class="mobile-drawer__link" style="padding: 10px 12px; font-size: 0.9rem">
-              📊 Admin Panel
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16v-5M12 16V8M17 16v-3"/></svg> Admin Panel
             </a>
           ` : ''}
           <a href="${prefix}orders.html" class="mobile-drawer__link" style="padding: 10px 12px; font-size: 0.9rem">
-            📦 Đơn hàng của tôi
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 8 9 5 9-5v8l-9 5-9-5V8Z"/></svg> Đơn hàng của tôi
           </a>
           <a href="${prefix}cart.html" class="mobile-drawer__link" style="padding: 10px 12px; font-size: 0.9rem">
-            🛒 Giỏ hàng
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h7.84a2 2 0 0 0 2-1.61L20.2 7H5.12"/></svg> Giỏ hàng
           </a>
           <button onclick="handleLogout()" class="dropdown-item logout-item" style="padding: 12px; border-radius: var(--r-md); font-weight: 600; width: 100%">
-            🚪 Đăng xuất
+            <span class="dropdown-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg></span> Đăng xuất
           </button>
         </nav>
       </div>

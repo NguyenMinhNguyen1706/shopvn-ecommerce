@@ -6,11 +6,18 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "worker": "node src/workers/background.worker.js",
     "test": "jest --verbose",
     "test:watch": "jest --watch",
     "load:test": "node scripts/load-test.js",
     "db:backup": "node scripts/backup-db.js",
-    "db:restore": "node scripts/restore-db.js"
+    "db:restore": "node scripts/restore-db.js",
+    "db:migrate": "npx sequelize-cli db:migrate",
+    "db:migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "db:migrate:undo:all": "npx sequelize-cli db:migrate:undo:all",
+    "db:migrate:status": "npx sequelize-cli db:migrate:status",
+    "db:seed": "npx sequelize-cli db:seed:all",
+    "db:seed:undo": "npx sequelize-cli db:seed:undo:all"
   },
   "keywords": [],
   "author": "",
@@ -21,9 +28,11 @@
   },
   "dependencies": {
     "@google/genai": "^2.8.0",
+    "axios": "^1.17.0",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.79.2",
     "bwip-js": "^4.11.1",
-    "cloudinary": "^1.41.3",
+    "cloudinary": "^2.10.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -34,16 +43,14 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.11.0",
     "multer": "^2.1.1",
-    "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^8.0.10",
+    "nodemailer": "^9.0.3",
     "pg": "^8.21.0",
     "pg-hstore": "^2.3.4",
     "qs": "^6.15.2",
     "redis": "^6.0.0",
     "sequelize": "^6.37.8",
     "swagger-jsdoc": "^6.3.0",
-    "swagger-ui-express": "^5.0.1",
-    "axios": "^1.17.0"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "jest": "^30.4.2",
@@ -57,5 +64,8 @@
     "collectCoverageFrom": [
       "src/services/**/*.js"
     ]
+  },
+  "overrides": {
+    "uuid": "11.1.1"
   }
 }

@@ -1,6 +1,6 @@
 /**
  * utils.js — Tiện ích dùng chung
- * Wishlist, Cart Drawer, Search Autocomplete, ScrollTop, BottomTabBar, FlashSale
+ * Wishlist, Cart Drawer, Search Autocomplete, theme và các tiện ích giao diện
  */
 
 // ── Format ────────────────────────────────────────────────────────────────────
@@ -14,6 +14,101 @@ function formatPrice(amount) {
 function calcDiscount(price, oldPrice) {
   if (!oldPrice || oldPrice <= price) return null;
   return Math.round((1 - price / oldPrice) * 100);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function getSafeProductImageUrl(product) {
+  const value = product?.imageUrl || product?.image_url;
+  if (!value || typeof value !== 'string') return '';
+
+  try {
+    const url = new URL(value, window.location.href);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+function getProductFallbackIcon(product) {
+  const value = `${product?.category || ''} ${product?.name || ''}`.toLowerCase();
+  if (/laptop|máy tính/.test(value)) {
+    return '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/>';
+  }
+  if (/điện thoại|phone|tablet/.test(value)) {
+    return '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>';
+  }
+  if (/tai nghe|headphone/.test(value)) {
+    return '<path d="M4 14a8 8 0 0 1 16 0"/><path d="M18 19v-5h2a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-2ZM6 19v-5H4a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h2Z"/>';
+  }
+  if (/màn hình|monitor/.test(value)) {
+    return '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>';
+  }
+  if (/đồng hồ|watch|wearable/.test(value)) {
+    return '<rect x="6" y="5" width="12" height="14" rx="3"/><path d="m9 5 1-3h4l1 3M9 19l1 3h4l1-3"/>';
+  }
+  return '<path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 8 9 5 9-5v8l-9 5-9-5V8Z"/>';
+}
+
+function productMediaMarkup(product, options = {}) {
+  const imageUrl = getSafeProductImageUrl(product);
+  const label = escapeHtml(product?.name || product?.category || 'Sản phẩm');
+  const fallbackLabel = escapeHtml(product?.category || 'Sản phẩm');
+  const className = String(options.className || '')
+    .replace(/[^a-zA-Z0-9_\- ]/g, '')
+    .trim();
+  const loading = options.eager ? 'eager' : 'lazy';
+
+  return `
+    <div class="product-media${imageUrl ? ' has-image' : ''}${className ? ` ${className}` : ''}">
+      ${imageUrl ? `<img class="product-media__image" data-product-image src="${escapeHtml(imageUrl)}" alt="${label}" loading="${loading}" decoding="async">` : ''}
+      <div class="product-media__fallback" role="img" aria-label="${label}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          ${getProductFallbackIcon(product)}
+        </svg>
+        <span>${fallbackLabel}</span>
+      </div>
+    </div>
+  `;
+}
+
+function getProductRatingSummary(product) {
+  let reviews = [];
+  try {
+    reviews = JSON.parse(localStorage.getItem(`reviews_${product?.id}`) || '[]');
+  } catch {
+    reviews = [];
+  }
+
+  if (reviews.length) {
+    const total = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0);
+    return { rating: Math.max(0, Math.min(5, total / reviews.length)), count: reviews.length };
+  }
+
+  const rating = Number(product?.rating);
+  if (rating > 0) {
+    const count = Math.max(0, Number(product?.reviewCount || product?.reviewsCount || 0));
+    return { rating: Math.min(5, rating), count };
+  }
+
+  return null;
+}
+
+function bindProductImageFallbacks() {
+  document.addEventListener('error', event => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement) || !image.matches('[data-product-image]')) return;
+    const media = image.closest('.product-media');
+    media?.classList.remove('has-image');
+    image.remove();
+  }, true);
 }
 
 /** Format ngày: "2024-05-15" → "15/05/2024" */
@@ -96,6 +191,10 @@ function updateCartBadge() {
     mobileCartBadgeNew.textContent = count;
     mobileCartBadgeNew.style.display = count > 0 ? 'flex' : 'none';
   }
+
+  const cartLabel = count > 0 ? `Giỏ hàng, ${count} sản phẩm` : 'Giỏ hàng, đang trống';
+  document.querySelectorAll('.navbar__cart-btn, .mobile-bottom-nav__item[href*="cart.html"]')
+    .forEach(link => link.setAttribute('aria-label', cartLabel));
 }
 
 // ── Local Cart ────────────────────────────────────────────────────────────────
@@ -262,7 +361,9 @@ function renderCartDrawer() {
   if (items.length === 0) {
     body.innerHTML = `
       <div class="cart-drawer__empty">
-        <div class="cart-drawer__empty-icon">🛒</div>
+        <div class="cart-drawer__empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h7.84a2 2 0 0 0 2-1.61L20.2 7H5.12"/></svg>
+        </div>
         <p class="cart-drawer__empty-text">Giỏ hàng trống</p>
         <p class="cart-drawer__empty-sub">Hãy thêm sản phẩm yêu thích vào giỏ hàng</p>
       </div>
@@ -275,11 +376,10 @@ function renderCartDrawer() {
 
   body.innerHTML = items.map(item => `
     <div class="cart-drawer__item">
-      <div class="cart-drawer__item-img">
-        <span>${item.icon || '📦'}</span>
-      </div>
+      <a class="cart-drawer__item-img" href="product-detail.html?id=${encodeURIComponent(item.id)}"
+         aria-label="Xem ${escapeHtml(item.name)}, ${escapeHtml(item.category || 'Sản phẩm')}">${productMediaMarkup(item)}</a>
       <div class="cart-drawer__item-info">
-        <p class="cart-drawer__item-name">${item.name}</p>
+        <p class="cart-drawer__item-name">${escapeHtml(item.name)}</p>
         <p class="cart-drawer__item-price">${formatPrice(item.price)}</p>
         <div class="cart-drawer__item-qty">
           <button onclick="LocalCart.update(${item.id}, ${item.quantity - 1})" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
@@ -339,7 +439,7 @@ function initSearchAutocomplete() {
         const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
         dropdown.innerHTML = matches.map(p => `
           <a href="${prefix}product-detail.html?id=${p.id}" class="search-ac__item">
-            <span class="search-ac__icon">${p.icon || '📦'}</span>
+            <span class="search-ac__icon">${productMediaMarkup(p)}</span>
             <div class="search-ac__info">
               <span class="search-ac__name">${highlightMatch(p.name, query)}</span>
               <span class="search-ac__price">${formatPrice(p.price)}</span>
@@ -354,18 +454,18 @@ function initSearchAutocomplete() {
       const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
       dropdown.innerHTML = `
         <div class="search-ac-suggestions">
-          <p class="search-ac-suggestions__title">🔥 Xu hướng tìm kiếm</p>
+          <p class="search-ac-suggestions__title">Gợi ý tìm kiếm</p>
           <div class="search-ac-suggestions__tags">
-            <a href="${prefix}products.html?q=Laptop" class="search-tag">Laptop Pro</a>
-            <a href="${prefix}products.html?q=Phone" class="search-tag">iPhone 15</a>
-            <a href="${prefix}products.html?q=Bàn%20phím" class="search-tag">Bàn phím cơ</a>
-            <a href="${prefix}products.html?q=Tai%20nghe" class="search-tag">Tai nghe chụp tai</a>
+            <a href="${prefix}products.html?q=Laptop" class="search-tag">Laptop</a>
+            <a href="${prefix}products.html?q=Điện%20thoại" class="search-tag">Điện thoại</a>
+            <a href="${prefix}products.html?q=Bàn%20phím" class="search-tag">Bàn phím</a>
+            <a href="${prefix}products.html?q=Tai%20nghe" class="search-tag">Tai nghe</a>
           </div>
-          <p class="search-ac-suggestions__title" style="margin-top:12px">📁 Danh mục phổ biến</p>
+          <p class="search-ac-suggestions__title" style="margin-top:12px">Danh mục</p>
           <div class="search-ac-suggestions__cats">
-            <a href="${prefix}products.html?category=Laptop" class="search-cat-item">💻 Laptop</a>
-            <a href="${prefix}products.html?category=Điện%20thoại" class="search-cat-item">📱 Điện thoại</a>
-            <a href="${prefix}products.html?category=Phụ%20kiện" class="search-cat-item">🎧 Phụ kiện</a>
+            <a href="${prefix}products.html?category=Laptop" class="search-cat-item">Laptop</a>
+            <a href="${prefix}products.html?category=Điện%20thoại" class="search-cat-item">Điện thoại</a>
+            <a href="${prefix}products.html?category=Phụ%20kiện" class="search-cat-item">Phụ kiện</a>
           </div>
         </div>
       `;
@@ -400,8 +500,9 @@ function initSearchAutocomplete() {
 }
 
 function highlightMatch(text, query) {
-  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-  return text.replace(regex, '<mark>$1</mark>');
+  const safeText = escapeHtml(text);
+  const safeQuery = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return safeText.replace(new RegExp(`(${safeQuery})`, 'gi'), '<mark>$1</mark>');
 }
 
 function getProductsFromStorage() {
@@ -434,88 +535,6 @@ function initScrollToTop() {
 function initBottomTabBar() {
   return; // Disabled in favor of hardcoded .mobile-bottom-nav
 }
-
-// ── Flash Sale Countdown ──────────────────────────────────────────────────────
-
-function initFlashSaleCountdown() {
-  const el = document.getElementById('flash-countdown');
-  if (!el) return;
-
-  // Sale ends at midnight tonight
-  function getEndTime() {
-    const stored = localStorage.getItem('flash_sale_end');
-    if (stored && new Date(stored) > new Date()) return new Date(stored);
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
-    localStorage.setItem('flash_sale_end', end.toISOString());
-    return end;
-  }
-
-  const endTime = getEndTime();
-
-  function update() {
-    const now = new Date();
-    const diff = endTime - now;
-    if (diff <= 0) {
-      el.innerHTML = '<span class="countdown-ended">Đã kết thúc!</span>';
-      return;
-    }
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    el.innerHTML = `
-      <span class="cd-block"><span class="cd-num">${String(h).padStart(2, '0')}</span><span class="cd-label">Giờ</span></span>
-      <span class="cd-sep">:</span>
-      <span class="cd-block"><span class="cd-num">${String(m).padStart(2, '0')}</span><span class="cd-label">Phút</span></span>
-      <span class="cd-sep">:</span>
-      <span class="cd-block"><span class="cd-num">${String(s).padStart(2, '0')}</span><span class="cd-label">Giây</span></span>
-    `;
-  }
-
-  update();
-  setInterval(update, 1000);
-}
-
-// ── Coupon System ─────────────────────────────────────────────────────────────
-
-const CouponSystem = {
-  coupons: {
-    'SHOPVN10':   { type: 'percent', value: 10, minOrder: 500000,    maxDiscount: 200000,  desc: 'Giảm 10% (tối đa 200k)' },
-    'WELCOME50':  { type: 'fixed',   value: 50000,  minOrder: 300000, desc: 'Giảm 50.000đ cho đơn từ 300k' },
-    'FREESHIP':   { type: 'fixed',   value: 30000,  minOrder: 0,      desc: 'Miễn phí vận chuyển (trị giá 30k)' },
-    'SUMMER20':   { type: 'percent', value: 20, minOrder: 1000000,   maxDiscount: 500000,  desc: 'Giảm 20% (tối đa 500k)' },
-    'FLASH30':    { type: 'percent', value: 30, minOrder: 2000000,   maxDiscount: 1000000, desc: 'Flash Sale giảm 30% (tối đa 1tr)' },
-  },
-
-  validate(code, orderTotal) {
-    const coupon = this.coupons[code.toUpperCase()];
-    if (!coupon) return { valid: false, message: 'Mã giảm giá không hợp lệ' };
-    if (orderTotal < coupon.minOrder) return { valid: false, message: `Đơn hàng tối thiểu ${formatPrice(coupon.minOrder)}` };
-
-    let discount = 0;
-    if (coupon.type === 'percent') {
-      discount = Math.round(orderTotal * coupon.value / 100);
-      if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount);
-    } else {
-      discount = coupon.value;
-    }
-
-    return { valid: true, discount, desc: coupon.desc, code: code.toUpperCase() };
-  },
-
-  getApplied() {
-    try { return JSON.parse(sessionStorage.getItem('applied_coupon')); }
-    catch { return null; }
-  },
-
-  apply(code, orderTotal) {
-    const result = this.validate(code, orderTotal);
-    if (result.valid) sessionStorage.setItem('applied_coupon', JSON.stringify(result));
-    return result;
-  },
-
-  clear() { sessionStorage.removeItem('applied_coupon'); },
-};
 
 // ── Misc ──────────────────────────────────────────────────────────────────────
 
@@ -550,69 +569,6 @@ function initScrollAnimations() {
   elements.forEach(el => observer.observe(el));
 }
 
-// ── Live Purchase Notifications (Social Proof) ───────────────────────────────
-
-const VIET_NAMES = [
-  'Nguyễn V.A', 'Trần T.B', 'Lê M.C', 'Phạm V.D', 'Hoàng T.E',
-  'Vũ Đ.F', 'Đặng H.G', 'Bùi T.H', 'Đỗ V.I', 'Hồ T.K',
-  'Ngô M.L', 'Dương T.M', 'Lý V.N', 'Phan T.O', 'Mai V.P',
-  'Trịnh M.Q', 'Đinh T.R', 'Huỳnh V.S', 'Võ T.T', 'Tô M.U',
-];
-const VIET_CITIES = [
-  'Hà Nội', 'TP.HCM', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
-  'Nha Trang', 'Huế', 'Vũng Tàu', 'Biên Hòa', 'Đà Lạt',
-];
-
-function initLivePurchaseNotifications() {
-  if (window.location.pathname.includes('/admin/')) return;
-
-  let container = document.getElementById('live-notif-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'live-notif-container';
-    container.className = 'live-notif-container';
-    document.body.appendChild(container);
-  }
-
-  function showNotification() {
-    const products = getProductsFromStorage();
-    if (!products || products.length === 0) return;
-
-    const product = products[Math.floor(Math.random() * products.length)];
-    const name    = VIET_NAMES[Math.floor(Math.random() * VIET_NAMES.length)];
-    const city    = VIET_CITIES[Math.floor(Math.random() * VIET_CITIES.length)];
-    const mins    = Math.floor(Math.random() * 15) + 1;
-
-    const notif = document.createElement('div');
-    notif.className = 'live-notif';
-    notif.innerHTML = `
-      <div class="live-notif__icon">${product.icon || '📦'}</div>
-      <div class="live-notif__body">
-        <div class="live-notif__text">
-          <strong>${name}</strong> (${city}) vừa mua
-          <span class="live-notif__product">${product.name}</span>
-        </div>
-        <div class="live-notif__time">${mins} phút trước</div>
-      </div>
-      <button class="live-notif__close" onclick="this.parentElement.classList.add('removing')" aria-label="Đóng">×</button>
-    `;
-
-    container.appendChild(notif);
-
-    // Auto remove after 6s
-    setTimeout(() => {
-      notif.classList.add('removing');
-      notif.addEventListener('animationend', () => notif.remove());
-    }, 6000);
-  }
-
-  // First notification after 8s, then every 20-40s
-  setTimeout(() => {
-    showNotification();
-    setInterval(showNotification, (Math.random() * 20000) + 20000);
-  }, 8000);
-}
-
 // ── Recently Viewed Products ──────────────────────────────────────────────────
 
 const RecentlyViewed = {
@@ -634,6 +590,7 @@ const RecentlyViewed = {
       oldPrice: product.oldPrice,
       category: product.category,
       icon: product.icon,
+      imageUrl: product.imageUrl || product.image_url || null,
       viewedAt: Date.now(),
     });
     if (items.length > this.MAX) items = items.slice(0, this.MAX);
@@ -656,9 +613,9 @@ function renderFreeShipProgress(containerEl, currentTotal) {
     containerEl.innerHTML = `
       <div class="free-ship-bar">
         <div class="free-ship-bar__header">
-          <span class="free-ship-bar__icon">🚚</span>
+          <span class="free-ship-bar__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17h4V5H2v12h3"/><path d="M14 9h4l4 4v4h-3M14 17h1"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span>
           <span class="free-ship-bar__text free-ship-bar__text--done">
-            🎉 Bạn được <strong>MIỄN PHÍ VẬN CHUYỂN!</strong>
+            Đơn hàng được <strong>miễn phí vận chuyển</strong>
           </span>
         </div>
         <div class="free-ship-bar__track">
@@ -670,7 +627,7 @@ function renderFreeShipProgress(containerEl, currentTotal) {
     containerEl.innerHTML = `
       <div class="free-ship-bar">
         <div class="free-ship-bar__header">
-          <span class="free-ship-bar__icon">🚚</span>
+          <span class="free-ship-bar__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17h4V5H2v12h3"/><path d="M14 9h4l4 4v4h-3M14 17h1"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span>
           <span class="free-ship-bar__text">
             Mua thêm <strong>${formatPrice(remaining)}</strong> để được <strong>MIỄN PHÍ VẬN CHUYỂN</strong>
           </span>
@@ -805,8 +762,10 @@ const CompareList = {
       <div class="compare-float-bar__items">
         ${items.map(p => `
           <div class="compare-float-bar__item">
-            <span>${p.icon || '📦'}</span>
-            <button onclick="CompareList.remove(${p.id}); CompareList.showFloatingBar();" aria-label="Xóa">×</button>
+            <span>${productMediaMarkup(p)}</span>
+            <button onclick="CompareList.remove(${p.id}); CompareList.showFloatingBar();" aria-label="Xóa ${escapeHtml(p.name)}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
           </div>
         `).join('')}
         ${items.length < this.MAX ? `<div class="compare-float-bar__placeholder">+ Thêm SP</div>` : ''}
@@ -814,7 +773,9 @@ const CompareList = {
       <a href="compare.html" class="btn btn-primary btn-sm" style="white-space:nowrap">
         So sánh (${items.length})
       </a>
-      <button class="compare-float-bar__close" onclick="CompareList.hideFloatingBar()" aria-label="Ẩn">×</button>
+      <button class="compare-float-bar__close" onclick="CompareList.hideFloatingBar()" aria-label="Ẩn thanh so sánh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
     `;
     bar.classList.add('visible');
   },
@@ -830,6 +791,12 @@ const CompareList = {
 const ThemeManager = {
   KEY: 'shopvn_theme',
 
+  iconMarkup(theme) {
+    return theme === 'dark'
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>';
+  },
+
   init() {
     const saved = localStorage.getItem(this.KEY);
     const theme = saved || 'light';
@@ -843,7 +810,7 @@ const ThemeManager = {
     // Update theme toggle buttons globally on the page
     const icons = document.querySelectorAll('.theme-toggle-icon');
     icons.forEach(icon => {
-      icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      icon.innerHTML = this.iconMarkup(theme);
     });
     
     const btns = document.querySelectorAll('.theme-toggle-btn');
@@ -872,7 +839,7 @@ const ThemeManager = {
     btn.id = 'theme-toggle';
     btn.className = 'theme-toggle-btn';
     btn.setAttribute('aria-label', theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối');
-    btn.innerHTML = `<span class="theme-toggle-icon">${theme === 'dark' ? '☀️' : '🌙'}</span>`;
+    btn.innerHTML = `<span class="theme-toggle-icon">${this.iconMarkup(theme)}</span>`;
     
     btn.addEventListener('click', () => this.toggle());
 
@@ -913,13 +880,15 @@ const QuickView = {
 
     overlay.innerHTML = `
       <div class="quickview-modal">
-        <button class="quickview-modal__close" onclick="QuickView.close()" aria-label="Đóng">×</button>
+        <button class="quickview-modal__close" onclick="QuickView.close()" aria-label="Đóng">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
         <div class="quickview-modal__img">
-          ${product.icon || '📦'}
+          ${productMediaMarkup(product, { eager: true })}
         </div>
         <div class="quickview-modal__info">
-          <div class="quickview-modal__cat">${product.category}</div>
-          <h2 class="quickview-modal__name">${product.name}</h2>
+          <div class="quickview-modal__cat">${escapeHtml(product.category || 'Sản phẩm')}</div>
+          <h2 class="quickview-modal__name">${escapeHtml(product.name)}</h2>
           
           <div class="quickview-modal__price-row">
             <span class="quickview-modal__price">${formatPrice(product.price)}</span>
@@ -928,11 +897,11 @@ const QuickView = {
           </div>
 
           <div class="quickview-modal__stock">
-            📦 Tình trạng: <strong>${product.stock > 0 ? `Còn ${product.stock} SP` : 'Hết hàng'}</strong>
+            Tình trạng: <strong>${product.stock > 0 ? `Còn ${product.stock} sản phẩm` : 'Hết hàng'}</strong>
           </div>
 
           <div class="quickview-modal__desc">
-            ${product.description || `Sản phẩm ${product.name} chính hãng cao cấp thuộc dòng ${product.category} của ShopVN. Thiết kế tinh xảo, độ bền cao và hiệu năng vượt trội.`}
+            ${escapeHtml(product.description || 'Mô tả chi tiết đang được cập nhật.')}
           </div>
 
           <div class="quickview-modal__actions">
@@ -940,7 +909,8 @@ const QuickView = {
               Xem chi tiết
             </button>
             <button class="btn btn-primary" style="flex:1; justify-content:center" onclick="LocalCart.add(getProductsFromStorage().find(p=>p.id===${product.id}), 1); QuickView.close()">
-              🛒 Thêm giỏ hàng
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h7.84a2 2 0 0 0 2-1.61L20.2 7H5.12"/></svg>
+              Thêm vào giỏ
             </button>
           </div>
         </div>
@@ -962,170 +932,35 @@ const QuickView = {
   }
 };
 
-// ── Flying Cart Icon Micro-Animation ─────────────────────────────────────────
-
-const CartAnimator = {
-  animate(emoji, startX, startY) {
-    const cartBtn = document.getElementById('theme-toggle')?.parentElement?.querySelector('.navbar__cart-btn') || 
-                    document.querySelector('.navbar__cart-btn') || 
-                    document.querySelector('.btab[href*="cart.html"]');
-    if (!cartBtn) return;
-
-    const rect = cartBtn.getBoundingClientRect();
-    const targetX = rect.left + rect.width / 2;
-    const targetY = rect.top + rect.height / 2;
-
-    const el = document.createElement('div');
-    el.className = 'flying-cart-icon';
-    el.textContent = emoji || '📦';
-    el.style.left = startX + 'px';
-    el.style.top = startY + 'px';
-    document.body.appendChild(el);
-
-    // Force reflow
-    el.offsetWidth;
-
-    // Animate to cart position
-    el.style.transform = `translate(${targetX - startX}px, ${targetY - startY}px) scale(0.3) rotate(360deg)`;
-    el.style.opacity = '0';
-
-    el.addEventListener('transitionend', () => {
-      el.remove();
-      // Cart button bounce animation
-      cartBtn.classList.add('cart-bounce');
-      setTimeout(() => cartBtn.classList.remove('cart-bounce'), 400);
-    });
-  }
-};
-
-// Global click event observer for cart flying emoji animation
-document.addEventListener('click', (e) => {
-  const addBtn = e.target.closest('.product-card__add, .quickview-modal__actions .btn-primary, .detail-actions .btn-primary, #bundle-grid .btn-accent');
-  if (!addBtn) return;
-
-  if (addBtn.disabled) return;
-
-  let emoji = '📦';
-  const card = addBtn.closest('.product-card');
-  if (card) {
-    emoji = card.querySelector('.product-card__img-icon')?.textContent || '📦';
-  } else {
-    const detailIcon = document.getElementById('product-icon');
-    if (detailIcon) {
-      emoji = detailIcon.textContent;
-    } else {
-      const qvOverlay = addBtn.closest('.quickview-overlay');
-      if (qvOverlay) {
-        emoji = qvOverlay.querySelector('.quickview-modal__img')?.textContent?.trim() || '📦';
-      }
-    }
-  }
-
-  const rect = addBtn.getBoundingClientRect();
-  const startX = rect.left + rect.width / 2 + window.scrollX;
-  const startY = rect.top + rect.height / 2 + window.scrollY;
-
-  CartAnimator.animate(emoji, startX, startY);
-});
-
 // ── AI Shopping Assistant (Chatbot System) ───────────────────────────────────
 
 const AIShoppingAssistant = {
   isOpen: false,
-  hasNotification: true, // Show badge at first
-
-  init() {
-    if (window.location.pathname.includes('/admin/')) return;
-    this.injectFab();
-  },
-
-  injectFab() {
-    if (document.getElementById('chatbot-fab')) return;
-
-    const fab = document.createElement('div');
-    fab.id = 'chatbot-fab';
-    fab.className = 'chatbot-fab';
-    fab.innerHTML = '🤖';
-    if (this.hasNotification) {
-      fab.innerHTML += '<span class="chatbot-fab__badge" id="chatbot-badge"></span>';
-    }
-    fab.addEventListener('click', () => this.toggle());
-    document.body.appendChild(fab);
-  },
+  hasNotification: false,
 
   toggle() {
     const win = document.getElementById('chatbot-window');
     if (win) {
       win.classList.add('closing');
-      win.addEventListener('animationend', () => {
+      setTimeout(() => {
         win.remove();
         this.isOpen = false;
-      }, { once: true });
-    } else {
-      this.openChat();
-      // Remove badge when opened
-      const badge = document.getElementById('chatbot-badge');
-      if (badge) {
-        badge.remove();
-        this.hasNotification = false;
-      }
+      }, 150);
+      return;
     }
+
+    this.openChat();
   },
 
-  openChat() {
-    this.isOpen = true;
-    const win = document.createElement('div');
-    win.id = 'chatbot-window';
-    win.className = 'chatbot-window';
-    
-    win.innerHTML = `
-      <div class="chatbot-header">
-        <div class="chatbot-header__title">
-          <span class="chatbot-header__status"></span>
-          <span>ShopVN Assistant</span>
-        </div>
-        <button class="chatbot-header__close" onclick="AIShoppingAssistant.toggle()">×</button>
-      </div>
-      <div class="chatbot-messages" id="chatbot-messages-box"></div>
-      <div class="chatbot-footer">
-        <input type="text" class="chatbot-input" id="chatbot-user-input" placeholder="..." data-i18n-placeholder="bot.placeholder">
-        <button class="chatbot-send-btn" id="chatbot-send-btn">
-          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
-        </button>
-      </div>
-    `;
+  send() {
+    const input = document.getElementById('chatbot-user-input');
+    if (!input) return;
+    const value = input.value.trim();
+    if (!value) return;
 
-    document.body.appendChild(win);
-
-    // Bind event listeners
-    const input = win.querySelector('#chatbot-user-input');
-    const sendBtn = win.querySelector('#chatbot-send-btn');
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.send();
-    });
-    sendBtn.addEventListener('click', () => this.send());
-
-    // Translate page to apply placeholder translation
-    if (window.i18n) window.i18n.translatePage();
-
-    // Render welcome message
-    this.addMessage(window.i18n.t('bot.welcome'), 'bot');
-    this.showQuickReplies();
-  },
-
-  addMessage(text, sender = 'bot', isHtml = false) {
-    const box = document.getElementById('chatbot-messages-box');
-    if (!box) return;
-
-    const msg = document.createElement('div');
-    msg.className = `chat-msg chat-msg--${sender}`;
-    if (isHtml) {
-      msg.innerHTML = text;
-    } else {
-      msg.textContent = text;
-    }
-    box.appendChild(msg);
-    box.scrollTop = box.scrollHeight;
+    input.value = '';
+    this.addMessage(value, 'user');
+    this.processQuery(value);
   },
 
   showTyping(callback) {
@@ -1135,6 +970,7 @@ const AIShoppingAssistant = {
     const typing = document.createElement('div');
     typing.className = 'chat-typing';
     typing.id = 'chat-typing-indicator';
+    typing.setAttribute('aria-label', 'Đang soạn phản hồi');
     typing.innerHTML = '<span></span><span></span><span></span>';
     box.appendChild(typing);
     box.scrollTop = box.scrollHeight;
@@ -1142,107 +978,26 @@ const AIShoppingAssistant = {
     setTimeout(() => {
       typing.remove();
       callback();
-    }, 800 + Math.random() * 500);
+    }, 450);
   },
-
-  showQuickReplies() {
-    const box = document.getElementById('chatbot-messages-box');
-    if (!box) return;
-
-    // Remove existing replies
-    const existing = box.querySelector('.chat-quick-replies');
-    if (existing) existing.remove();
-
-    const repliesDiv = document.createElement('div');
-    repliesDiv.className = 'chat-quick-replies';
-
-    const replies = [
-      { key: 'bot.quick_search_laptop', query: 'laptop' },
-      { key: 'bot.quick_search_phone', query: 'điện thoại' },
-      { key: 'bot.quick_search_promo', query: 'mã giảm giá' },
-      { key: 'bot.quick_search_shipping', query: 'vận chuyển' }
-    ];
-
-    replies.forEach(r => {
-      const btn = document.createElement('button');
-      btn.className = 'chat-quick-reply';
-      btn.textContent = window.i18n.t(r.key);
-      btn.addEventListener('click', () => {
-        this.addMessage(btn.textContent, 'user');
-        this.processQuery(r.query);
-      });
-      repliesDiv.appendChild(btn);
-    });
-
-    box.appendChild(repliesDiv);
-    box.scrollTop = box.scrollHeight;
-  },
-
-  send() {
-    const input = document.getElementById('chatbot-user-input');
-    if (!input) return;
-    const text = input.value.trim();
-    if (!text) return;
-
-    input.value = '';
-    this.addMessage(text, 'user');
-    this.processQuery(text);
-  },
-
-  processQuery(rawText) {
-    const text = rawText.toLowerCase();
-    this.showTyping(() => {
-      // 1. Promo keyword
-      if (text.includes('mã') || text.includes('voucher') || text.includes('khuyến mãi') || text.includes('giảm giá') || text.includes('promo') || text.includes('sale') || text.includes('vòng quay') || text.includes('quà')) {
-        this.addMessage(window.i18n.t('bot.promo_suggest'), 'bot', true);
-        this.showQuickReplies();
-        return;
-      }
-
-      // 2. Shipping keyword
-      if (text.includes('vận chuyển') || text.includes('ship') || text.includes('giao hàng') || text.includes('phí ship')) {
-        this.addMessage(window.i18n.t('bot.shipping_suggest'), 'bot');
-        this.showQuickReplies();
-        return;
-      }
-
-      // 3. Product searches (match categories or names)
-      const allProducts = getProductsFromStorage();
-      const matched = allProducts.filter(p => {
-        return p.name.toLowerCase().includes(text) || p.category.toLowerCase().includes(text);
-      });
-
-      if (matched.length > 0) {
-        const isVi = window.i18n.getLang() === 'vi';
-        this.addMessage(isVi ? 'Tôi tìm thấy các sản phẩm phù hợp dưới đây:' : 'I found matching products below:', 'bot');
-        matched.slice(0, 3).forEach(p => {
-          const card = document.createElement('div');
-          card.className = 'chat-product-card';
-          card.innerHTML = `
-            <div class="chat-product-card__img">${p.icon || '📦'}</div>
-            <div class="chat-product-card__info">
-              <div class="chat-product-card__name" title="${p.name}">${p.name}</div>
-              <div class="chat-product-card__price">${formatPrice(p.price)}</div>
-            </div>
-            <div class="chat-product-card__actions">
-              <button class="chat-product-card__btn" onclick="QuickView.open(${p.id})">🔍</button>
-              <button class="chat-product-card__btn chat-product-card__btn--primary" onclick="LocalCart.add(getProductsFromStorage().find(prod => prod.id === ${p.id}), 1)">🛒</button>
-            </div>
-          `;
-          document.getElementById('chatbot-messages-box').appendChild(card);
-        });
-        const box = document.getElementById('chatbot-messages-box');
-        if (box) box.scrollTop = box.scrollHeight;
-        this.showQuickReplies();
-        return;
-      }
-
-      // 4. Default fallback
-      this.addMessage(window.i18n.t('bot.not_found'), 'bot');
-      this.showQuickReplies();
-    });
-  }
 };
+
+function polishSharedHeaderControls() {
+  document.querySelectorAll('[aria-label="ShopVN Xu"]').forEach(control => {
+    [...control.childNodes]
+      .filter(node => node.nodeType === Node.TEXT_NODE)
+      .forEach(node => node.remove());
+
+    if (!control.querySelector('.loyalty-nav-icon')) {
+      control.insertAdjacentHTML('afterbegin', `
+        <svg class="loyalty-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="8"></circle>
+          <path d="M12 8v8M9 10h4.5a2 2 0 0 1 0 4H10"></path>
+        </svg>
+      `);
+    }
+  });
+}
 
 // ── Dynamic Layout Injection (Blog, Footer, Legal) ──────────────────────────
 
@@ -1288,7 +1043,9 @@ Object.assign(AIShoppingAssistant, {
             <small>${this.copy('subtitle')}</small>
           </div>
         </div>
-        <button class="chatbot-header__close" onclick="AIShoppingAssistant.toggle()" aria-label="${this.copy('close')}">×</button>
+        <button class="chatbot-header__close" onclick="AIShoppingAssistant.toggle()" aria-label="${this.copy('close')}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
       </div>
       <div class="chatbot-context" id="chatbot-context">${this.renderContextBar()}</div>
       <div class="chatbot-messages" id="chatbot-messages-box"></div>
@@ -1351,7 +1108,7 @@ Object.assign(AIShoppingAssistant, {
       compare: 'So sánh',
       inStock: 'Còn hàng',
       outStock: 'Hết hàng',
-      featured: 'Bán chạy',
+      featured: 'Nổi bật',
       newItem: 'Mới',
       sale: 'Đang giảm',
       underBudget: 'Hợp ngân sách',
@@ -1487,7 +1244,7 @@ Object.assign(AIShoppingAssistant, {
     const replies = [
       { label: this.copy('quickLaptop'), query: this.isVi() ? 'laptop cho học tập dưới 15 triệu' : 'student laptop under 15 million' },
       { label: this.copy('quickCompare'), query: this.isVi() ? 'so sánh sản phẩm nổi bật' : 'compare popular products' },
-      { label: this.copy('quickDeal'), query: this.isVi() ? 'mã giảm giá và flash sale' : 'discount codes and flash sale' },
+      { label: this.copy('quickDeal'), query: this.isVi() ? 'mã giảm giá' : 'discount codes' },
       { label: this.copy('quickShipping'), query: this.isVi() ? 'phí vận chuyển' : 'shipping fee' },
       { label: this.copy('quickBudget'), query: this.isVi() ? 'phụ kiện dưới 1 triệu' : 'accessories under 1 million' }
     ];
@@ -1510,7 +1267,7 @@ Object.assign(AIShoppingAssistant, {
   processQuery(rawText) {
     const normalized = this.normalizeText(rawText);
     this.showTyping(() => {
-      if (this.hasAny(normalized, ['ma', 'voucher', 'khuyen mai', 'giam gia', 'promo', 'sale', 'deal', 'flash'])) {
+      if (this.hasAny(normalized, ['ma', 'voucher', 'khuyen mai', 'giam gia', 'promo', 'sale', 'deal'])) {
         this.renderDealPanel();
         this.showQuickReplies();
         return;
@@ -1686,7 +1443,7 @@ Object.assign(AIShoppingAssistant, {
     const tags = (product._reasons || []).map(reason => `<span>${this.escapeHtml(reason)}</span>`).join('');
     return `
       <article class="chat-product-card">
-        <div class="chat-product-card__img">${product.icon || '📦'}</div>
+        <div class="chat-product-card__img">${productMediaMarkup(product)}</div>
         <div class="chat-product-card__info">
           <div class="chat-product-card__name" title="${this.escapeHtml(product.name)}">${this.escapeHtml(product.name)}</div>
           <div class="chat-product-card__price">${formatPrice(product.price)}</div>
@@ -1709,7 +1466,7 @@ Object.assign(AIShoppingAssistant, {
     }
     const rows = choices.map(product => `
       <tr>
-        <td>${product.icon || '📦'} ${this.escapeHtml(product.name)}</td>
+        <td>${this.escapeHtml(product.name)}</td>
         <td>${formatPrice(product.price)}</td>
         <td>${product.stock > 0 ? product.stock : '0'}</td>
       </tr>
@@ -1732,7 +1489,7 @@ Object.assign(AIShoppingAssistant, {
         <div class="chat-coupon-list">
           <button type="button" onclick="AIShoppingAssistant.copyCoupon('SHOPVN50')"><strong>SHOPVN50</strong><span>Giảm 50.000đ</span></button>
           <button type="button" onclick="AIShoppingAssistant.copyCoupon('SAVE10')"><strong>SAVE10</strong><span>Giảm 10%</span></button>
-          <button type="button" onclick="window.location.href='index.html#flash-sale'"><strong>Flash Sale</strong><span>Xem sản phẩm đang giảm</span></button>
+          <button type="button" onclick="window.location.href='products.html?sort=popular'"><strong>Sản phẩm nổi bật</strong><span>Xem danh sách sản phẩm</span></button>
         </div>
       </div>
     `, 'bot', { html: true });
@@ -1825,109 +1582,55 @@ function injectNavbarBlogLink() {
 }
 
 function injectFooterContent() {
-  const footer = document.querySelector('.footer');
+  const footer = document.querySelector('footer.footer');
   if (!footer) return;
 
   const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
-  
+  const year = new Date().getFullYear();
   footer.innerHTML = `
     <div class="container">
       <div class="footer__grid">
-        <!-- Column 1: About Brand & Hotline -->
-        <div class="footer-col-brand">
-          <div class="footer__brand-name">Shop<span>VN</span></div>
-          <p class="footer__desc" data-i18n="footer.about_us_desc">
-            ShopVN là hệ thống bán lẻ thiết bị công nghệ chính hãng hàng đầu Việt Nam, cam kết chất lượng sản phẩm và dịch vụ chăm sóc khách hàng tốt nhất.
-          </p>
-          <div class="footer__hotline-box">
-            <p class="footer__heading" data-i18n="footer.hotline">Hotline hỗ trợ</p>
-            <a href="tel:19006789" class="footer__hotline-num" data-i18n="footer.hotline_num">1900 6789 (8:00 - 22:00)</a>
-          </div>
+        <div class="footer__brand">
+          <a class="footer__brand-name" href="${prefix}index.html" aria-label="ShopVN - Trang chủ">Shop<span>VN</span></a>
+          <p class="footer__desc">Thiết bị công nghệ với thông tin giá, tồn kho và đơn hàng được trình bày rõ ràng.</p>
         </div>
-
-        <!-- Column 2: Shop Links -->
         <div>
-          <h3 class="footer__heading" data-i18n="footer.shop">Mua sắm</h3>
+          <h3 class="footer__heading">Mua sắm</h3>
           <ul class="footer__links">
-            <li><a href="${prefix}products.html" class="footer__link" data-i18n="footer.all_products">Tất cả sản phẩm</a></li>
-            <li><a href="${prefix}products.html?sort=sale" class="footer__link" data-i18n="footer.sale">Khuyến mãi</a></li>
-            <li><a href="${prefix}products.html?sort=newest" class="footer__link" data-i18n="footer.new">Hàng mới về</a></li>
-            <li><a href="${prefix}products.html?sort=popular" class="footer__link" data-i18n="footer.popular">Bán chạy nhất</a></li>
+            <li><a href="${prefix}products.html" class="footer__link">Tất cả sản phẩm</a></li>
+            <li><a href="${prefix}products.html?sort=newest" class="footer__link">Sản phẩm mới</a></li>
+            <li><a href="${prefix}products.html?sort=popular" class="footer__link">Sản phẩm nổi bật</a></li>
+            <li><a href="${prefix}compare.html" class="footer__link">So sánh sản phẩm</a></li>
           </ul>
         </div>
-
-        <!-- Column 3: Account & Aux Links -->
         <div>
-          <h3 class="footer__heading" data-i18n="footer.account">Tài khoản</h3>
+          <h3 class="footer__heading">Tài khoản</h3>
           <ul class="footer__links">
-            <li><a href="${prefix}login.html" class="footer__link" data-i18n="auth.login">Đăng nhập</a></li>
-            <li><a href="${prefix}register.html" class="footer__link" data-i18n="auth.register">Đăng ký</a></li>
-            <li><a href="${prefix}orders.html" class="footer__link" data-i18n="nav.orders">Đơn hàng</a></li>
-            <li><a href="${prefix}cart.html" class="footer__link" data-i18n="nav.cart">Giỏ hàng</a></li>
-            <li><a href="${prefix}faq.html" class="footer__link">Tuyển dụng</a></li>
+            <li><a href="${prefix}login.html" class="footer__link">Đăng nhập</a></li>
+            <li><a href="${prefix}register.html" class="footer__link">Đăng ký</a></li>
+            <li><a href="${prefix}orders.html" class="footer__link">Đơn hàng</a></li>
+            <li><a href="${prefix}wishlist.html" class="footer__link">Yêu thích</a></li>
           </ul>
         </div>
-
-        <!-- Column 4: Support & Partners -->
         <div>
-          <h3 class="footer__heading" data-i18n="footer.support">Hỗ trợ</h3>
+          <h3 class="footer__heading">Hỗ trợ</h3>
           <ul class="footer__links">
-            <li><a href="${prefix}faq.html" class="footer__link" data-i18n="footer.faq">Câu hỏi thường gặp</a></li>
-            <li><a href="${prefix}contact.html" class="footer__link" data-i18n="footer.contact">Liên hệ</a></li>
-            <li><a href="${prefix}faq.html#doi-tra" class="footer__link" data-i18n="footer.returns">Đổi trả hàng</a></li>
-            <li><a href="${prefix}faq.html#van-chuyen" class="footer__link" data-i18n="footer.shipping">Chính sách vận chuyển</a></li>
-            <li><a href="${prefix}contact.html" class="footer__link">Đối tác phát triển</a></li>
+            <li><a href="${prefix}faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
+            <li><a href="${prefix}contact.html" class="footer__link">Liên hệ</a></li>
+            <li><a href="${prefix}faq.html#doi-tra" class="footer__link">Đổi trả hàng</a></li>
+            <li><a href="${prefix}faq.html#van-chuyen" class="footer__link">Vận chuyển</a></li>
           </ul>
-        </div>
-
-        <!-- Column 5: Newsletter & Socials & Payments -->
-        <div class="footer-col-news">
-          <div>
-            <h3 class="footer__heading" data-i18n="footer.newsletter_title">Đăng ký nhận tin</h3>
-            <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 10px; line-height: 1.4;" data-i18n="footer.newsletter_desc">Nhận thông báo về các ưu đãi mới nhất và tin công nghệ từ ShopVN.</p>
-            <form onsubmit="event.preventDefault(); showToast('Đăng ký nhận bản tin thành công!', 'success'); this.reset();" class="footer__newsletter-form">
-              <input type="email" required placeholder="Nhập email của bạn..." data-i18n-placeholder="footer.newsletter_placeholder" class="footer__newsletter-input" />
-              <button type="submit" class="btn btn-primary btn-sm" style="padding: 8px 12px; font-size: 0.85rem;" data-i18n="footer.newsletter_btn">Đăng ký</button>
-            </form>
-          </div>
-
-          <div style="margin-top: 5px;">
-            <p class="footer__heading" style="margin-bottom: 8px; font-size: 0.75rem;" data-i18n="footer.socials">Kết nối với chúng tôi</p>
-            <div class="footer__social-links">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="footer__social-icon" onmouseover="this.style.color='#1877F2'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="Facebook">📘</a>
-              <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" class="footer__social-icon" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="TikTok">🎵</a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="footer__social-icon" onmouseover="this.style.color='#E1306C'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="Instagram">📸</a>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="footer__social-icon" onmouseover="this.style.color='#FF0000'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="YouTube">📺</a>
-            </div>
-          </div>
-
-          <div style="margin-top: 5px;">
-            <p class="footer__heading" style="margin-bottom: 8px; font-size: 0.75rem;" data-i18n="footer.payment_methods">Phương thức thanh toán</p>
-            <div class="footer__payments">
-              <span class="footer__payment-badge">VISA</span>
-              <span class="footer__payment-badge footer__payment-badge--vnpay">VNPAY</span>
-              <span class="footer__payment-badge footer__payment-badge--momo">MOMO</span>
-              <span class="footer__payment-badge footer__payment-badge--cod">COD</span>
-            </div>
-          </div>
         </div>
       </div>
-
-      <!-- Footer Bottom with Copyright and Legal popups -->
       <div class="footer__bottom">
-        <div style="display: flex; flex-direction: column; gap: 4px;">
-          <span data-i18n="footer.copy">© 2024 ShopVN. Bảo lưu mọi quyền.</span>
-          <span style="color: rgba(255,255,255,0.4);" data-i18n="footer.made_in">Made with ♥ in Đà Nẵng, Việt Nam</span>
-        </div>
-        <div class="footer__legal-links">
-          <a href="javascript:void(0)" onclick="openLegalModal('terms')" class="footer__legal-link" data-i18n="footer.terms">Điều khoản dịch vụ</a>
-          <a href="javascript:void(0)" onclick="openLegalModal('privacy')" class="footer__legal-link" data-i18n="footer.privacy">Chính sách bảo mật</a>
-          <a href="javascript:void(0)" onclick="openLegalModal('sitemap')" class="footer__legal-link" data-i18n="footer.sitemap">Sơ đồ trang web</a>
+        <span>© ${year} ShopVN. Bảo lưu mọi quyền.</span>
+        <div class="footer__legal-links" aria-label="Thông tin pháp lý">
+          <button type="button" onclick="openLegalModal('terms')">Điều khoản</button>
+          <button type="button" onclick="openLegalModal('privacy')">Quyền riêng tư</button>
         </div>
       </div>
     </div>
   `;
-  if (window.i18n) window.i18n.translatePage();
 }
 
 function openLegalModal(type) {
@@ -1951,7 +1654,7 @@ function openLegalModal(type) {
         <p style="margin-bottom:15px;">ShopVN chấp nhận thanh toán qua VISA, VNPAY, MOMO và COD (Giao hàng thu tiền). Giá trị đơn hàng đã bao gồm thuế GTGT. Chúng tôi có quyền hủy đơn hàng trong trường hợp phát hiện sai lệch về giá hoặc lỗi kỹ thuật hệ thống.</p>
         
         <h4 style="margin-bottom:10px; color:var(--c-title);">4. Chính sách bảo hành & Đổi trả</h4>
-        <p style="margin-bottom:15px;">Tất cả sản phẩm công nghệ được bảo hành chính hãng từ 12 đến 24 tháng. Khách hàng có quyền đổi trả sản phẩm lỗi do nhà sản xuất miễn phí trong vòng 7 ngày kể từ khi nhận hàng.</p>
+        <p style="margin-bottom:15px;">Thời hạn bảo hành và điều kiện đổi trả được hiển thị theo từng sản phẩm hoặc xác nhận trong quá trình xử lý đơn hàng.</p>
         
         <h4 style="margin-bottom:10px; color:var(--c-title);">5. Luật áp dụng</h4>
         <p style="margin-bottom:15px;">Các điều khoản này tuân thủ và được diễn giải theo luật pháp nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.</p>
@@ -2111,22 +1814,36 @@ function registerServiceWorker() {
   }
 }
 
+function ensureAccessibleFormControlNames() {
+  document.querySelectorAll('input, select, textarea').forEach(control => {
+    if (!control.name && control.id) control.name = control.id;
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  const isBrowsePage = [
+    'page-home',
+    'page-products',
+    'page-product-detail',
+    'page-contact',
+  ].some(className => document.body.classList.contains(className));
+
+  bindProductImageFallbacks();
+  ensureAccessibleFormControlNames();
   injectNavbarBlogLink();
   injectFooterContent();
   ThemeManager.injectToggle();
+  polishSharedHeaderControls();
   initScrollToTop();
   initBottomTabBar();
   initMobileBottomNavActiveState();
   updateMobileBottomNavAuth();
   initSearchAutocomplete();
-  initFlashSaleCountdown();
   LocalWishlist.updateBadge();
   initScrollAnimations();
-  initLivePurchaseNotifications();
   LoyaltyPoints.updateNavbarBadge();
-  if (CompareList.count() > 0) CompareList.showFloatingBar();
-  AIShoppingAssistant.init();
+  if (isBrowsePage && CompareList.count() > 0) CompareList.showFloatingBar();
+  if (isBrowsePage) AIShoppingAssistant.init();
   
   // Register service worker on load
   window.addEventListener('load', registerServiceWorker);

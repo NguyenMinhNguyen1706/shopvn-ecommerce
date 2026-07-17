@@ -16,7 +16,7 @@ function checkPaymentResult() {
   const message = params.get('message');
 
   if (payment === 'success' && orderId) {
-    showToast(`Thanh toán đơn #${orderId} thành công! 🎉`, 'success');
+    showToast(`Thanh toán đơn #${orderId} thành công`, 'success');
   } else if (payment === 'failed') {
     showToast(decodeURIComponent(message || 'Thanh toán thất bại'), 'error');
   }
@@ -87,7 +87,7 @@ function renderOrders() {
   if (userOrders.length === 0) {
     listContainer.innerHTML = `
       <div class="orders-empty">
-        <div class="orders-empty__icon">📦</div>
+        <div class="orders-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 8 9 5 9-5v8l-9 5-9-5V8Z"/></svg></div>
         <h3 class="orders-empty__title">Không tìm thấy đơn hàng</h3>
         <p class="orders-empty__desc">
           ${currentFilter === 'all' 
@@ -127,7 +127,7 @@ function renderOrderCard(order) {
   // Nút hủy đơn hàng — chỉ hiển thị khi trạng thái là 'Chờ xác nhận'
   const canCancel = order.status === 'Chờ xác nhận';
   const cancelButtonHTML = canCancel 
-    ? `<button class="btn btn-outline btn-sm" onclick="confirmCancelOrder('${order.id}')" style="border-color:#e53935; color:#e53935">Hủy đơn hàng</button>` 
+    ? `<button class="btn btn-outline btn-sm order-cancel-btn" data-order-id="${escapeHtml(order.id)}" onclick="confirmCancelOrder(this.dataset.orderId)">Hủy đơn hàng</button>` 
     : '';
 
   return `
@@ -136,19 +136,19 @@ function renderOrderCard(order) {
       <!-- Card Header -->
       <div class="order-card__header">
         <div class="order-card__meta">
-          <span class="order-card__id">${order.id}</span>
+          <span class="order-card__id">${escapeHtml(order.id)}</span>
           <span class="order-card__date">Đặt lúc: ${formatDate(order.createdAt)}</span>
         </div>
-        <span class="badge ${badgeClass}">${order.status}</span>
+        <span class="badge ${badgeClass}">${escapeHtml(order.status)}</span>
       </div>
 
       <!-- Card Items List -->
       <div class="order-card__items">
         ${order.items.map(item => `
           <div class="order-card-item">
-            <div class="order-card-item__thumb">${item.icon || '📦'}</div>
+            <div class="order-card-item__thumb">${productMediaMarkup(item)}</div>
             <div class="order-card-item__info">
-              <h4 class="order-card-item__name">${item.name}</h4>
+              <h4 class="order-card-item__name">${escapeHtml(item.name)}</h4>
               <span class="order-card-item__qty">Số lượng: ${item.quantity}</span>
             </div>
             <span class="order-card-item__price">${formatPrice(item.price)}</span>
@@ -159,11 +159,11 @@ function renderOrderCard(order) {
       <!-- Card Footer -->
       <div class="order-card__footer">
         <div class="order-card__payment-info">
-          <div>Thanh toán: <strong>${order.payment.methodName}</strong></div>
-          <div style="font-size: 0.75rem; margin-top: 2px;">Trạng thái: <strong>${order.payment.status}</strong></div>
+          <div>Thanh toán: <strong>${escapeHtml(order.payment.methodName)}</strong></div>
+          <div style="font-size: 0.75rem; margin-top: 2px;">Trạng thái: <strong>${escapeHtml(order.payment.status)}</strong></div>
         </div>
         <div class="order-card__total-section">
-          ${order.earnedXu ? `<div style="font-size: 0.82rem; color: #2E7D32; margin-bottom: 6px; font-weight: 500">🎉 +${order.earnedXu} ShopVN Xu</div>` : ''}
+          ${order.earnedXu ? `<div class="order-card__points">+${Number(order.earnedXu)} ShopVN Xu</div>` : ''}
           <div class="order-card__total">
             Tổng thanh toán: <strong>${formatPrice(order.pricing.total)}</strong>
           </div>

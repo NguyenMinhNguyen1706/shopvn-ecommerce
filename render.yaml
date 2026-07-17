@@ -35,6 +35,60 @@ services:
         value: 7d
       - key: JWT_REFRESH_EXPIRES_IN
         value: 30d
+      - key: API_RATE_LIMIT_MAX
+        value: "300"
+      - key: API_RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
+      - key: JSON_BODY_LIMIT
+        value: 2mb
+      - key: FORM_BODY_LIMIT
+        value: 2mb
+      - key: WEBHOOK_SHARED_SECRET
+        sync: false
+      - key: DB_SYNC_ON_STARTUP
+        value: "true"
+      - key: SEED_ON_STARTUP
+        value: "true"
+      - key: ENSURE_INVENTORY_ON_STARTUP
+        value: "true"
+
+  - type: worker
+    name: shopvn-worker
+    runtime: node
+    region: singapore
+    rootDir: ecommerce-backend
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm run worker
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: shopvn-redis
+          property: connectionString
+      - key: FRONTEND_URL
+        value: https://shopvn-ecommerce.vercel.app
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        value: "false"
+      - key: EMAIL_FROM
+        sync: false
+      - key: WORKER_CONCURRENCY
+        value: "5"
 
   - type: keyvalue
     name: shopvn-redis

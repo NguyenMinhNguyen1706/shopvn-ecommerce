@@ -27,7 +27,7 @@ function getChatbotApiBaseUrl() {
   const settingsConfig = JSON.parse(localStorage.getItem('system_settings') || '{}');
   return runtimeConfig.backendApiUrl
     || settingsConfig.backendApiUrl
-    || 'http://localhost:3000/api';
+    || 'https://shopvn-backend.onrender.com/api';
 }
 
 window.toggleChat = function() {

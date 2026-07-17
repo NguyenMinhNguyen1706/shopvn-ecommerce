@@ -1,38 +1,129 @@
 version: '3.8'
 
 services:
-
-  # PostgreSQL Database
+  # ── DATABASE (PostgreSQL) ───────────────────────────────────────────────────
   db:
     image: postgres:15-alpine
-    container_name: shopvn_db
+    container_name: shopvn-postgres-dev
+    restart: always
     environment:
-      POSTGRES_DB:       ecommerce_db
-      POSTGRES_USER:     postgres
-      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: shopvn_db
+      POSTGRES_USER: shopvn_user
+      POSTGRES_PASSWORD: shopvn_password
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout:  5s
-      retries:  5
+      test: ["CMD-SHELL", "pg_isready -U shopvn_user -d shopvn_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  # Redis Cache
+  # ── CACHE & QUEUE BACKBONE (Redis) ──────────────────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: shopvn_redis
+    container_name: shopvn-redis-dev
+    restart: always
     ports:
       - "6379:6379"
     volumes:
       - redisdata:/data
+    networks:
+      - backend-net
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
+
+  # ── EXPRESS APPLICATION SERVICE 1 ───────────────────────────────────────────
+  app1:
+    build: .
+    container_name: shopvn-app-1
+    restart: always
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=db
+      - DB_NAME=shopvn_db
+      - DB_USER=shopvn_user
+      - DB_PASSWORD=shopvn_password
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super_secret_jwt_access_key_1M_scale
+      - JWT_REFRESH_SECRET=super_secret_jwt_refresh_key_1M_scale
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend-net
+
+  # ── EXPRESS APPLICATION SERVICE 2 ───────────────────────────────────────────
+  app2:
+    build: .
+    container_name: shopvn-app-2
+    restart: always
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=db
+      - DB_NAME=shopvn_db
+      - DB_USER=shopvn_user
+      - DB_PASSWORD=shopvn_password
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super_secret_jwt_access_key_1M_scale
+      - JWT_REFRESH_SECRET=super_secret_jwt_refresh_key_1M_scale
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend-net
+
+  # ── BULLMQ WORKER SERVICE ───────────────────────────────────────────────────
+  worker:
+    build: .
+    container_name: shopvn-worker
+    restart: always
+    command: npm run worker
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_NAME=shopvn_db
+      - DB_USER=shopvn_user
+      - DB_PASSWORD=shopvn_password
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend-net
+
+  # ── REVERSE PROXY & LOAD BALANCER (Nginx) ───────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: shopvn-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app1
+      - app2
+    networks:
+      - backend-net
+
+networks:
+  backend-net:
+    driver: bridge
 
 volumes:
   pgdata:

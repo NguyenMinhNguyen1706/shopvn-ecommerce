@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const GeminiService = require('../services/gemini.service');
+const { validate, schemas } = require('../middlewares/validation.middleware');
 const rateLimit = require('express-rate-limit');
 
 // Protect Gemini chatbot endpoint from DDoS and API key exhaustion
@@ -13,14 +14,9 @@ const chatbotLimiter = rateLimit({
   }
 });
 
-router.post('/ask', chatbotLimiter, async (req, res) => {
+router.post('/ask', chatbotLimiter, validate(schemas.chatbotAsk), async (req, res, next) => {
   try {
     const { message, context } = req.body;
-    
-    if (!message) {
-      return res.status(400).json({ success: false, message: 'Vui lòng cung cấp tin nhắn' });
-    }
-
     const reply = await GeminiService.ask(message, context);
     
     res.json({
@@ -30,7 +26,7 @@ router.post('/ask', chatbotLimiter, async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    next(error);
   }
 });
 

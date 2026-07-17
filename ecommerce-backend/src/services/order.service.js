@@ -31,7 +31,11 @@ function applyVoucher(subtotal, code) {
     : Math.floor(subtotal * voucher.discount);
 }
 
-// ── Create order (dùng DB Transaction) ───────────────────────────────────────
+const { withRetry } = require('../lib/retry');
+const { Transaction } = require('sequelize');
+
+// ── Create order (dùng DB Transaction + Retry trên Deadlock) ───────────────────
+// Concept: Race Conditions, Deadlocks, Retries, Distributed Transactions
 
 async function createOrder(userId, {
   shippingName,
@@ -41,110 +45,124 @@ async function createOrder(userId, {
   voucherCode,
   note,
 }) {
-  // Bắt đầu transaction — nếu lỗi bất kỳ bước nào → rollback tất cả
-  const t = await sequelize.transaction();
-
-  try {
-    // 1. Lấy giỏ hàng hiện tại
-    const cartItems = await CartItem.findAll({
-      where:   { userId },
-      include: [{ model: Product, as: 'product' }],
-      transaction: t,
+  return withRetry(async () => {
+    // Bắt đầu transaction với isolation level cao nhất để chống Race Condition tuyệt đối
+    const t = await sequelize.transaction({
+      isolationLevel: Transaction.ISOLATION_LEVELS.SERIALIZABLE
     });
 
-    if (cartItems.length === 0) {
-      const err = new Error('Giỏ hàng trống, không thể đặt hàng.');
-      err.status = 400;
-      throw err;
-    }
-
-    // 2. Kiểm tra tồn kho + lock row (SELECT FOR UPDATE)
-    for (const item of cartItems) {
-      const product = await Product.findOne({
-        where: { id: item.productId },
-        lock:  t.LOCK.UPDATE, // pessimistic lock
+    try {
+      // 1. Lấy giỏ hàng hiện tại
+      const cartItems = await CartItem.findAll({
+        where:   { userId },
+        include: [{ model: Product, as: 'product' }],
         transaction: t,
       });
 
-      if (!product || product.stock < item.quantity) {
-        const err = new Error(
-          `Sản phẩm "${item.product.name}" không đủ hàng. Còn ${product?.stock || 0}.`
-        );
+      if (cartItems.length === 0) {
+        const err = new Error('Giỏ hàng trống, không thể đặt hàng.');
         err.status = 400;
         throw err;
       }
-    }
 
-    // 3. Tính tiền
-    const subtotal   = cartItems.reduce(
-      (sum, i) => sum + Number(i.product.price) * i.quantity, 0
-    );
-    const shipping   = calcShipping(subtotal);
-    const discount   = applyVoucher(subtotal, voucherCode);
-    const total      = subtotal + shipping - discount;
+      // 2. Kiểm tra tồn kho + lock row (SELECT FOR UPDATE)
+      for (const item of cartItems) {
+        const product = await Product.findOne({
+          where: { id: item.productId },
+          lock:  t.LOCK.UPDATE, // pessimistic lock
+          transaction: t,
+        });
 
-    // 4. Tạo Order
-    const order = await Order.create({
-      userId,
-      shippingName,
-      shippingPhone,
-      shippingAddress,
-      subtotal,
-      shippingFee: shipping,
-      discount,
-      total,
-      paymentMethod,
-      voucherCode:   voucherCode || null,
-      note:          note || null,
-      status:        'pending',
-      paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'unpaid',
-    }, { transaction: t });
+        if (!product || product.stock < item.quantity) {
+          const err = new Error(
+            `Sản phẩm "${item.product.name}" không đủ hàng. Còn ${product?.stock || 0}.`
+          );
+          err.status = 400;
+          throw err;
+        }
+      }
 
-    // 5. Tạo OrderItems + trừ tồn kho + giữ kho trong WMS (OMSService)
-    const omsItems = [];
-    for (const item of cartItems) {
-      await OrderItem.create({
-        orderId:     order.id,
-        productId:   item.productId,
-        productName: item.product.name,
-        productIcon: item.product.icon,
-        price:       item.product.price,
-        quantity:    item.quantity,
-        subtotal:    Number(item.product.price) * item.quantity,
+      // 3. Tính tiền
+      const subtotal   = cartItems.reduce(
+        (sum, i) => sum + Number(i.product.price) * i.quantity, 0
+      );
+      const shipping   = calcShipping(subtotal);
+      const discount   = applyVoucher(subtotal, voucherCode);
+      const total      = subtotal + shipping - discount;
+
+      // 4. Tạo Order
+      const order = await Order.create({
+        userId,
+        shippingName,
+        shippingPhone,
+        shippingAddress,
+        subtotal,
+        shippingFee: shipping,
+        discount,
+        total,
+        paymentMethod,
+        voucherCode:   voucherCode || null,
+        note:          note || null,
+        status:        'pending',
+        paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'unpaid',
       }, { transaction: t });
 
-      // Trừ tồn kho
-      await Product.decrement('stock', {
-        by:          item.quantity,
-        where:       { id: item.productId },
-        transaction: t,
+      // 5. Tạo OrderItems + trừ tồn kho + giữ kho trong WMS (OMSService)
+      const omsItems = [];
+      for (const item of cartItems) {
+        await OrderItem.create({
+          orderId:     order.id,
+          productId:   item.productId,
+          productName: item.product.name,
+          productIcon: item.product.icon,
+          price:       item.product.price,
+          quantity:    item.quantity,
+          subtotal:    Number(item.product.price) * item.quantity,
+        }, { transaction: t });
+
+        // Trừ tồn kho
+        await Product.decrement('stock', {
+          by:          item.quantity,
+          where:       { id: item.productId },
+          transaction: t,
+        });
+
+        omsItems.push({
+          productId: item.productId,
+          quantity: item.quantity
+        });
+      }
+
+      // Giữ kho trong WMS
+      await OMSService.reserveStock(omsItems, order.id, t);
+
+      // 6. Xóa giỏ hàng
+      await CartItem.destroy({ where: { userId }, transaction: t });
+
+      // 7. Commit — tất cả thành công
+      await t.commit();
+
+      // Load lại order với items để trả về
+      return Order.findByPk(order.id, {
+        include: [{ model: OrderItem, as: 'items' }],
       });
 
-      omsItems.push({
-        productId: item.productId,
-        quantity: item.quantity
-      });
+    } catch (err) {
+      // Có lỗi → rollback toàn bộ
+      await t.rollback();
+      throw err;
     }
-
-    // Giữ kho trong WMS
-    await OMSService.reserveStock(omsItems, order.id, t);
-
-    // 6. Xóa giỏ hàng
-    await CartItem.destroy({ where: { userId }, transaction: t });
-
-    // 7. Commit — tất cả thành công
-    await t.commit();
-
-    // Load lại order với items để trả về
-    return Order.findByPk(order.id, {
-      include: [{ model: OrderItem, as: 'items' }],
-    });
-
-  } catch (err) {
-    // Có lỗi → rollback toàn bộ
-    await t.rollback();
-    throw err;
-  }
+  }, {
+    maxRetries: 3,
+    baseDelay: 200,
+    retryableErrors: [
+      'SequelizeConnectionError',
+      'SequelizeDatabaseError', // includes serialization failure / deadlock error codes
+      '40001', // PostgreSQL serialization_failure code
+      '40P01'  // PostgreSQL deadlock_detected code
+    ],
+    label: 'createOrder-transaction'
+  });
 }
 
 // ── Get orders của user ───────────────────────────────────────────────────────

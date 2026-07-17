@@ -15,30 +15,25 @@ window.addEventListener('scroll', () => {
 
 // ── Render helpers ────────────────────────────────────────────────────────────
 
-function getProductRating(product) {
-  const reviews = JSON.parse(localStorage.getItem(`reviews_${product.id}`) || '[]');
-  if (reviews.length) {
-    const avg = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length;
-    return Math.max(0, Math.min(5, avg));
-  }
-  return Number(product.rating || 4.8);
-}
-
-function getProductSoldCount(product) {
-  if (product.soldCount || product.sold) return product.soldCount || product.sold;
-  return Math.max(24, ((Number(product.id) || 1) * 37) % 900);
-}
-
 function renderProductCard(product, delay = 0) {
   const disc = calcDiscount(product.price, product.oldPrice);
   const inWish = LocalWishlist.has(product.id);
-  const rating = getProductRating(product);
-  const sold = getProductSoldCount(product);
+  const rating = getProductRatingSummary(product);
+  const sold = Math.max(0, Number(product.soldCount || product.sold || 0));
+  const stock = Math.max(0, Number(product.stock || 0));
+  const name = escapeHtml(product.name);
+  const category = escapeHtml(product.category || 'Sản phẩm');
+  const detailUrl = `product-detail.html?id=${encodeURIComponent(product.id)}`;
+  const meta = [
+    rating ? `<span class="product-card__rating">${rating.rating.toFixed(1)} / 5${rating.count ? ` (${rating.count})` : ''}</span>` : '',
+    sold ? `<span class="product-card__sold">Đã bán ${sold}</span>` : `<span class="product-card__sold">${stock ? `Còn ${stock}` : 'Hết hàng'}</span>`,
+  ].filter(Boolean).join('');
   return `
-    <article class="product-card fade-up" style="animation-delay:${delay}s"
-             onclick="window.location.href='product-detail.html?id=${product.id}'">
+    <article class="product-card fade-up" role="listitem" style="animation-delay:${delay}s">
       <div class="product-card__img">
-        <span class="product-card__img-icon">${product.icon || '📦'}</span>
+        <a class="product-card__media-link" href="${detailUrl}" aria-label="Xem ${name}, ${category}">
+          ${productMediaMarkup(product)}
+        </a>
         ${disc ? `<span class="badge badge-accent product-card__badge">-${disc}%</span>` : ''}
         ${product.isNew && !disc ? `<span class="badge badge-green product-card__badge">Mới</span>` : ''}
         <button class="product-card__wish ${inWish ? 'active' : ''}"
@@ -49,16 +44,14 @@ function renderProductCard(product, delay = 0) {
           </svg>
         </button>
         <button class="product-card__quickview" onclick="event.stopPropagation(); QuickView.open(${product.id})" aria-label="Xem nhanh" data-i18n="product.quickview">
-          👁 Xem nhanh
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+          Xem nhanh
         </button>
       </div>
       <div class="product-card__body">
-        <p class="product-card__cat">${product.category}</p>
-        <h3 class="product-card__name">${product.name}</h3>
-        <div class="product-card__meta" aria-label="${rating.toFixed(1)} sao, đã bán ${sold}">
-          <span class="product-card__rating">★ ${rating.toFixed(1)}</span>
-          <span class="product-card__sold">Đã bán ${sold}+</span>
-        </div>
+        <p class="product-card__cat">${category}</p>
+        <h3 class="product-card__name"><a href="${detailUrl}">${name}</a></h3>
+        <div class="product-card__meta">${meta}</div>
         <div class="product-card__price-row">
           <div>
             <span class="product-card__price">${formatPrice(product.price)}</span>
@@ -89,13 +82,14 @@ function toggleWishlist(productId) {
 }
 
 function renderCategoryCard(cat, delay = 0) {
+  const count = getProducts().filter(product => product.category === cat.name).length;
   return `
-    <div class="cat-card fade-up" style="animation-delay:${delay}s"
-         onclick="window.location.href='products.html?category=${encodeURIComponent(cat.name)}'">
-      <div class="cat-card__icon">${cat.icon}</div>
-      <div class="cat-card__name">${cat.name}</div>
-      <div class="cat-card__count">${cat.count} sản phẩm</div>
-    </div>
+    <a class="cat-card fade-up" style="animation-delay:${delay}s"
+       href="products.html?category=${encodeURIComponent(cat.name)}">
+      <div class="cat-card__icon">${productMediaMarkup({ name: cat.name, category: cat.name })}</div>
+      <div class="cat-card__name">${escapeHtml(cat.name)}</div>
+      <div class="cat-card__count">${count} sản phẩm</div>
+    </a>
   `;
 }
 
@@ -165,13 +159,13 @@ async function initHomePage() {
                style="${isCurrent && !isChecked ? 'border-color:rgba(255,255,255,0.4); background:rgba(255,255,255,0.15)' : ''}"
                title="${isCurrent ? 'Hôm nay' : ''}">
             <span class="bento-checkin__day-label">${day}</span>
-            <span class="bento-checkin__day-coin">${isChecked ? '✔️' : '🪙'}</span>
+            <span class="bento-checkin__day-coin">${isChecked ? '✓' : '+10'}</span>
           </div>
         `;
       }).join('');
 
       loyaltyCell.innerHTML = `
-        <div class="bento-loyalty__icon">✨</div>
+        <div class="bento-loyalty__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></div>
         <p class="bento-loyalty__title" style="margin-bottom:var(--sp-xs)">Chào mừng, ${user.name}!</p>
         <p class="bento-loyalty__desc" data-i18n="bento.loyalty_points" style="margin-bottom:var(--sp-xs)">ShopVN Xu tích lũy:</p>
         <div style="font-size:1.8rem; font-weight:800; color:#FFA726; margin-bottom:var(--sp-xs); font-family:var(--f-display)" id="bento-xu-balance">
@@ -182,10 +176,7 @@ async function initHomePage() {
           <button class="btn btn-primary btn-sm" id="btn-bento-checkin" onclick="handleBentoCheckIn()" 
                   style="background:#FFA726; color:#0D1B2A; border-color:#FFA726; padding: 5px 12px; font-size:0.75rem"
                   ${hasCheckedInToday ? 'disabled' : ''}>
-            ${hasCheckedInToday ? '✓ Đã điểm danh' : '📅 Điểm danh (+10)'}
-          </button>
-          <button class="btn btn-outline btn-sm" onclick="LuckyWheel.open()" style="color:white; border-color:rgba(255,255,255,0.3); padding: 5px 12px; font-size:0.75rem">
-            🎟️ Vòng quay
+            ${hasCheckedInToday ? '✓ Đã điểm danh' : 'Điểm danh (+10)'}
           </button>
         </div>
 
@@ -198,10 +189,10 @@ async function initHomePage() {
       `;
     } else {
       loyaltyCell.innerHTML = `
-        <div class="bento-loyalty__icon">🎁</div>
-        <p class="bento-loyalty__title" data-i18n="bento.loyalty_title_guest">Tích xu đổi quà</p>
-        <p class="bento-loyalty__desc" data-i18n="bento.loyalty_desc_guest">Đăng ký thành viên để tích ShopVN Xu khi mua sắm và nhận lượt quay miễn phí!</p>
-        <a href="register.html" class="btn btn-primary btn-sm" style="background:#FFF; color:var(--c-navy); border-color:#FFF">
+        <div class="bento-loyalty__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></div>
+        <p class="bento-loyalty__title">Theo dõi ShopVN Xu</p>
+        <p class="bento-loyalty__desc">Đăng ký thành viên để lưu điểm tích lũy cùng lịch sử đơn hàng.</p>
+        <a href="register.html" class="btn btn-outline btn-sm">
           Đăng ký ngay
         </a>
       `;
@@ -213,6 +204,19 @@ async function initHomePage() {
   }
 
   // Featured products — show skeleton, then render
+  // Render above-the-fold showcase before waiting for network-backed product sections.
+  const heroShowcase = document.getElementById('hero-showcase');
+  if (heroShowcase) {
+    const showcaseItems = getProducts().slice(0, 4);
+    heroShowcase.innerHTML = showcaseItems.map(p => `
+      <a class="hero__mini-card" href="product-detail.html?id=${encodeURIComponent(p.id)}">
+        <div class="hero__mini-icon">${productMediaMarkup(p, { eager: true })}</div>
+        <div class="hero__mini-name">${escapeHtml(p.name)}</div>
+        <div class="hero__mini-price">${formatPrice(p.price)}</div>
+      </a>
+    `).join('');
+  }
+
   const featuredGrid = document.getElementById('featured-grid');
   if (featuredGrid) {
     featuredGrid.innerHTML = renderSkeletonCards(8);
@@ -221,11 +225,32 @@ async function initHomePage() {
       featuredGrid.innerHTML = data.items
         .map((p, i) => renderProductCard(p, i * 0.05))
         .join('');
+      if (data.fromOfflineDB) {
+        let status = document.getElementById('home-data-status');
+        if (!status) {
+          status = document.createElement('div');
+          status.id = 'home-data-status';
+          status.className = 'data-status data-status--warning';
+          status.setAttribute('role', 'status');
+          featuredGrid.before(status);
+        }
+        status.textContent = 'Không thể kết nối máy chủ. ShopVN đang hiển thị dữ liệu tạm trên thiết bị.';
+      } else {
+        document.getElementById('home-data-status')?.remove();
+      }
     } catch {
-      // fallback về MOCK nếu backend chưa chạy
       featuredGrid.innerHTML = MOCK.products
         .map((p, i) => renderProductCard(p, i * 0.05))
         .join('');
+      let status = document.getElementById('home-data-status');
+      if (!status) {
+        status = document.createElement('div');
+        status.id = 'home-data-status';
+        status.className = 'data-status data-status--warning';
+        status.setAttribute('role', 'status');
+        featuredGrid.before(status);
+      }
+      status.textContent = 'Không thể kết nối máy chủ. ShopVN đang hiển thị dữ liệu tạm trên thiết bị.';
     }
   }
 
@@ -236,20 +261,6 @@ async function initHomePage() {
     newGrid.innerHTML = newProducts
       .map((p, i) => renderProductCard(p, i * 0.05))
       .join('');
-  }
-
-  // Hero mini showcase
-  const heroShowcase = document.getElementById('hero-showcase');
-  if (heroShowcase) {
-    const showcaseItems = getProducts().slice(0, 4);
-    heroShowcase.innerHTML = showcaseItems.map(p => `
-      <div class="hero__mini-card"
-           onclick="window.location.href='products.html?category=${encodeURIComponent(p.category)}'">
-        <div class="hero__mini-icon">${p.icon}</div>
-        <div class="hero__mini-name">${p.category}</div>
-        <div class="hero__mini-price">${formatPrice(p.price)}</div>
-      </div>
-    `).join('');
   }
 
   // Recently Viewed Products
@@ -276,11 +287,11 @@ function renderRecentlyViewed() {
   if (!grid) return;
 
   grid.innerHTML = items.map(p => `
-    <div class="recently-viewed__item" onclick="window.location.href='product-detail.html?id=${p.id}'">
-      <div class="recently-viewed__item-img">${p.icon || '📦'}</div>
-      <div class="recently-viewed__item-name">${p.name}</div>
+    <a class="recently-viewed__item" href="product-detail.html?id=${encodeURIComponent(p.id)}">
+      <div class="recently-viewed__item-img">${productMediaMarkup(p)}</div>
+      <div class="recently-viewed__item-name">${escapeHtml(p.name)}</div>
       <div class="recently-viewed__item-price">${formatPrice(p.price)}</div>
-    </div>
+    </a>
   `).join('');
 }
 
@@ -348,7 +359,7 @@ function handleBentoCheckIn() {
   localStorage.setItem(LoyaltyPoints.KEY, String(current + 10));
   LoyaltyPoints.updateNavbarBadge();
 
-  showToast('Điểm danh thành công! Bạn nhận được +10 ShopVN Xu 🪙', 'success');
+  showToast('Điểm danh thành công. Bạn nhận được 10 ShopVN Xu.', 'success');
 
   // Confetti micro-animation inside bento grid item
   createCheckinConfetti();

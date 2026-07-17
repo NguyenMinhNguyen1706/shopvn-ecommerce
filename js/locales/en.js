@@ -3,7 +3,7 @@ window.locales.en = {
   "compare.desc": "Compare features and specs to choose the best product for you.",
   "checkout.address": "Detailed Address",
   "footer.copy": "© 2024 ShopVN. All rights reserved.",
-  "footer.made_in": "Made with ♥ in Da Nang, Vietnam",
+  "footer.made_in": "ShopVN, Da Nang, Vietnam",
   "footer.shipping": "Shipping Policy",
   "footer.faq": "FAQ",
   "footer.all_products": "All Products",

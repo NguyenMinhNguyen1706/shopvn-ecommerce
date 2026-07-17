@@ -236,22 +236,22 @@ function updateOrderStatus(orderId, newStatus) {
 function renderProductsTable() {
   const tbody = document.getElementById('products-table-body');
   if (products.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--c-muted)">Chưa có sản phẩm nào.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="admin-table-empty">Chưa có sản phẩm nào.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = products.map(product => `
     <tr>
       <td>${product.id}</td>
-      <td><div class="admin-prod-thumb">${product.icon || '📦'}</div></td>
-      <td><div class="admin-prod-name" title="${product.name}">${product.name}</div></td>
-      <td>${product.category}</td>
+      <td><div class="admin-prod-thumb">${productMediaMarkup(product)}</div></td>
+      <td><div class="admin-prod-name" title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</div></td>
+      <td>${escapeHtml(product.category || 'Sản phẩm')}</td>
       <td style="font-weight:600">${formatPrice(product.price)}</td>
       <td>${product.stock} cái</td>
       <td>
         <div class="admin-actions">
-          <button class="admin-btn admin-btn-edit" onclick="openProductModal(${product.id})">Sửa</button>
-          <button class="admin-btn admin-btn-delete" onclick="deleteProduct(${product.id})">Xóa</button>
+          <button class="admin-btn admin-btn-edit" onclick="openProductModal(${product.id})" aria-label="Sửa ${escapeHtml(product.name)}">Sửa</button>
+          <button class="admin-btn admin-btn-delete" onclick="deleteProduct(${product.id})" aria-label="Xóa ${escapeHtml(product.name)}">Xóa</button>
         </div>
       </td>
     </tr>
@@ -290,12 +290,12 @@ function openProductModal(productId = null) {
     document.getElementById('prod-price').value = prod.price;
     document.getElementById('prod-oldprice').value = prod.oldPrice || '';
     document.getElementById('prod-stock').value = prod.stock;
-    document.getElementById('prod-icon').value = prod.icon || '📦';
+    document.getElementById('prod-image-url').value = prod.imageUrl || prod.image_url || '';
   } else {
     // THÊM MỚI
     title.textContent = 'Thêm sản phẩm mới';
     form.reset();
-    document.getElementById('prod-icon').value = '📦';
+    document.getElementById('prod-image-url').value = '';
   }
 
   overlay.classList.add('show');
@@ -315,10 +315,16 @@ function saveProduct(event) {
   const oldPriceVal = document.getElementById('prod-oldprice').value.trim();
   const oldPrice = oldPriceVal ? parseInt(oldPriceVal, 10) : null;
   const stock = parseInt(document.getElementById('prod-stock').value, 10);
-  const icon = document.getElementById('prod-icon').value.trim();
+  const imageUrlInput = document.getElementById('prod-image-url').value.trim();
+  const imageUrl = getSafeProductImageUrl({ imageUrl: imageUrlInput });
 
   if (!name || isNaN(price) || isNaN(stock)) {
     showToast('Vui lòng điền đầy đủ các thông tin bắt buộc', 'error');
+    return;
+  }
+
+  if (imageUrlInput && !imageUrl) {
+    showToast('URL ảnh sản phẩm phải bắt đầu bằng http:// hoặc https://', 'error');
     return;
   }
 
@@ -333,7 +339,7 @@ function saveProduct(event) {
         price,
         oldPrice,
         stock,
-        icon
+        imageUrl: imageUrl || null
       };
       showToast('Cập nhật sản phẩm thành công', 'success');
     }
@@ -347,7 +353,7 @@ function saveProduct(event) {
       price,
       oldPrice,
       stock,
-      icon,
+      imageUrl: imageUrl || null,
       featured: false,
       isNew: true
     };
@@ -365,15 +371,10 @@ function renderCustomersTable() {
   const tbody = document.getElementById('customers-table-body');
   if (!tbody) return;
   
-  let users = JSON.parse(localStorage.getItem('users') || '[]');
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
   if (users.length === 0) {
-    users = [
-      { id: 1, name: 'Nguyễn Văn A', email: 'nva@gmail.com', phone: '0901234567', xu: 120, status: 'Hoạt động' },
-      { id: 2, name: 'Trần Thị B', email: 'ttb@gmail.com', phone: '0912345678', xu: 350, status: 'Hoạt động' },
-      { id: 3, name: 'Lê Hoàng C', email: 'lhc@gmail.com', phone: '0987654321', xu: 0, status: 'Bị khóa' },
-      { id: 4, name: 'Phạm Minh D', email: 'pmd@gmail.com', phone: '0905111222', xu: 80, status: 'Hoạt động' }
-    ];
-    localStorage.setItem('users', JSON.stringify(users));
+    tbody.innerHTML = '<tr><td colspan="6" class="admin-table-empty">Chưa có dữ liệu khách hàng.</td></tr>';
+    return;
   }
 
   tbody.innerHTML = users.map(user => {
@@ -384,11 +385,11 @@ function renderCustomersTable() {
     
     return `
       <tr>
-        <td><strong>${user.name}</strong></td>
-        <td>${user.email}</td>
-        <td>${user.phone || 'N/A'}</td>
-        <td style="font-weight:600;color:#F57C00">${user.xu || 0} xu</td>
-        <td><span class="badge ${isBlocked ? 'badge-red' : 'badge-green'}">${user.status}</span></td>
+        <td><strong>${escapeHtml(user.name)}</strong></td>
+        <td>${escapeHtml(user.email)}</td>
+        <td>${escapeHtml(user.phone || 'Chưa cập nhật')}</td>
+        <td class="admin-number">${Number(user.xu || 0)} xu</td>
+        <td><span class="badge ${isBlocked ? 'badge-red' : 'badge-green'}">${escapeHtml(user.status || 'Hoạt động')}</span></td>
         <td><div class="admin-actions">${actionBtn}</div></td>
       </tr>
     `;
@@ -411,24 +412,20 @@ function renderBlogTable() {
   const tbody = document.getElementById('blog-table-body');
   if (!tbody) return;
   
-  let blogPosts = JSON.parse(localStorage.getItem('admin_blog_posts') || '[]');
+  const blogPosts = JSON.parse(localStorage.getItem('admin_blog_posts') || '[]');
   if (blogPosts.length === 0) {
-    blogPosts = [
-      { id: 1, category: 'technology', titleVi: 'Xu hướng tích hợp AI trên điện thoại di động năm 2026', titleEn: 'Mobile AI Integration Trends in 2026', date: '2026-05-24', author: 'Admin ShopVN', icon: '📱', excerptVi: 'Mô tả ngắn...', excerptEn: 'Short description...', contentVi: 'Nội dung...', contentEn: 'Content...' },
-      { id: 2, category: 'guides', titleVi: 'Bí quyết chọn laptop lập trình chuyên nghiệp cho dev năm 2026', titleEn: 'Choosing a Developer Laptop in 2026', date: '2026-05-18', author: 'Tech Guru', icon: '💻', excerptVi: 'Mô tả ngắn...', excerptEn: 'Short description...', contentVi: 'Nội dung...', contentEn: 'Content...' },
-      { id: 3, category: 'reviews', titleVi: 'Đánh giá bàn phím cơ hot swap dưới 1 triệu đáng mua nhất 2026', titleEn: 'Best Hotswap Keyboard Under 1 Million VND in 2026', date: '2026-05-12', author: 'Gear Reviewer', icon: '⌨️', excerptVi: 'Mô tả ngắn...', excerptEn: 'Short description...', contentVi: 'Nội dung...', contentEn: 'Content...' }
-    ];
-    localStorage.setItem('admin_blog_posts', JSON.stringify(blogPosts));
+    tbody.innerHTML = '<tr><td colspan="7" class="admin-table-empty">Chưa có bài viết nào.</td></tr>';
+    return;
   }
 
   tbody.innerHTML = blogPosts.map(post => `
     <tr>
       <td>${post.id}</td>
-      <td><div style="font-size:1.5rem">${post.icon || '📝'}</div></td>
-      <td><div class="admin-prod-name" title="${post.titleVi}">${post.titleVi}</div></td>
-      <td><span class="badge badge-blue">${post.category}</span></td>
+      <td><div class="admin-post-thumb" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div></td>
+      <td><div class="admin-prod-name" title="${escapeHtml(post.titleVi)}">${escapeHtml(post.titleVi)}</div></td>
+      <td><span class="badge badge-blue">${escapeHtml(post.category)}</span></td>
       <td>${formatDate(post.date)}</td>
-      <td>${post.author}</td>
+      <td>${escapeHtml(post.author)}</td>
       <td>
         <div class="admin-actions">
           <button class="admin-btn admin-btn-edit" onclick="openBlogModal(${post.id})">Sửa</button>
@@ -456,7 +453,6 @@ function openBlogModal(postId = null) {
     document.getElementById('blog-title-vi').value = post.titleVi;
     document.getElementById('blog-title-en').value = post.titleEn || '';
     document.getElementById('blog-cat').value = post.category;
-    document.getElementById('blog-icon').value = post.icon || '📝';
     document.getElementById('blog-author').value = post.author;
     document.getElementById('blog-date').value = post.date;
     document.getElementById('blog-excerpt-vi').value = post.excerptVi || '';
@@ -466,7 +462,6 @@ function openBlogModal(postId = null) {
   } else {
     title.textContent = 'Viết bài mới';
     form.reset();
-    document.getElementById('blog-icon').value = '📝';
     document.getElementById('blog-author').value = 'Admin ShopVN';
     document.getElementById('blog-date').value = new Date().toISOString().substring(0, 10);
   }
@@ -486,7 +481,6 @@ function saveBlogPost(event) {
   const titleVi = document.getElementById('blog-title-vi').value.trim();
   const titleEn = document.getElementById('blog-title-en').value.trim();
   const category = document.getElementById('blog-cat').value;
-  const icon = document.getElementById('blog-icon').value.trim();
   const author = document.getElementById('blog-author').value.trim();
   const date = document.getElementById('blog-date').value;
   const excerptVi = document.getElementById('blog-excerpt-vi').value.trim();
@@ -499,14 +493,14 @@ function saveBlogPost(event) {
     if (idx !== -1) {
       blogPosts[idx] = {
         ...blogPosts[idx],
-        titleVi, titleEn, category, icon, author, date, excerptVi, excerptEn, contentVi, contentEn
+        titleVi, titleEn, category, author, date, excerptVi, excerptEn, contentVi, contentEn
       };
       showToast('Cập nhật bài viết thành công!', 'success');
     }
   } else {
     const newId = blogPosts.length > 0 ? Math.max(...blogPosts.map(p => p.id)) + 1 : 1;
     blogPosts.push({
-      id: newId, titleVi, titleEn, category, icon, author, date, excerptVi, excerptEn, contentVi, contentEn
+      id: newId, titleVi, titleEn, category, author, date, excerptVi, excerptEn, contentVi, contentEn
     });
     showToast('Đăng bài viết mới thành công!', 'success');
   }
@@ -535,13 +529,13 @@ function renderShipmentsTable() {
   if (!tbody) return;
   
   if (orders.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--c-muted)">Không tìm thấy vận đơn nào. Hãy đặt hàng trước!</td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="7" class="admin-table-empty">Chưa có vận đơn.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = orders.map((order, index) => {
-    const carrierCode = (order.shippingInfo.carrier || 'GHTK').toUpperCase();
-    const waybillCode = `${carrierCode}-${100000 + index}`;
+  tbody.innerHTML = orders.map(order => {
+    const waybillCode = order.trackingCode || order.waybillCode || 'Chưa có mã';
+    const carrier = order.shippingInfo.carrier || 'Chưa chọn';
     
     let shippingStatus = order.shippingStatus || 'Chờ lấy hàng';
     if (order.status === 'Đã hủy') shippingStatus = 'Đã hủy giao hàng';
@@ -564,15 +558,15 @@ function renderShipmentsTable() {
 
     return `
       <tr>
-        <td><strong>${waybillCode}</strong></td>
-        <td>${order.id}</td>
-        <td><span style="font-weight:600;color:var(--c-blue)">${order.shippingInfo.carrier || 'GHTK'}</span></td>
+        <td><strong>${escapeHtml(waybillCode)}</strong></td>
+        <td>${escapeHtml(order.id)}</td>
+        <td><span class="admin-link-value">${escapeHtml(carrier)}</span></td>
         <td>
-          <div style="font-weight:600">${order.shippingInfo.name}</div>
-          <div style="font-size:0.75rem;color:var(--c-muted)">${order.shippingInfo.address}, ${order.shippingInfo.ward}</div>
+          <div style="font-weight:600">${escapeHtml(order.shippingInfo.name)}</div>
+          <div style="font-size:0.75rem;color:var(--c-muted)">${escapeHtml([order.shippingInfo.address, order.shippingInfo.ward].filter(Boolean).join(', '))}</div>
         </td>
-        <td>${order.payment.method === 'cod' ? `COD: ${formatPrice(order.pricing.total)}` : 'Đã TT (0đ)'}</td>
-        <td><span class="badge ${badgeClass}">${shippingStatus}</span></td>
+        <td>${order.payment.method === 'cod' ? `COD: ${formatPrice(order.pricing.total)}` : escapeHtml(order.payment.status || 'Chưa cập nhật')}</td>
+        <td><span class="badge ${badgeClass}">${escapeHtml(shippingStatus)}</span></td>
         <td><div class="admin-actions">${actionBtn}</div></td>
       </tr>
     `;
@@ -1950,7 +1944,7 @@ function renderSettingsForm() {
   const feeViettel = settings.feeViettel !== undefined ? settings.feeViettel : 25000;
   const ga = settings.ga || '';
   const pixel = settings.pixel || '';
-  const backendApiUrl = settings.backendApiUrl || 'http://localhost:3000/api';
+  const backendApiUrl = settings.backendApiUrl || 'https://shopvn-backend.onrender.com/api';
 
   const setVatInput = document.getElementById('set-vat');
   const setThresholdInput = document.getElementById('set-freeship-threshold');

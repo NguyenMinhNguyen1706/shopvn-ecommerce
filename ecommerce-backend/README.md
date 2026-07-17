@@ -6,10 +6,13 @@ Node.js + Express + PostgreSQL REST API cho hệ thống thương mại điện 
 
 | Layer      | Technology                        |
 |------------|-----------------------------------|
-| Runtime    | Node.js 20 + Express 4            |
+| Runtime    | Node.js 20 + Express 5            |
 | Database   | PostgreSQL 15 + Sequelize ORM     |
 | Auth       | JWT Access Token + Refresh Token  |
-| Validation | Joi + express-rate-limit          |
+| Cache      | Redis                             |
+| Jobs       | BullMQ + Redis                    |
+| Storage    | Cloudinary                        |
+| Protection | Route auth + rate limits          |
 | Docs       | Swagger UI (OpenAPI 3.0)          |
 | Deploy     | Docker + Docker Compose           |
 
@@ -30,6 +33,9 @@ createdb ecommerce_db
 
 # 4. Chạy dev server
 npm run dev
+
+# 5. Chay worker job nen (terminal rieng, can Redis)
+npm run worker
 ```
 
 ### Chạy với Docker
@@ -81,3 +87,8 @@ Request → Route → Middleware (Auth/RBAC) → Controller → Service → Mode
 - DB Transaction khi tạo đơn hàng — đảm bảo atomicity
 - Snapshot giá sản phẩm vào OrderItem — lịch sử không bị ảnh hưởng khi đổi giá
 - defaultScope loại bỏ password khỏi mọi query User
+
+Additional scalable-backend notes:
+- Redis cache cho product/shipping data, co invalidation khi admin/review/upload thay doi san pham
+- BullMQ worker xu ly email xac nhan don hang voi retry/backoff
+- Webhook Shopee/TikTok mock duoc bao ve bang `WEBHOOK_SHARED_SECRET`

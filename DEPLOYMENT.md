@@ -4,8 +4,9 @@ This project should be deployed as two public services:
 
 - Frontend static site: Vercel
 - Backend API: a Node.js host such as Render, Railway, Fly.io, or a VPS
+- Backend worker: a background Node.js process for BullMQ jobs
 - Database: managed PostgreSQL
-- Optional cache: managed Redis
+- Cache and queue broker: managed Redis
 
 ## 1. Deploy Backend First
 
@@ -23,12 +24,29 @@ BACKEND_URL=https://your-backend-domain.example.com
 CORS_ORIGINS=https://your-vercel-site.vercel.app
 JWT_SECRET=generate-a-long-random-secret
 JWT_REFRESH_SECRET=generate-another-long-random-secret
+WEBHOOK_SHARED_SECRET=generate-a-long-random-secret
+API_RATE_LIMIT_MAX=300
+API_RATE_LIMIT_WINDOW_SECONDS=60
+JSON_BODY_LIMIT=2mb
+FORM_BODY_LIMIT=2mb
+DB_SYNC_ON_STARTUP=true
+SEED_ON_STARTUP=true
+ENSURE_INVENTORY_ON_STARTUP=true
 ```
 
 Health checks:
 
 - `/health`: app process is alive
 - `/ready`: app can connect to PostgreSQL
+
+Run the worker as a separate process:
+
+```bash
+npm run worker
+```
+
+On Render this is represented by the `shopvn-worker` service in `render.yaml`.
+Render does not support the `free` instance type for background workers, so the worker uses `starter`.
 
 ## 2. Configure Payment Sandbox Webhooks
 
@@ -68,6 +86,14 @@ Webhook target:
 ```text
 https://your-backend-domain.example.com/api/payment/webhooks/payos/callback
 ```
+
+Mock marketplace webhooks:
+
+- `POST /api/webhooks/shopee`
+- `POST /api/webhooks/tiktok`
+
+Send either `x-webhook-secret: <WEBHOOK_SHARED_SECRET>` or
+`x-webhook-signature: sha256=<hmac_sha256_json_body>`.
 
 ## 3. Deploy Frontend To Vercel
 

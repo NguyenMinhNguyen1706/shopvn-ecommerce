@@ -25,12 +25,32 @@ async function deleteImage(imageUrl) {
 /**
  * Upload ảnh từ buffer (dùng khi cần xử lý ảnh trước khi upload)
  */
-async function uploadBuffer(buffer, folder = 'shopvn/products') {
+function buildSafePublicId(originalName = 'image') {
+  const basename = String(originalName)
+    .replace(/\.[^/.]+$/, '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'image';
+
+  return `${Date.now()}-${basename}`;
+}
+
+async function uploadBuffer(buffer, folder = 'shopvn/products', originalName = 'image') {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder,
-        transformation: [{ width: 800, height: 800, crop: 'limit', quality: 'auto' }],
+        public_id: buildSafePublicId(originalName),
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        transformation: [{
+          width: 800,
+          height: 800,
+          crop: 'limit',
+          quality: 'auto',
+          fetch_format: 'auto',
+        }],
       },
       (error, result) => {
         if (error) reject(error);
@@ -41,4 +61,4 @@ async function uploadBuffer(buffer, folder = 'shopvn/products') {
   });
 }
 
-module.exports = { deleteImage, uploadBuffer };
+module.exports = { deleteImage, uploadBuffer, buildSafePublicId };

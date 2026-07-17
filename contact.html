@@ -1,57 +1,59 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LiÃªn há»‡ â€” ShopVN</title>
-  <meta name="description" content="LiÃªn há»‡ vá»›i ShopVN â€” Há»— trá»£ khÃ¡ch hÃ ng 24/7, cá»­a hÃ ng trÃªn toÃ n quá»‘c." />
+  <title>Liên hệ — ShopVN</title>
+  <meta name="description" content="Gửi yêu cầu tư vấn mua hàng hoặc hỗ trợ đơn hàng tới ShopVN." />
 
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/pages/contact.css" />
-  <link rel="stylesheet" href="css/lucky-wheel.css" />
+  <link rel="stylesheet" href="css/redesign.css" />
 </head>
-<body>
+<body class="page-contact">
 
 <!-- ========================================== -->
 <header class="navbar" role="banner">
   <div class="container">
-    <nav class="navbar__inner" aria-label="Äiá»u hÆ°á»›ng chÃ­nh">
+    <nav class="navbar__inner" aria-label="Điều hướng chính">
       <a href="index.html" class="navbar__logo">Shop<span>VN</span></a>
       <ul class="navbar__nav" role="list">
-        <li><a href="index.html"    class="navbar__link"><span data-i18n="nav.home">Trang chá»§</span></a></li>
-        <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sáº£n pháº©m</span></a></li>
+        <li><a href="index.html"    class="navbar__link"><span data-i18n="nav.home">Trang chủ</span></a></li>
+        <li><a href="products.html" class="navbar__link"><span data-i18n="nav.products">Sản phẩm</span></a></li>
         <li><a href="products.html?category=Laptop"     class="navbar__link"><span data-i18n="nav.laptop">Laptop</span></a></li>
-        <li><a href="products.html?category=Äiá»‡n thoáº¡i" class="navbar__link"><span data-i18n="nav.phone">Äiá»‡n thoáº¡i</span></a></li>
-        <li><a href="products.html?category=Phá»¥ kiá»‡n"   class="navbar__link"><span data-i18n="nav.accessories">Phá»¥ kiá»‡n</span></a></li>
+        <li><a href="products.html?category=Điện thoại" class="navbar__link"><span data-i18n="nav.phone">Điện thoại</span></a></li>
+        <li><a href="products.html?category=Phụ kiện"   class="navbar__link"><span data-i18n="nav.accessories">Phụ kiện</span></a></li>
       </ul>
       <div class="navbar__search" role="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--c-muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="search" placeholder="TÃ¬m laptop, Ä‘iá»‡n thoáº¡i, phá»¥ kiá»‡n..." aria-label="TÃ¬m kiáº¿m sáº£n pháº©m"
+        <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
                onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
       </div>
       <div class="navbar__actions">
         <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
-          âœ¨
+          ✨
           <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
         </div>
-        <a href="wishlist.html" class="navbar__cart-btn" aria-label="YÃªu thÃ­ch" style="margin-right:-4px">
+        <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           <span class="navbar__wish-count navbar__cart-count" style="display:none">0</span>
         </a>
-        <a href="cart.html" class="navbar__cart-btn" aria-label="Giá» hÃ ng">
+        <a href="cart.html" class="navbar__cart-btn" aria-label="Giỏ hàng">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           <span class="navbar__cart-count">0</span>
         </a>
         <div id="navbar-actions" style="display:flex;align-items:center;gap:8px">
-          <a href="login.html" class="btn btn-ghost btn-sm"><span data-i18n="auth.login">ÄÄƒng nháº­p</span></a>
-          <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">ÄÄƒng kÃ½</span></a>
+          <a href="login.html" class="btn btn-ghost btn-sm"><span data-i18n="auth.login">Đăng nhập</span></a>
+          <a href="register.html" class="btn btn-primary btn-sm"><span data-i18n="auth.register">Đăng ký</span></a>
         </div>
       </div>
     </nav>
   </div>
 </header>
+
+<main id="main-content">
 
 
 <div class="contact-page">
@@ -59,8 +61,8 @@
   <!-- ========================================== -->
   <section class="contact-hero">
     <div class="container">
-      <h1><span data-i18n="footer.contact">LiÃªn há»‡</span> vá»›i chÃºng tÃ´i</h1>
-      <p>ChÃºng tÃ´i luÃ´n sáºµn sÃ ng há»— trá»£ báº¡n. HÃ£y liÃªn há»‡ qua form bÃªn dÆ°á»›i hoáº·c ghÃ© thÄƒm cá»­a hÃ ng gáº§n nháº¥t.</p>
+      <h1><span data-i18n="footer.contact">Liên hệ</span> với chúng tôi</h1>
+        <p>Hãy gửi yêu cầu qua form bên dưới hoặc chọn kênh hỗ trợ đang được hiển thị trên trang.</p>
     </div>
   </section>
 
@@ -72,12 +74,12 @@
       <!-- ========================================== -->
       <div>
         <h2 style="font-family:var(--f-display);font-size:1.4rem;font-weight:700;color:var(--c-title);margin-bottom:var(--sp-lg)">
-          Gá»­i tin nháº¯n
+          Gửi tin nhắn
         </h2>
         <form class="contact-form" id="contact-form" onsubmit="handleContactSubmit(event)">
           <div>
-            <label for="ct-name">Há» vÃ  tÃªn *</label>
-            <input type="text" id="ct-name" placeholder="Nguyá»…n VÄƒn A" required />
+            <label for="ct-name">Họ và tên *</label>
+            <input type="text" id="ct-name" placeholder="Nguyễn Văn A" required />
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-md)">
             <div>
@@ -85,77 +87,68 @@
               <input type="email" id="ct-email" placeholder="email@example.com" required />
             </div>
             <div>
-              <label for="ct-phone"><span data-i18n="checkout.phone">Sá»‘ Ä‘iá»‡n thoáº¡i</span></label>
+              <label for="ct-phone"><span data-i18n="checkout.phone">Số điện thoại</span></label>
               <input type="tel" id="ct-phone" placeholder="0901 234 567" />
             </div>
           </div>
           <div>
-            <label for="ct-subject">Chá»§ Ä‘á»</label>
+            <label for="ct-subject">Chủ đề</label>
             <select id="ct-subject">
-              <option value="">Chuáº©n chá»§ Ä‘á»</option>
-              <option value="order">Há»i vá» Ä‘Æ¡n hÃ ng</option>
-              <option value="product">Há»i vá» sáº£n pháº©m</option>
-              <option value="return"><span data-i18n="footer.returns">Äá»•i tráº£ hÃ ng</span></option>
-              <option value="warranty">Báº£o hÃ nh</option>
-              <option value="other">KhÃ¡c</option>
+              <option value="">Chuẩn chủ đề</option>
+              <option value="order">Hỏi về đơn hàng</option>
+              <option value="product">Hỏi về sản phẩm</option>
+              <option value="return"><span data-i18n="footer.returns">Đổi trả hàng</span></option>
+              <option value="warranty">Bảo hành</option>
+              <option value="other">Khác</option>
             </select>
           </div>
           <div>
-            <label for="ct-message">Ná»™i dung *</label>
-            <textarea id="ct-message" placeholder="MÃ´ táº£ chi tiáº¿t váº¥n Ä‘á» cá»§a báº¡n..." required></textarea>
+            <label for="ct-message">Nội dung *</label>
+            <textarea id="ct-message" placeholder="Mô tả chi tiết vấn đề của bạn..." required></textarea>
           </div>
           <button type="submit" class="btn btn-primary btn-lg btn-full" style="justify-content:center" id="ct-submit">
-            Gá»­i tin nháº¯n
+            Gửi tin nhắn
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9l20-7z"/></svg>
           </button>
         </form>
 
-        <div class="form-success" id="form-success">
-          <div class="form-success__icon">âœ…</div>
-          <p class="form-success__title">ÄÃ£ gá»­i thÃ nh cÃ´ng!</p>
-          <p class="form-success__text">ChÃºng tÃ´i sáº½ pháº£n há»“i trong vÃ²ng 2-4 giá» lÃ m viá»‡c. MÃ£ ticket: <strong id="ticket-id">â€”</strong></p>
-        </div>
       </div>
 
       <!-- ========================================== -->
       <div class="contact-info-cards">
         <div class="info-card">
-          <div class="info-card__icon">ðŸ“ž</div>
+          <div class="info-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 8 9 5 9-5v8l-9 5-9-5V8Z"/></svg></div>
           <div>
-            <div class="info-card__title">Hotline</div>
+            <div class="info-card__title">Đơn hàng</div>
             <div class="info-card__text">
-              <strong>1800 9999</strong> (Miá»…n phÃ­)<br>
-              Thá»© 2 â€“ Chá»§ nháº­t: 8:00 â€“ 22:00
+              <a href="orders.html">Kiểm tra lịch sử và trạng thái đơn hàng</a>
             </div>
           </div>
         </div>
         <div class="info-card">
-          <div class="info-card__icon">ðŸ“§</div>
+          <div class="info-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
           <div>
-            <div class="info-card__title">Email</div>
+            <div class="info-card__title">Tìm sản phẩm</div>
             <div class="info-card__text">
-              <strong>support@shopvn.vn</strong><br>
-              Pháº£n há»“i trong 2-4 giÃ¡ lÃ m viá»‡c
+              <a href="products.html">Tìm kiếm và lọc theo nhu cầu</a>
             </div>
           </div>
         </div>
         <div class="info-card">
-          <div class="info-card__icon">ðŸ’¬</div>
+          <div class="info-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg></div>
           <div>
-            <div class="info-card__title">Live Chat</div>
+            <div class="info-card__title">Trợ lý mua sắm</div>
             <div class="info-card__text">
-              Chat trá»±c tiáº¿p vá»›i nhÃ¢n viÃªn há»— trá»£<br>
-              Thá»© 2 â€“ Thá»© 7: 8:00 â€“ 20:00
+              Dùng trợ lý trên trang sản phẩm để so sánh lựa chọn
             </div>
           </div>
         </div>
         <div class="info-card">
-          <div class="info-card__icon">?</div>
+          <div class="info-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4M12 18h.01"/></svg></div>
           <div>
-            <div class="info-card__title">Trá»¥ sá»Ÿ chÃ­nh</div>
+            <div class="info-card__title">Câu hỏi thường gặp</div>
             <div class="info-card__text">
-              123 Nguyá»…n Huá»‡, Quáº­n 1<br>
-              TP. Há»“ ChÃ­ Minh, Viá»‡t Nam
+              <a href="faq.html">Xem thông tin thanh toán, vận chuyển và đổi trả</a>
             </div>
           </div>
         </div>
@@ -166,7 +159,7 @@
     <!-- ========================================== -->
     <div style="margin-bottom:var(--sp-lg)">
       <h2 style="font-family:var(--f-display);font-size:1.4rem;font-weight:700;color:var(--c-title);margin-bottom:var(--sp-lg)">
-        - Há»‡ thá»‘ng cá»­a hÃ ng
+        - Hệ thống cửa hàng
       </h2>
     </div>
 
@@ -174,66 +167,66 @@
       <iframe
         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4241674198073!2d106.70086001533417!3d10.77967099232671!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f38f9ed887b%3A0x14aded5703768989!2zMTIzIE5ndXnhu4VuIEh14buHLCBC4bq_biBOZ2jDqSwgUXXhuq1uIDEsIEjhu5MgQ2jDrSBNaW5oLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1699999999999!5m2!1svi!2s"
         allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-        title="Báº£n Ä‘á»“ cá»­a hÃ ng ShopVN">
+        title="Bản đồ cửa hàng ShopVN">
       </iframe>
     </div>
 
     <!-- ========================================== -->
     <div class="stores-grid">
       <div class="store-card">
-        <div class="store-card__name">ShopVN Quáº­n 1</div>
+        <div class="store-card__name">ShopVN Quận 1</div>
         <div class="store-card__detail">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          123 Nguyá»…n Huá»‡, Quáº­n 1, TP.HCM
+          123 Nguyễn Huệ, Quận 1, TP.HCM
         </div>
         <div class="store-card__detail">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          8:00 â€“ 21:30 (HÃ ng ngÃ y)
+          8:00 – 21:30 (Hàng ngày)
         </div>
         <div class="store-card__detail">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6.23-6.23 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           028 3822 1234
         </div>
         <a href="https://maps.google.com/?q=123+Nguyen+Hue+Quan+1+HCMC" target="_blank" class="store-card__dir">
-          Chá»‰ Ä‘Æ°á»ng â†’
+          Chỉ đường →
         </a>
       </div>
 
       <div class="store-card">
-        <div class="store-card__name">ShopVN ÄÃ  Náºµng</div>
+        <div class="store-card__name">ShopVN Đà Nẵng</div>
         <div class="store-card__detail">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          456 Nguyá»…n VÄƒn Linh, Háº£i ChÃ¢u, ÄÃ  Náºµng
+          456 Nguyễn Văn Linh, Hải Châu, Đà Nẵng
         </div>
         <div class="store-card__detail">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          8:30 â€“ 21:00 (HÃ ng ngÃ y)
+          8:30 – 21:00 (Hàng ngày)
         </div>
         <div class="store-card__detail">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6.23-6.23 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           0236 3456 789
         </div>
         <a href="https://maps.google.com/?q=456+Nguyen+Van+Linh+Da+Nang" target="_blank" class="store-card__dir">
-          Chá»‰ Ä‘Æ°á»ng â†’
+          Chỉ đường →
         </a>
       </div>
 
       <div class="store-card">
-        <div class="store-card__name">ShopVN HÃ  Ná»™i</div>
+        <div class="store-card__name">ShopVN Hà Nội</div>
         <div class="store-card__detail">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          789 Cáº§u Giáº¥y, Quáº­n Cáº§u Giáº¥y, HÃ  Ná»™i
+          789 Cầu Giấy, Quận Cầu Giấy, Hà Nội
         </div>
         <div class="store-card__detail">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          8:00 â€“ 22:00 (HÃ ng ngÃ y)
+          8:00 – 22:00 (Hàng ngày)
         </div>
         <div class="store-card__detail">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6.23-6.23 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           024 3789 0123
         </div>
         <a href="https://maps.google.com/?q=789+Cau+Giay+Ha+Noi" target="_blank" class="store-card__dir">
-          Chá»‰ Ä‘Æ°á»ng â†’
+          Chỉ đường →
         </a>
       </div>
     </div>
@@ -243,44 +236,46 @@
 
 
 <!-- ========================================== -->
+</main>
+
 <footer class="footer" role="contentinfo">
   <div class="container">
     <div class="footer__grid">
       <div>
         <div class="footer__brand-name">Shop<span>VN</span></div>
-        <p class="footer__desc">Ná»n táº£ng thÆ°Æ¡ng máº¡i Ä‘iá»‡n tá»­ uy tÃ­n â€” chuyÃªn cung cáº¥p thiáº¿t bá»‹ Ä‘iá»‡n tá»­, phá»¥ kiá»‡n cÃ´ng nghá»‡ chÃ­nh hÃ£ng toÃ n quá»‘c.</p>
+        <p class="footer__desc">Cửa hàng trực tuyến dành cho thiết bị điện tử và phụ kiện công nghệ.</p>
       </div>
       <div>
-        <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sáº¯m</span></h3>
+        <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sắm</span></h3>
         <ul class="footer__links">
-          <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Táº¥t cáº£ sáº£n pháº©m</span></a></li>
-          <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyáº¿n mÃ£i</span></a></li>
-          <li><a href="products.html?sort=newest" class="footer__link">HÃ ng má»›i vá»</a></li>
-          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">BÃ¡n cháº¡y nháº¥t</span></a></li>
+          <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
+          <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến mãi</span></a></li>
+          <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
+          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Sản phẩm nổi bật</span></a></li>
         </ul>
       </div>
       <div>
-        <h3 class="footer__heading"><span data-i18n="footer.account">TÃ i khoáº£n</span></h3>
+        <h3 class="footer__heading"><span data-i18n="footer.account">Tài khoản</span></h3>
         <ul class="footer__links">
-          <li><a href="login.html" class="footer__link"><span data-i18n="auth.login">ÄÄƒng nháº­p</span></a></li>
-          <li><a href="register.html" class="footer__link"><span data-i18n="auth.register">ÄÄƒng kÃ½</span></a></li>
-          <li><a href="orders.html" class="footer__link"><span data-i18n="nav.orders">ÄÆ¡n hÃ ng</span></a></li>
-          <li><a href="cart.html" class="footer__link"><span data-i18n="nav.cart">Giá» hÃ ng</span></a></li>
+          <li><a href="login.html" class="footer__link"><span data-i18n="auth.login">Đăng nhập</span></a></li>
+          <li><a href="register.html" class="footer__link"><span data-i18n="auth.register">Đăng ký</span></a></li>
+          <li><a href="orders.html" class="footer__link"><span data-i18n="nav.orders">Đơn hàng</span></a></li>
+          <li><a href="cart.html" class="footer__link"><span data-i18n="nav.cart">Giỏ hàng</span></a></li>
         </ul>
       </div>
       <div>
-        <h3 class="footer__heading"><span data-i18n="footer.support">Há»— trá»£</span></h3>
+        <h3 class="footer__heading"><span data-i18n="footer.support">Hỗ trợ</span></h3>
         <ul class="footer__links">
-          <li><a href="faq.html" class="footer__link">CÃ¢u há»i thÆ°á»ng gáº·p</a></li>
-          <li><a href="contact.html" class="footer__link"><span data-i18n="footer.contact">LiÃªn há»‡</span></a></li>
-          <li><a href="faq.html#doi-tra" class="footer__link"><span data-i18n="footer.returns">Äá»•i tráº£ hÃ ng</span></a></li>
-          <li><a href="faq.html#van-chuyen" class="footer__link"><span data-i18n="footer.shipping">ChÃ­nh sÃ¡ch váº­n chuyá»ƒn</span></a></li>
+          <li><a href="faq.html" class="footer__link">Câu hỏi thường gặp</a></li>
+          <li><a href="contact.html" class="footer__link"><span data-i18n="footer.contact">Liên hệ</span></a></li>
+          <li><a href="faq.html#doi-tra" class="footer__link"><span data-i18n="footer.returns">Đổi trả hàng</span></a></li>
+          <li><a href="faq.html#van-chuyen" class="footer__link"><span data-i18n="footer.shipping">Chính sách vận chuyển</span></a></li>
         </ul>
       </div>
     </div>
     <div class="footer__bottom">
-      <span>Â© 2024 ShopVN. Báº£o lÆ°u má»i quyá»n.</span>
-      <span>Made with â™¥ in ÄÃ  Náºµng, Viá»‡t Nam</span>
+      <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
+      <span>ShopVN, Đà Nẵng, Việt Nam</span>
     </div>
   </div>
 </footer>
@@ -290,7 +285,6 @@
 <script src="js/api.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/lucky-wheel.js"></script>
 <script>
   // Navbar scroll
   window.addEventListener('scroll', () => {
@@ -301,16 +295,8 @@
     e.preventDefault();
     const btn = document.getElementById('ct-submit');
     btn.disabled = true;
-    btn.innerHTML = `<span class="skeleton" style="width:100px;height:16px;display:inline-block"></span>`;
-
-    // Simulate API call
-    setTimeout(() => {
-      const ticketId = 'TK-' + Date.now().toString(36).toUpperCase();
-      document.getElementById('ticket-id').textContent = ticketId;
-      document.getElementById('contact-form').style.display = 'none';
-      document.getElementById('form-success').classList.add('show');
-      showToast('Tin nháº¯n Ä‘Ã£ Ä‘Æ°á»£c gá»­i thÃ nh cÃ´ng!');
-    }, 1500);
+    showToast('Kênh gửi yêu cầu trực tuyến đang được cấu hình. Vui lòng xem mục Câu hỏi thường gặp.', 'warning');
+    btn.disabled = false;
   }
 
   document.addEventListener('DOMContentLoaded', () => {

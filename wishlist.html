@@ -10,10 +10,10 @@
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/pages/products.css" />
-  <link rel="stylesheet" href="css/lucky-wheel.css" />
   <link rel="stylesheet" href="css/mobile-nav.css" />
+  <link rel="stylesheet" href="css/redesign.css" />
 </head>
-<body>
+<body class="page-wishlist">
 
 <!-- ========================================== -->
 <header class="navbar" role="banner">
@@ -62,6 +62,8 @@
   </div>
 </header>
 
+<main id="main-content">
+
 
 <!-- ========================================== -->
 <div style="padding-top:calc(var(--nav-h) + var(--sp-xl))">
@@ -82,12 +84,13 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-xl);flex-wrap:wrap;gap:var(--sp-md)">
       <div>
         <h1 style="font-family:var(--f-display);font-size:1.8rem;font-weight:700;color:var(--c-title);margin-bottom:4px">
-          💖 <span data-i18n="nav.products">Sản phẩm</span> yêu thích
+          <span data-i18n="nav.products">Sản phẩm</span> yêu thích
         </h1>
         <p id="wish-count-text" style="font-size:.9rem;color:var(--c-muted)">0 sản phẩm</p>
       </div>
       <button class="btn btn-outline btn-sm" id="wish-add-all-cart" style="display:none" onclick="addAllWishToCart()">
-        🛒 Thêm tất cả vào giá
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h7.84a2 2 0 0 0 2-1.61L20.2 7H5.12"/></svg>
+        Thêm tất cả vào giỏ
       </button>
     </div>
 
@@ -101,12 +104,14 @@
 
 
 <!-- ========================================== -->
+</main>
+
 <footer class="footer" role="contentinfo">
   <div class="container">
     <div class="footer__grid">
       <div>
         <div class="footer__brand-name">Shop<span>VN</span></div>
-        <p class="footer__desc">Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị điện tử, phụ kiện công nghệ chính hãng toàn quốc.</p>
+        <p class="footer__desc">Cửa hàng trực tuyến dành cho thiết bị điện tử và phụ kiện công nghệ.</p>
       </div>
       <div>
         <h3 class="footer__heading"><span data-i18n="footer.shop">Mua sắm</span></h3>
@@ -114,7 +119,7 @@
           <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
           <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến mãi</span></a></li>
           <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
-          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy nhất</span></a></li>
+          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Sản phẩm nổi bật</span></a></li>
         </ul>
       </div>
       <div>
@@ -138,7 +143,7 @@
     </div>
     <div class="footer__bottom">
       <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
-      <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+      <span>ShopVN, Đà Nẵng, Việt Nam</span>
     </div>
   </div>
 </footer>
@@ -148,7 +153,6 @@
 <script src="js/api.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/lucky-wheel.js"></script>
 <script>
   const getProducts = () => {
     if (!localStorage.getItem('admin_products')) {
@@ -174,9 +178,9 @@
     if (items.length === 0) {
       grid.innerHTML = `
         <div class="wishlist-empty" style="grid-column:1/-1">
-          <div class="wishlist-empty__icon">✨</div>
+          <div class="wishlist-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
           <p class="wishlist-empty__text">Chưa có sản phẩm yêu thích</p>
-          <p class="wishlist-empty__sub">Hãy duyệt sản phẩm và nhấn ✨ để lưu vào đây</p>
+          <p class="wishlist-empty__sub">Hãy duyệt sản phẩm và dùng nút yêu thích để lưu vào đây.</p>
           <a href="products.html" class="btn btn-primary">Khám phá sản phẩm</a>
         </div>
       `;
@@ -186,9 +190,11 @@
     grid.innerHTML = items.map((p, i) => {
       const disc = calcDiscount(p.price, p.oldPrice);
       return `
-        <article class="product-card fade-up" style="animation-delay:${i * 0.05}s">
-          <div class="product-card__img" onclick="window.location.href='product-detail.html?id=${p.id}'">
-            <span class="product-card__img-icon">${p.icon || '📦'}</span>
+        <article class="product-card fade-up" role="listitem" style="animation-delay:${i * 0.05}s">
+          <div class="product-card__img">
+            <a class="product-card__media-link" href="product-detail.html?id=${encodeURIComponent(p.id)}" aria-label="Xem ${escapeHtml(p.name)}">
+              ${productMediaMarkup(p)}
+            </a>
             ${disc ? `<span class="badge badge-accent product-card__badge">-${disc}%</span>` : ''}
             <button class="product-card__wish active"
                     onclick="event.stopPropagation(); removeFromWishlist(${p.id})"
@@ -199,8 +205,8 @@
             </button>
           </div>
           <div class="product-card__body">
-            <p class="product-card__cat">${p.category}</p>
-            <h3 class="product-card__name">${p.name}</h3>
+            <p class="product-card__cat">${escapeHtml(p.category || 'Sản phẩm')}</p>
+            <h3 class="product-card__name"><a href="product-detail.html?id=${encodeURIComponent(p.id)}">${escapeHtml(p.name)}</a></h3>
             <div class="product-card__price-row">
               <div>
                 <span class="product-card__price">${formatPrice(p.price)}</span>

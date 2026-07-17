@@ -41,6 +41,7 @@ const MasterInventory = sequelize.define('MasterInventory', {
 }, {
   tableName:  'master_inventories',
   timestamps: true,
+  version:    true, // Enables Optimistic Locking
 });
 
 const Product = require('./Product');

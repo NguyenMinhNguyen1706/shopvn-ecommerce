@@ -5,8 +5,11 @@ const fs = require('fs');
 class EmailService {
   static getTransporter() {
     return nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
+      host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: process.env.SMTP_SECURE === 'true',
+      disableFileAccess: true,
+      disableUrlAccess: true,
       auth: {
         user: process.env.EMAIL_USER || 'ethereal.user@ethereal.email',
         pass: process.env.EMAIL_PASS || 'mock_password'
@@ -67,10 +70,12 @@ class EmailService {
 
       const transporter = this.getTransporter();
       const info = await transporter.sendMail({
-        from: '"ShopVN" <noreply@shopvn.com>',
+        from: process.env.EMAIL_FROM || '"ShopVN" <noreply@shopvn.com>',
         to: userEmail,
         subject: `[ShopVN] Xác nhận đơn hàng #${orderData.id || 'N/A'}`,
-        html: html
+        html: html,
+        disableFileAccess: true,
+        disableUrlAccess: true
       });
 
       console.log('Email sent: %s', info.messageId);

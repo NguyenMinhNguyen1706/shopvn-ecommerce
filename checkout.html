@@ -3,7 +3,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thanh toán — ShopVN</title>
-  <meta name="description" content="Thanh toán đơn hàng nhanh chóng, an toàn tại ShopVN.">
+  <meta name="description" content="Nhập thông tin giao hàng, chọn phương thức thanh toán và xác nhận đơn hàng tại ShopVN.">
 
   <!-- ========================================== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,10 +13,10 @@
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages/checkout.css">
-  <link rel="stylesheet" href="css/lucky-wheel.css">
   <link rel="stylesheet" href="css/mobile-nav.css" />
+  <link rel="stylesheet" href="css/redesign.css" />
 </head>
-<body>
+<body class="page-checkout">
 
 <!-- ========================================== -->
 <header class="navbar" role="banner">
@@ -143,6 +143,7 @@
 
       <!-- ========================================== -->
       <main>
+        <h1 class="sr-only">Thanh toán</h1>
         
         <!-- ========================================== -->
         <section class="checkout-card" aria-labelledby="shipping-title">
@@ -313,7 +314,7 @@
             <div class="payment-details" id="details-momo">
               <div class="payment-details__qr">
                 <p style="font-weight:600; color:#d21f3c">Chuyển khoản qua Ví MoMo</p>
-                <div class="qr-box" style="color:#d21f3c">📱</div>
+                <div class="qr-box" style="color:#d21f3c" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
                 <p style="color:var(--c-muted); max-width:300px; line-height:1.4">Mở app MoMo quét mã QR hoặc chuyển tiền đến số điện thoại ví:</p>
                 
                 <div class="bank-info">
@@ -346,7 +347,7 @@
             <div class="payment-details" id="details-vnpay">
               <div class="payment-details__qr">
                 <p style="font-weight:600; color:var(--c-blue)">Cổng thanh toán VNPay</p>
-                <div class="qr-box" style="color:var(--c-blue)">💳</div>
+                <div class="qr-box" style="color:var(--c-blue)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
                 <p style="color:var(--c-muted); max-width:300px; line-height:1.4">Bạn sẽ được chuyển hướng sang cổng thanh toán bảo mật VNPay sau khi nhấn nút đặt hàng.</p>
               </div>
             </div>
@@ -422,7 +423,7 @@
         </button>
 
         <p class="checkout-legal-note">
-          Khi đặt hàng, bạn xác nhận thông tin giao hàng là chính xác. ShopVN sẽ gọi xác nhận trước khi giao với đơn COD giá trị cao.
+          Khi đặt hàng, bạn xác nhận thông tin giao hàng là chính xác. Trạng thái xử lý sẽ được cập nhật cùng đơn hàng.
         </p>
 
         <!-- ========================================== -->
@@ -431,14 +432,14 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            <span><span data-i18n="checkout.title">Thanh toán</span> an toàn, bảo mật</span>
+            <span>Phương thức thanh toán được ghi cùng đơn hàng</span>
           </div>
           <div class="summary-trust-item">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
-            <span><span data-i18n="footer.support">Hỗ trợ</span> khách hàng 24/7 (1800 9999)</span>
+            <span>Thông tin hỗ trợ có tại trang Liên hệ</span>
           </div>
         </div>
 
@@ -465,7 +466,7 @@
         <div class="footer__brand-name">Shop<span>VN</span></div>
         <p class="footer__desc">
           Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị
-          điện tử, phụ kiện công nghệ chính hãng toàn quốc.
+          thiết bị điện tử và phụ kiện công nghệ với thông tin mua hàng rõ ràng.
         </p>
       </div>
       <div>
@@ -474,7 +475,7 @@
           <li><a href="products.html" class="footer__link"><span data-i18n="footer.all_products">Tất cả sản phẩm</span></a></li>
           <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến mãi</span></a></li>
           <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
-          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy nhất</span></a></li>
+          <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Sản phẩm nổi bật</span></a></li>
         </ul>
       </div>
       <div>
@@ -499,7 +500,7 @@
 
     <div class="footer__bottom">
       <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
-      <span>Made with ♥ in Đà Nẵng, Việt Nam</span>
+      <span>ShopVN, Đà Nẵng, Việt Nam</span>
     </div>
   </div>
 </footer>
@@ -509,7 +510,6 @@
 <script src="js/api.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/lucky-wheel.js"></script>
 <script src="js/pages/checkout.js"></script>
 
 

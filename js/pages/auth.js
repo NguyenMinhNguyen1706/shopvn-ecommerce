@@ -193,7 +193,7 @@ async function handleRegister(e) {
     });
     Auth.saveSession(data);
 
-    showToast('Đăng ký thành công! Chào mừng bạn đến với ShopVN 🎉', 'success');
+    showToast('Đăng ký thành công. Chào mừng bạn đến với ShopVN', 'success');
     setTimeout(() => window.location.href = 'index.html', 1000);
 
   } catch (err) {

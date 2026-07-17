@@ -9,11 +9,33 @@ class I18n {
       this.lang = lang;
       localStorage.setItem('lang', lang);
       this.translatePage();
+      this.updateSwitcher();
     }
   }
 
   getLang() {
     return this.lang;
+  }
+
+  switcherMarkup() {
+    const label = this.lang === 'vi' ? 'VI' : 'EN';
+    return `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"></path>
+      </svg>
+      <span>${label}</span>
+    `;
+  }
+
+  updateSwitcher() {
+    document.querySelectorAll('.lang-btn').forEach(button => {
+      button.innerHTML = this.switcherMarkup();
+      button.setAttribute(
+        'aria-label',
+        this.lang === 'vi' ? 'VI - Switch to English' : 'EN - Chuyển sang tiếng Việt'
+      );
+    });
   }
 
   t(key) {
@@ -57,8 +79,8 @@ class I18n {
     if (navbarActions && !document.getElementById('lang-switcher')) {
       const switcherHtml = `
         <div id="lang-switcher" class="lang-switcher">
-          <button class="lang-btn" onclick="i18n.setLang(i18n.getLang() === 'vi' ? 'en' : 'vi')">
-            ${this.lang === 'vi' ? '🇻🇳 VI' : '🇬🇧 EN'}
+          <button type="button" class="lang-btn" onclick="i18n.setLang(i18n.getLang() === 'vi' ? 'en' : 'vi')">
+            ${this.switcherMarkup()}
           </button>
         </div>
       `;
@@ -68,9 +90,13 @@ class I18n {
 
     // Wait for DOM
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.translatePage());
+      document.addEventListener('DOMContentLoaded', () => {
+        this.translatePage();
+        this.updateSwitcher();
+      });
     } else {
       this.translatePage();
+      this.updateSwitcher();
     }
   }
 }

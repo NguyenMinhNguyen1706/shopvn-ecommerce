@@ -55,6 +55,7 @@
 const router         = require('express').Router();
 const authController = require('../controllers/auth.controller');
 const { authenticate } = require('../middlewares/auth.middleware');
+const { validate, schemas } = require('../middlewares/validation.middleware');
 const rateLimit      = require('express-rate-limit');
 
 // Rate limit riêng cho auth — chặn brute force
@@ -67,9 +68,9 @@ const authLimiter = rateLimit({
   },
 });
 
-router.post('/register', authLimiter, authController.register);
-router.post('/login',    authLimiter, authController.login);
-router.post('/social',   authLimiter, authController.socialLogin);
+router.post('/register', authLimiter, validate(schemas.register), authController.register);
+router.post('/login',    authLimiter, validate(schemas.login),    authController.login);
+router.post('/social',   authLimiter, validate(schemas.socialLogin), authController.socialLogin);
 router.post('/refresh',              authController.refresh);
 router.post('/logout',  authenticate, authController.logout);
 router.get ('/me',      authenticate, authController.getMe);

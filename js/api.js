@@ -133,11 +133,17 @@ const MemoryCache = {
 };
 
 const runtimeConfig = window.SHOPVN_CONFIG || {};
-const settingsConfig = JSON.parse(localStorage.getItem('system_settings') || '{}');
-const BASE_URL = runtimeConfig.backendApiUrl
+let settingsConfig = {};
+try {
+  settingsConfig = JSON.parse(localStorage.getItem('system_settings') || '{}');
+} catch {
+  settingsConfig = {};
+}
+const DEFAULT_BACKEND_API_URL = 'https://shopvn-backend.onrender.com/api';
+const BASE_URL = (runtimeConfig.backendApiUrl
   || settingsConfig.backendApiUrl
-  || 'http://localhost:3000/api';
-const USE_BACKEND_API = Boolean(runtimeConfig.backendApiUrl || settingsConfig.backendApiUrl);
+  || DEFAULT_BACKEND_API_URL).replace(/\/$/, '');
+const USE_BACKEND_API = runtimeConfig.useBackendApi !== false && settingsConfig.useBackendApi !== false;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

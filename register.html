@@ -4,15 +4,16 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Tạo tài khoản ShopVN miễn phí để mua sắm đồ điện tử, lưu sản phẩm yêu thích và theo dõi đơn hàng thuận tiện." />
   <title>Đăng ký — ShopVN</title>
 
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/pages/auth.css" />
-  <link rel="stylesheet" href="css/lucky-wheel.css" />
   <link rel="stylesheet" href="css/mobile-nav.css" />
+  <link rel="stylesheet" href="css/redesign.css" />
 </head>
-<body>
+<body class="page-auth page-register">
 
 <div class="auth-page">
 
@@ -23,7 +24,7 @@
 
     <div class="auth-panel__content">
       <div class="auth-panel__tag">
-        - Tặng voucher 50k khi đăng ký mới
+        Mua sắm thuận tiện hơn với tài khoản ShopVN
       </div>
 
       <h2 class="auth-panel__title">
@@ -31,31 +32,31 @@
       </h2>
 
       <p class="auth-panel__desc">
-        Tạo tài khoản miễn phí, nhận ngay voucher 50k cho đơn hàng
-        đầu tiên và hàng trăm ưu đãi độc quyền dành cho thành viên mới.
+        Tạo tài khoản để lưu sản phẩm yêu thích, theo dõi đơn hàng
+        và rút ngắn thông tin cần nhập ở những lần mua tiếp theo.
       </p>
     </div>
 
     <div class="auth-panel__features">
       <div class="auth-feature">
-        <div class="auth-feature__icon">🎟️</div>
+        <div class="auth-feature__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
         <div>
-          <div class="auth-feature__title">Voucher chào mừng</div>
-          <div class="auth-feature__desc">Giảm ngay 50.000đ đơn hàng đầu tiên</div>
+          <div class="auth-feature__title">Lưu sản phẩm yêu thích</div>
+          <div class="auth-feature__desc">Quay lại danh sách đã chọn bất cứ lúc nào</div>
         </div>
       </div>
       <div class="auth-feature">
-        <div class="auth-feature__icon">⚡</div>
+        <div class="auth-feature__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
         <div>
-          <div class="auth-feature__title">Flash Sale độc quyền</div>
-          <div class="auth-feature__desc">Thành viên được vào sớm 1 giá</div>
+          <div class="auth-feature__title">Theo dõi đơn hàng</div>
+          <div class="auth-feature__desc">Xem lịch sử và trạng thái xử lý đơn</div>
         </div>
       </div>
       <div class="auth-feature">
-        <div class="auth-feature__icon">📦</div>
+        <div class="auth-feature__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/><circle cx="12" cy="12" r="10"/></svg></div>
         <div>
-          <div class="auth-feature__title">Miễn phí vận chuyển</div>
-          <div class="auth-feature__desc">Cho mã đơn hàng trên 500.000đ</div>
+          <div class="auth-feature__title">Thanh toán nhanh hơn</div>
+          <div class="auth-feature__desc">Tái sử dụng thông tin nhận hàng đã lưu</div>
         </div>
       </div>
     </div>
@@ -311,11 +312,11 @@
                    style="margin-top:3px; flex-shrink:0" />
             <span class="form-checkbox-label" style="font-size:.84rem; line-height:1.6">
               Tôi đồng ý với
-              <a href="javascript:void(0)" class="form-link" onclick="openLegalModal('terms')">
+              <a href="#terms" class="form-link" onclick="event.preventDefault(); openLegalModal('terms')">
                 Điều khoản sử dụng
               </a>
               và
-              <a href="javascript:void(0)" class="form-link" onclick="openLegalModal('privacy')">
+              <a href="#privacy" class="form-link" onclick="event.preventDefault(); openLegalModal('privacy')">
                 Chính sách bảo mật
               </a>
               của ShopVN.
@@ -356,7 +357,6 @@
 <script src="js/api.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/lucky-wheel.js"></script>
 <script src="js/pages/auth.js"></script>
 <script src="js/locales/vi.js"></script>
 <script src="js/locales/en.js"></script>

@@ -54,6 +54,7 @@ const Product = sequelize.define('Product', {
 }, {
   tableName:  'products',
   timestamps: true,
+  version:    true, // Enables Optimistic Locking
 });
 
 module.exports = Product;

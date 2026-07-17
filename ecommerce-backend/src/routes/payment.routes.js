@@ -1,6 +1,9 @@
 const router            = require('express').Router();
 const paymentController = require('../controllers/payment.controller');
 const { authenticate }  = require('../middlewares/auth.middleware');
+const { validate } = require('../middlewares/validation.middleware');
+const { requireWebhookIP } = require('../middlewares/webhook-security.middleware');
+const Joi = require('joi');
 const rateLimit      = require('express-rate-limit');
 
 // Protect payment creation endpoints from DDoS and invoice spamming
@@ -13,34 +16,28 @@ const paymentLimiter = rateLimit({
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════
-// ✓ EXISTING: VNPay
-// ══════════════════════════════════════════════════════════════════════
-router.post('/vnpay/create', authenticate, paymentLimiter, paymentController.createVnpayUrl);
+const createPaymentSchema = Joi.object({
+  orderId: Joi.number().integer().required()
+});
+
+// ── VNPay ─────────────────────────────────────────────────────────────
+router.post('/vnpay/create', authenticate, paymentLimiter, validate(createPaymentSchema), paymentController.createVnpayUrl);
 router.get('/vnpay/return', paymentController.vnpayReturn);
-router.get('/vnpay/ipn', paymentController.vnpayIpn);
+router.get('/vnpay/ipn', requireWebhookIP('vnpay'), paymentController.vnpayIpn);
 
-// ══════════════════════════════════════════════════════════════════════
-// ✨ NEW 2026: ZaloPay
-// ══════════════════════════════════════════════════════════════════════
-router.post('/zalopay/create', authenticate, paymentLimiter, paymentController.createZaloPayment);
-router.post('/webhooks/zalopay/callback', paymentController.zalopayWebhook);
+// ── ZaloPay ───────────────────────────────────────────────────────────
+router.post('/zalopay/create', authenticate, paymentLimiter, validate(createPaymentSchema), paymentController.createZaloPayment);
+router.post('/webhooks/zalopay/callback', requireWebhookIP('zalopay'), paymentController.zalopayWebhook);
 
-// ══════════════════════════════════════════════════════════════════════
-// ✨ NEW 2026: MoMo
-// ══════════════════════════════════════════════════════════════════════
-router.post('/momo/create', authenticate, paymentLimiter, paymentController.createMomoPayment);
-router.post('/webhooks/momo/callback', paymentController.momoWebhook);
+// ── MoMo ──────────────────────────────────────────────────────────────
+router.post('/momo/create', authenticate, paymentLimiter, validate(createPaymentSchema), paymentController.createMomoPayment);
+router.post('/webhooks/momo/callback', requireWebhookIP('momo'), paymentController.momoWebhook);
 
-// ══════════════════════════════════════════════════════════════════════
-// ✨ NEW 2026: PayOS - VietQR Bank Transfer (AUTO-RECONCILIATION)
-// ══════════════════════════════════════════════════════════════════════
-router.post('/bank-transfer/create', authenticate, paymentLimiter, paymentController.createBankTransferPayment);
-router.post('/webhooks/payos/callback', paymentController.payosWebhook);
+// ── PayOS - VietQR Bank Transfer ──────────────────────────────────────
+router.post('/bank-transfer/create', authenticate, paymentLimiter, validate(createPaymentSchema), paymentController.createBankTransferPayment);
+router.post('/webhooks/payos/callback', requireWebhookIP('payos'), paymentController.payosWebhook);
 
-// ══════════════════════════════════════════════════════════════════════
 // Shared Endpoints
-// ══════════════════════════════════════════════════════════════════════
 router.get('/status/:orderId', authenticate, paymentController.getPaymentStatus);
 
 module.exports = router;

@@ -17,15 +17,6 @@ const state = {
 
 const SHIPPING_THRESHOLD = 500000;
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   const isLoggedIn = Auth.isLoggedIn();
   if (!isLoggedIn) {
@@ -213,14 +204,10 @@ function toggleXu() {
     state.xuDiscount = 0;
     btn.textContent = 'Dùng Xu';
     btn.classList.replace('btn-primary', 'btn-outline');
-    btn.style.color = '#F57C00';
-    btn.style.background = 'white';
   } else {
     state.xuUsed = true;
     btn.textContent = 'Bỏ Xu';
     btn.classList.replace('btn-outline', 'btn-primary');
-    btn.style.color = 'white';
-    btn.style.background = '#F57C00';
   }
 
   calculateTotals();
@@ -232,9 +219,9 @@ function renderSummaryItems() {
 
   container.innerHTML = state.items.map(item => `
     <div class="summary-item">
-      <div class="summary-item__thumb">${escapeHtml(item.icon || '📦')}</div>
+      <div class="summary-item__thumb">${productMediaMarkup(item)}</div>
       <div class="summary-item__info">
-        <h4 class="summary-item__name">${escapeHtml(item.name)}</h4>
+        <h3 class="summary-item__name">${escapeHtml(item.name)}</h3>
         <div class="summary-item__qty-price">
           Số lượng: ${Number(item.quantity) || 0} × ${formatPrice(item.price)}
         </div>
@@ -458,7 +445,7 @@ async function submitOrder() {
         status: 'Chờ xác nhận',
         payment: {
           method: paymentMethod,
-          methodName: paymentMethod === 'vnpay' ? 'Thanh toán VNPay (giả lập khách)' : paymentMethodName,
+          methodName: paymentMethod === 'vnpay' ? 'Thanh toán VNPay' : paymentMethodName,
           status: 'Chờ thanh toán'
         },
         pricing: {
@@ -482,88 +469,78 @@ async function submitOrder() {
 
 function showSuccessPopup(order) {
   const overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100vw';
-  overlay.style.height = '100vh';
-  overlay.style.background = 'rgba(13, 27, 66, 0.6)';
-  overlay.style.backdropFilter = 'blur(8px)';
-  overlay.style.zIndex = '99999';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.animation = 'fadeIn 0.3s ease forwards';
+  overlay.className = 'checkout-success-overlay';
 
   const modal = document.createElement('div');
-  modal.style.background = 'white';
-  modal.style.borderRadius = 'var(--r-lg)';
-  modal.style.padding = 'var(--sp-xl)';
-  modal.style.width = '90%';
-  modal.style.maxWidth = '460px';
-  modal.style.boxShadow = 'var(--shadow-lg)';
-  modal.style.textAlign = 'center';
-  modal.style.animation = 'scaleUp 0.3s cubic-bezier(.34,1.56,.64,1) forwards';
+  modal.className = 'checkout-success-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'checkout-success-title');
 
   modal.innerHTML = `
-    <div style="font-size: 4rem; color: #43a047; margin-bottom: var(--sp-md); animation: pop 0.4s ease 0.2s both">🎉</div>
-    <h3 style="font-family: var(--f-display); font-size: 1.4rem; font-weight: 800; color: var(--c-navy); margin-bottom: var(--sp-sm)">Đặt hàng thành công!</h3>
-    <p style="font-size: .88rem; color: var(--c-muted); margin-bottom: var(--sp-lg)">
+    <button type="button" class="checkout-success-modal__close" aria-label="Đóng">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="checkout-success-modal__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>
+    <h3 id="checkout-success-title">Đặt hàng thành công</h3>
+    <p class="checkout-success-modal__lead">
       Cảm ơn bạn đã mua sắm tại ShopVN. Mã đơn hàng của bạn là:<br>
-      <strong style="color: var(--c-blue); font-size: 1.1rem; letter-spacing: 0.5px">${escapeHtml(order.id)}</strong>
+      <strong>${escapeHtml(order.id)}</strong>
     </p>
 
-    <div style="background: var(--c-off); border-radius: var(--r-md); padding: var(--sp-md); text-align: left; margin-bottom: var(--sp-lg); font-size: .82rem; border: 1px solid var(--c-border)">
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px">
-        <span style="color:var(--c-muted)">Khách hàng:</span>
-        <span style="font-weight:600">${escapeHtml(order.shippingInfo.name)}</span>
+    <div class="checkout-success-modal__summary">
+      <div>
+        <span>Khách hàng:</span>
+        <strong>${escapeHtml(order.shippingInfo.name)}</strong>
       </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px">
-        <span style="color:var(--c-muted)">Số điện thoại:</span>
-        <span style="font-weight:600">${escapeHtml(order.shippingInfo.phone)}</span>
+      <div>
+        <span>Số điện thoại:</span>
+        <strong>${escapeHtml(order.shippingInfo.phone)}</strong>
       </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px">
-        <span style="color:var(--c-muted)">Phương thức:</span>
-        <span style="font-weight:600">${escapeHtml(order.payment.methodName)}</span>
+      <div>
+        <span>Phương thức:</span>
+        <strong>${escapeHtml(order.payment.methodName)}</strong>
       </div>
-      <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--c-border); padding-top:6px; margin-top:6px">
-        <span style="font-weight:600">Tổng thanh toán:</span>
-        <span style="font-weight:700; color:var(--c-accent); font-size:0.95rem">${formatPrice(order.pricing.total)}</span>
+      <div class="checkout-success-modal__total">
+        <span>Tổng thanh toán:</span>
+        <strong>${formatPrice(order.pricing.total)}</strong>
       </div>
     </div>
 
     ${order.payment.method === 'bank' ? `
-      <div style="margin-bottom: var(--sp-lg); font-size: .78rem; color: #e65100; background: #fff3e0; padding: 10px; border-radius: var(--r-sm); border: 1px solid #ffe0b2; text-align: left">
+      <div class="checkout-success-modal__notice">
         <strong>Lưu ý:</strong> Vui lòng chuyển khoản đúng số tiền <strong>${formatPrice(order.pricing.total)}</strong> vào tài khoản ngân hàng hiển thị ở trang thanh toán, với nội dung chuyển khoản là mã đơn hàng <strong>${escapeHtml(order.id)}</strong> để đơn được duyệt nhanh nhất.
       </div>
     ` : ''}
 
     ${order.earnedXu ? `
-      <div style="margin-bottom: var(--sp-lg); font-size: .85rem; color: #2E7D32; background: #E8F5E9; padding: 10px; border-radius: var(--r-sm); border: 1px solid #C8E6C9; text-align: center">
+      <div class="checkout-success-modal__points">
         Bạn được tích lũy <strong>${order.earnedXu} ShopVN Xu</strong> từ đơn hàng này.
       </div>
     ` : ''}
 
-    <div style="display: flex; gap: var(--sp-sm)">
+    <div class="checkout-success-modal__actions">
       <a href="products.html" class="btn btn-outline btn-full btn-sm">Tiếp tục mua sắm</a>
       <a href="orders.html" class="btn btn-primary btn-full btn-sm">Xem đơn hàng</a>
     </div>
   `;
 
-  const styleTag = document.createElement('style');
-  styleTag.textContent = `
-    @keyframes scaleUp {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes pop {
-      0% { transform: scale(0); }
-      70% { transform: scale(1.2); }
-      100% { transform: scale(1); }
-    }
-  `;
-  document.head.appendChild(styleTag);
-
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
+
+  const onKeydown = event => {
+    if (event.key === 'Escape') close();
+  };
+  const close = () => {
+    document.removeEventListener('keydown', onKeydown);
+    overlay.remove();
+  };
+  modal.querySelector('.checkout-success-modal__close')?.addEventListener('click', close);
+  overlay.addEventListener('click', event => {
+    if (event.target === overlay) close();
+  });
+  document.addEventListener('keydown', onKeydown);
+  modal.querySelector('.checkout-success-modal__close')?.focus();
 }
