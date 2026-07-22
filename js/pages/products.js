@@ -49,10 +49,20 @@ const SORT_OPTIONS = [
 ];
 
 const STATUS_FILTERS = [
-  { field: 'inStock', label: 'Còn hàng', icon: '✓' },
-  { field: 'isNew', label: 'Hàng mới', icon: '★' },
-  { field: 'onSale', label: 'Đang giảm giá', icon: '%' },
+  { field: 'inStock', label: 'Còn hàng', icon: 'available' },
+  { field: 'isNew', label: 'Hàng mới', icon: 'new' },
+  { field: 'onSale', label: 'Đang giảm giá', icon: 'sale' },
 ];
+
+const STATUS_ICON_PATHS = {
+  available: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>',
+  new: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>',
+  sale: '<path d="m19 5-14 14"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+};
+
+function statusIconMarkup(icon) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">${STATUS_ICON_PATHS[icon] || ''}</svg>`;
+}
 
 const PRICE_FILTER = {
   min: 0,
@@ -296,7 +306,7 @@ function renderProductCard(product, delay = 0) {
     sold ? `<span class="product-card__sold">Đã bán ${sold}</span>` : `<span class="product-card__sold">${stock ? `Còn ${stock}` : 'Hết hàng'}</span>`,
   ].filter(Boolean).join('');
   return `
-    <article class="product-card fade-up" role="listitem" style="animation-delay:${delay}s">
+    <article class="product-card fade-up" style="animation-delay:${delay}s">
       <div class="product-card__img">
         <a class="product-card__media-link" href="${detailUrl}" aria-label="Xem ${name}, ${category}">
           ${productMediaMarkup(product)}
@@ -328,7 +338,7 @@ function renderProductCard(product, delay = 0) {
           </div>
           <button class="product-card__add"
                   onclick="event.stopPropagation(); addToCartFromGrid(${product.id})"
-                  aria-label="Thêm ${product.name} vào giỏ hàng">
+                  aria-label="Thêm ${name} vào giỏ hàng">
             <span>Thêm</span>
           </button>
         </div>
@@ -459,9 +469,11 @@ async function renderAll() {
 
   try {
     const res = await fetchProductsFromAPI();
-    items = res.items || [];
-    total = res.total || 0;
-    totalPages = res.totalPages || 1;
+    if (!res.fromOfflineDB) {
+      items = res.items || [];
+      total = res.total || 0;
+      totalPages = res.totalPages || 1;
+    }
     setCatalogDataStatus(res.fromOfflineDB
       ? 'Không thể kết nối máy chủ. ShopVN đang hiển thị dữ liệu tạm được lưu trên thiết bị này.'
       : '');
@@ -636,14 +648,23 @@ function initMobileFilter() {
 function renderSidebar() {
   const catList = document.getElementById('cat-list');
   if (catList) {
-    catList.innerHTML = getCategoryOptions().map(cat => `
-      <button type="button"
-              class="filter-option ${state.category === cat.name || (cat.name === 'Tất cả' && !state.category) ? 'active' : ''}"
-              onclick="setCategory('${cat.name}')">
-        <span class="filter-option__name">${cat.name}</span>
-        <span class="filter-option__count">${cat.count}</span>
-      </button>
-    `).join('');
+    catList.innerHTML = getCategoryOptions().map(cat => {
+      const categoryName = escapeHtml(cat.name);
+      const active = state.category === cat.name || (cat.name === 'Tất cả' && !state.category);
+      return `
+        <button type="button"
+                class="filter-option ${active ? 'active' : ''}"
+                data-category="${categoryName}"
+                aria-pressed="${active}">
+          <span class="filter-option__name">${categoryName}</span>
+          <span class="filter-option__count">${Number(cat.count) || 0}</span>
+        </button>
+      `;
+    }).join('');
+
+    catList.querySelectorAll('[data-category]').forEach(button => {
+      button.addEventListener('click', () => setCategory(button.dataset.category));
+    });
   }
 
   const ratingList = document.getElementById('rating-list');
@@ -732,19 +753,22 @@ function renderActiveTags() {
   if (state.rating > 0) tags.push({ label: `Từ ${state.rating} sao`, onRemove: () => { state.rating = 0; applyFilters(); } });
 
   window._tagRemoveHandlers = tags.map(t => t.onRemove);
-  wrap.innerHTML = tags.map((t, i) => `
-    <span class="filter-tag">
-      ${t.label}
-      <button class="filter-tag__remove" onclick="window._tagRemoveHandlers[${i}]()"
-              aria-label="Xóa filter ${t.label}">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </span>
-  `).join('');
+  wrap.innerHTML = tags.map((t, i) => {
+    const label = escapeHtml(t.label);
+    return `
+      <span class="filter-tag">
+        ${label}
+        <button class="filter-tag__remove" onclick="window._tagRemoveHandlers[${i}]()"
+                aria-label="Xóa bộ lọc ${label}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </span>
+    `;
+  }).join('');
 }
 
 function updatePremiumSortUI() {
@@ -763,7 +787,7 @@ function updatePremiumStatusUI() {
   if (!chips) return;
   const selected = STATUS_FILTERS.filter(item => state[item.field]);
   chips.innerHTML = selected.length
-    ? selected.map(item => `<span class="premium-chip"><span>${item.icon}</span>${item.label}</span>`).join('')
+    ? selected.map(item => `<span class="premium-chip"><span aria-hidden="true">${statusIconMarkup(item.icon)}</span>${item.label}</span>`).join('')
     : '<span class="premium-multiselect__placeholder">Chọn trạng thái</span>';
 }
 

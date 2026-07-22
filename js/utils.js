@@ -123,10 +123,17 @@ function showToast(message, type = 'success') {
   if (!container) {
     container = document.createElement('div');
     container.className = 'toast-container';
+    container.setAttribute('aria-live', 'polite');
+    container.setAttribute('aria-atomic', 'false');
     document.body.appendChild(container);
   }
 
-  const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+  const icons = {
+    success: '<path d="m5 12 4 4L19 6"/>',
+    error: '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/>',
+    warning: '<path d="M10.3 3.7 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 4h.01"/>',
+  };
   const colors = {
     success: 'var(--c-navy)',
     error:   '#C62828',
@@ -135,12 +142,15 @@ function showToast(message, type = 'success') {
   };
 
   const toast = document.createElement('div');
+  const safeType = Object.hasOwn(icons, type) ? type : 'success';
   toast.className = 'toast';
-  toast.style.background = colors[type] || colors.success;
+  toast.setAttribute('role', safeType === 'error' ? 'alert' : 'status');
+  toast.style.background = colors[safeType];
   toast.innerHTML = `
-    <span class="toast-icon">${icons[type] || icons.success}</span>
-    <span>${message}</span>
+    <span class="toast-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icons[safeType]}</svg></span>
+    <span class="toast__message"></span>
   `;
+  toast.querySelector('.toast__message').textContent = String(message ?? '');
   container.appendChild(toast);
 
   setTimeout(() => {
@@ -193,7 +203,7 @@ function updateCartBadge() {
   }
 
   const cartLabel = count > 0 ? `Giỏ hàng, ${count} sản phẩm` : 'Giỏ hàng, đang trống';
-  document.querySelectorAll('.navbar__cart-btn, .mobile-bottom-nav__item[href*="cart.html"]')
+  document.querySelectorAll('a.navbar__cart-btn[href*="cart.html"], .mobile-bottom-nav__item[href*="cart.html"]')
     .forEach(link => link.setAttribute('aria-label', cartLabel));
 }
 
@@ -251,8 +261,25 @@ const LocalCart = {
 
 const LocalWishlist = {
   get() {
-    try { return JSON.parse(localStorage.getItem('wishlist') || '[]'); }
-    catch { return []; }
+    try {
+      const stored = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      if (!Array.isArray(stored)) return [];
+
+      const hasLegacyIds = stored.some(item => typeof item !== 'object' || item === null);
+      if (!hasLegacyIds) return stored;
+
+      const products = JSON.parse(localStorage.getItem('admin_products') || '[]');
+      const normalized = stored
+        .map(item => {
+          if (item && typeof item === 'object') return item;
+          return products.find(product => String(product.id) === String(item));
+        })
+        .filter(Boolean);
+      localStorage.setItem('wishlist', JSON.stringify(normalized));
+      return normalized;
+    } catch {
+      return [];
+    }
   },
 
   save(items) {
@@ -261,12 +288,12 @@ const LocalWishlist = {
   },
 
   has(productId) {
-    return this.get().some(i => i.id === productId);
+    return this.get().some(i => String(i.id) === String(productId));
   },
 
   toggle(product) {
     const items = this.get();
-    const idx = items.findIndex(i => i.id === product.id);
+    const idx = items.findIndex(i => String(i.id) === String(product.id));
     if (idx >= 0) {
       items.splice(idx, 1);
       this.save(items);
@@ -281,7 +308,7 @@ const LocalWishlist = {
   },
 
   remove(productId) {
-    const items = this.get().filter(i => i.id !== productId);
+    const items = this.get().filter(i => String(i.id) !== String(productId));
     this.save(items);
   },
 
@@ -307,10 +334,16 @@ const LocalWishlist = {
       wishBadge.textContent = count;
       wishBadge.style.display = count > 0 ? 'flex' : 'none';
     }
+
+    const wishlistLabel = count > 0 ? `Yêu thích, ${count} sản phẩm` : 'Yêu thích, đang trống';
+    document.querySelectorAll('a.navbar__cart-btn[href*="wishlist.html"], .mobile-bottom-nav__item[href*="wishlist.html"]')
+      .forEach(link => link.setAttribute('aria-label', wishlistLabel));
   },
 };
 
 // ── Cart Drawer ───────────────────────────────────────────────────────────────
+
+let cartDrawerReturnFocus = null;
 
 function ensureCartDrawer() {
   if (document.getElementById('cart-drawer')) return;
@@ -325,6 +358,10 @@ function ensureCartDrawer() {
   const drawer = document.createElement('div');
   drawer.className = 'cart-drawer';
   drawer.id = 'cart-drawer';
+  drawer.setAttribute('role', 'dialog');
+  drawer.setAttribute('aria-modal', 'true');
+  drawer.setAttribute('aria-label', 'Giỏ hàng');
+  drawer.setAttribute('aria-hidden', 'true');
   drawer.innerHTML = `
     <div class="cart-drawer__header">
       <h3 class="cart-drawer__title">
@@ -346,7 +383,35 @@ function ensureCartDrawer() {
       <a href="${prefix}checkout.html" class="btn btn-primary btn-full" style="justify-content:center">Thanh toán ngay</a>
     </div>
   `;
+  drawer.inert = true;
   document.body.appendChild(drawer);
+
+  drawer.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeCartDrawer();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+    const focusable = [...drawer.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter(element => element.getClientRects().length > 0);
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
 }
 
 function renderCartDrawer() {
@@ -401,15 +466,33 @@ function renderCartDrawer() {
 }
 
 function openCartDrawer() {
+  cartDrawerReturnFocus = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
   ensureCartDrawer();
   renderCartDrawer();
+  const drawer = document.getElementById('cart-drawer');
+  if (!drawer) return;
+
+  drawer.inert = false;
+  drawer.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => {
     document.body.classList.add('cart-drawer-open');
+    drawer.querySelector('.cart-drawer__close')?.focus({ preventScroll: true });
   });
 }
 
 function closeCartDrawer() {
   document.body.classList.remove('cart-drawer-open');
+  const drawer = document.getElementById('cart-drawer');
+  if (drawer) {
+    drawer.inert = true;
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+  if (cartDrawerReturnFocus?.isConnected) {
+    cartDrawerReturnFocus.focus({ preventScroll: true });
+  }
+  cartDrawerReturnFocus = null;
 }
 
 // ── Search Autocomplete ───────────────────────────────────────────────────────
@@ -1077,7 +1160,7 @@ Object.assign(AIShoppingAssistant, {
 
   copy(key) {
     const vi = {
-      fabLabel: 'Mở trợ lý mua sắm ShopVN',
+      fabLabel: 'AI Trợ lý mua sắm ShopVN - Mở',
       fabText: 'Trợ lý mua sắm',
       subtitle: 'Tư vấn, so sánh, ưu đãi',
       close: 'Đóng',
@@ -1122,7 +1205,7 @@ Object.assign(AIShoppingAssistant, {
       noProduct: 'Mình chưa tìm thấy sản phẩm phù hợp. Thử nói rõ hơn như "laptop dưới 15 triệu", "điện thoại mới", hoặc "phụ kiện giảm giá".'
     };
     const en = {
-      fabLabel: 'Open ShopVN shopping assistant',
+      fabLabel: 'AI Shopping assistant - Open',
       fabText: 'Shopping assistant',
       subtitle: 'Advice, compare, deals',
       close: 'Close',
@@ -1807,6 +1890,18 @@ function registerServiceWorker() {
     navigator.serviceWorker.register(swPath)
       .then(reg => {
         console.log('[ShopVN] Service Worker registered with scope:', reg.scope);
+
+        const activateWaitingWorker = () => {
+          reg.waiting?.postMessage({ type: 'SKIP_WAITING' });
+        };
+
+        activateWaitingWorker();
+        reg.addEventListener('updatefound', () => {
+          const worker = reg.installing;
+          worker?.addEventListener('statechange', () => {
+            if (worker.state === 'installed') activateWaitingWorker();
+          });
+        });
       })
       .catch(err => {
         console.warn('[ShopVN] Service Worker registration failed:', err);
@@ -1839,6 +1934,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileBottomNavActiveState();
   updateMobileBottomNavAuth();
   initSearchAutocomplete();
+  updateCartBadge();
   LocalWishlist.updateBadge();
   initScrollAnimations();
   LoyaltyPoints.updateNavbarBadge();

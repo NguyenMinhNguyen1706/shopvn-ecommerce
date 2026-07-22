@@ -4,7 +4,7 @@
  *   name: Auth
  *   description: Đăng ký, đăng nhập, refresh token
  *
- * /api/auth/register:
+ * /api/v1/auth/register:
  *   post:
  *     summary: Đăng ký tài khoản mới
  *     tags: [Auth]
@@ -25,7 +25,7 @@
  *       201: { description: Đăng ký thành công }
  *       409: { description: Email đã tồn tại }
  *
- * /api/auth/login:
+ * /api/v1/auth/login:
  *   post:
  *     summary: Đăng nhập
  *     tags: [Auth]
@@ -44,7 +44,7 @@
  *       200: { description: Đăng nhập thành công, trả về accessToken }
  *       401: { description: Sai email hoặc mật khẩu }
  *
- * /api/auth/me:
+ * /api/v1/auth/me:
  *   get:
  *     summary: Lấy thông tin user đang đăng nhập
  *     tags: [Auth]

@@ -12,6 +12,7 @@
 
   <meta name="description" content="Xem chi tiết sản phẩm điện tử tại ShopVN, bao gồm giá bán, tồn kho, ưu đãi, đánh giá và thông tin giao hàng." />
   <title>Chi tiết sản phẩm — ShopVN</title>
+  <link rel="canonical" href="https://shopvn-ecommerce.vercel.app/product-detail" />
 
 
 
@@ -74,7 +75,7 @@
 
           </svg>
 
-          <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
+          <input type="search" name="site-search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
 
             onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
 
@@ -84,7 +85,7 @@
 
         <div class="navbar__actions">
         <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
-          ✨
+          <svg class="loyalty-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v8M9 10h4.5a2 2 0 0 1 0 4H10"></path></svg>
           <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
         </div>
 
@@ -154,7 +155,7 @@
 
       <!-- ========================================== -->
 
-      <nav aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
+      <nav class="breadcrumb" aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
 
         <ol style="display:flex;align-items:center;gap:6px;
 
@@ -226,7 +227,7 @@
 
           </div>
 
-          <div class="detail-img-thumbs" id="product-thumbs" role="list" aria-label="Ảnh thu nhỏ">
+          <div class="detail-img-thumbs" id="product-thumbs" role="group" aria-label="Ảnh thu nhỏ">
 
             <!-- ========================================== -->
 
@@ -515,7 +516,7 @@
 
         </div>
 
-        <div class="related__grid" id="related-grid" role="list">
+        <div class="related__grid" id="related-grid">
 
           <!-- ========================================== -->
 

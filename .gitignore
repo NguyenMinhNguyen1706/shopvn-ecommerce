@@ -2,10 +2,14 @@
 node_modules/
 ecommerce-backend/node_modules/
 ecommerce-backend/coverage/
+ecommerce-backend/backups/
 
 # Ignore local environment files
 .env
 ecommerce-backend/.env
+
+# Ignore tmp/
+tmp/
 
 # Ignore temporary/OS files
 .DS_Store

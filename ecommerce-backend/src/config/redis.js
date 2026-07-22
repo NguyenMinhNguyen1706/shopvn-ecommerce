@@ -31,7 +31,7 @@ let isConnected = false;
 
 redisClient.on('connect', () => {
   isConnected = true;
-  logger.info('✓ Redis connected successfully');
+  logger.info('[Redis] Connected');
 });
 
 redisClient.on('error', (err) => {
@@ -46,7 +46,7 @@ redisClient.on('end', () => {
 // Connect (non-blocking — if Redis is down, the app still starts)
 redisClient.connect().catch((err) => {
   logger.error('Redis initial connection failed:', err.message);
-  logger.info('⚠ App will run without cache (Redis unavailable)');
+  logger.info('[Redis] App will run without cache while Redis is unavailable');
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -1,4 +1,4 @@
-/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- HERO ------------------------------------------- */
 .hero {
   padding-top: var(--sp-2xl);
   padding-bottom: var(--sp-2xl);
@@ -85,7 +85,7 @@
 .hero__mini-name { font-size: .78rem; color: rgba(255,255,255,.8); font-weight: 500; }
 .hero__mini-price { font-size: .75rem; color: var(--c-blue-mid); margin-top: 2px; }
 
-/* â”€â”€ BENTO SHOWCASE SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- BENTO SHOWCASE SECTION ------------------------ */
 .bento-section {
   padding: var(--sp-xl) 0;
   background: var(--c-white);
@@ -305,13 +305,13 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
-/* â”€â”€ FEATURED PRODUCTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- FEATURED PRODUCTS ----------------------------- */
 .featured { padding: var(--sp-2xl) 0; }
 .featured__grid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-lg);
 }
 
-/* â”€â”€ PROMO BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- PROMO BANNER ---------------------------------- */
 .promo-banner {
   background: var(--c-navy); border-radius: var(--r-xl);
   padding: var(--sp-2xl); margin: var(--sp-2xl) 0;
@@ -338,13 +338,13 @@
 .promo-banner__desc { color: rgba(255,255,255,.6); font-size: .92rem; }
 .promo-banner__action { position: relative; z-index: 1; flex-shrink: 0; }
 
-/* â”€â”€ NEW ARRIVALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- NEW ARRIVALS ---------------------------------- */
 .new-arrivals { padding: 0 0 var(--sp-2xl); }
 .new-arrivals__grid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-lg);
 }
 
-/* â”€â”€ TRUST STRIP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- TRUST STRIP ----------------------------------- */
 .trust-strip {
   background: var(--c-off); border-top: 1px solid var(--c-border);
   border-bottom: 1px solid var(--c-border); padding: var(--sp-xl) 0;
@@ -361,7 +361,7 @@
 .trust-item__title { font-size: .9rem; font-weight: 600; color: var(--c-text); }
 .trust-item__desc  { font-size: .8rem; color: var(--c-muted); margin-top: 3px; }
 
-/* â”€â”€ ANIMATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- ANIMATIONS ------------------------------------ */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -374,7 +374,7 @@
 .fade-up-3 { animation-delay: .15s; }
 .fade-up-4 { animation-delay: .20s; }
 
-/* â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- RESPONSIVE ------------------------------------ */
 @media (max-width: 1024px) {
   .featured__grid, .new-arrivals__grid { grid-template-columns: repeat(3, 1fr); }
   .bento-showcase { grid-template-columns: repeat(3, 1fr); }
@@ -407,7 +407,7 @@
   .navbar__nav, .navbar__search { display: none; }
 }
 
-/* â”€â”€ BENTO CHECKIN CALENDAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- BENTO CHECKIN CALENDAR ------------------------ */
 .bento-checkin {
   display: flex;
   flex-direction: column;

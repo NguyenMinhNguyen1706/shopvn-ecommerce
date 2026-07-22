@@ -6,6 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Giỏ hàng — ShopVN</title>
+  <meta name="robots" content="noindex,follow" />
   <meta name="description" content="Xem và quản lý giỏ hàng của bạn tại ShopVN.">
 
   <!-- ========================================== -->
@@ -51,7 +52,7 @@
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
-          <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
+          <input type="search" name="site-search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
             onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value">
         </div>
 
@@ -60,7 +61,7 @@
           <div class="navbar__cart-btn" aria-label="ShopVN Xu"
             style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default"
             title="ShopVN Xu">
-            ✨
+            <svg class="loyalty-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v8M9 10h4.5a2 2 0 0 1 0 4H10"></path></svg>
             <span class="navbar__cart-count" id="xu-badge" aria-live="polite"
               style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
           </div>
@@ -102,7 +103,7 @@
     <div class="container">
 
       <!-- ========================================== -->
-      <nav aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
+      <nav class="breadcrumb" aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
         <ol style="display:flex;align-items:center;gap:6px;
                  font-size:.82rem;color:var(--c-muted);list-style:none">
           <li>
@@ -251,8 +252,7 @@
             <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến
                   mãi</span></a></li>
             <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
-            <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy
-                  nhất</span></a></li>
+            <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Sản phẩm nổi bật</span></a></li>
           </ul>
         </div>
         <div>

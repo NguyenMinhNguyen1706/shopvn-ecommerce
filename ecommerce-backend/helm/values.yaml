@@ -1,0 +1,71 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Helm Values — Production configurations for ShopVN E-Commerce (1M user scale)
+# Concepts: Helm Charts, Infrastructure as Code, Autoscaling, Rolling Deployments
+# ═══════════════════════════════════════════════════════════════════════════════
+
+replicaCount: 3
+
+image:
+  repository: gcr.io/shopvn-ecommerce/backend
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-rps: "30"
+  hosts:
+    - host: api.shopvn-ecommerce.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: shopvn-tls-cert
+      hosts:
+        - api.shopvn-ecommerce.com
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Environment variables mapping
+env:
+  NODE_ENV: "production"
+  PORT: "3000"
+  DB_POOL_MAX: "50" # Optimized connection pool for GKE pods
+  DB_STATEMENT_TIMEOUT: "15000" # Kill queries running > 15s
+  API_RATE_LIMIT_MAX: "300"
+  MAX_EVENT_LOOP_LAG_MS: "300"
+  MAX_CONCURRENT_REQUESTS: "1500"
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 15
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 3000
+  initialDelaySeconds: 20
+  periodSeconds: 10

@@ -26,9 +26,10 @@ function applyVoucher(subtotal, code) {
     err.status = 400;
     throw err;
   }
-  return voucher.type === 'fixed'
+  const discount = voucher.type === 'fixed'
     ? voucher.discount
     : Math.floor(subtotal * voucher.discount);
+  return Math.min(subtotal, discount);
 }
 
 const { withRetry } = require('../lib/retry');
@@ -194,39 +195,38 @@ async function getOrderById(orderId, userId) {
 // ── Cancel order ──────────────────────────────────────────────────────────────
 
 async function cancelOrder(orderId, userId) {
-  const order = await Order.findOne({ where: { id: orderId, userId } });
-
-  if (!order) {
-    const err = new Error('Không tìm thấy đơn hàng.');
-    err.status = 404;
-    throw err;
-  }
-  if (order.status !== 'pending') {
-    const err = new Error('Chỉ có thể hủy đơn hàng đang chờ xác nhận.');
-    err.status = 400;
-    throw err;
-  }
-
-  // Hoàn tồn kho
   const t = await sequelize.transaction();
+
   try {
+    const order = await Order.findOne({
+      where: { id: orderId, userId },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!order) {
+      const err = new Error('Không tìm thấy đơn hàng.');
+      err.status = 404;
+      throw err;
+    }
+    if (order.status !== 'pending') {
+      const err = new Error('Chỉ có thể hủy đơn hàng đang chờ xác nhận.');
+      err.status = 400;
+      throw err;
+    }
+
     const items = await OrderItem.findAll({ where: { orderId }, transaction: t });
     const omsItems = [];
     for (const item of items) {
       await Product.increment('stock', {
-        by:          item.quantity,
-        where:       { id: item.productId },
+        by: item.quantity,
+        where: { id: item.productId },
         transaction: t,
       });
-      omsItems.push({
-        productId: item.productId,
-        quantity: item.quantity
-      });
+      omsItems.push({ productId: item.productId, quantity: item.quantity });
     }
 
-    // Giải phóng kho WMS
     await OMSService.releaseReservedStock(orderId, omsItems, t);
-
     await order.update({ status: 'cancelled' }, { transaction: t });
     await t.commit();
     return order;

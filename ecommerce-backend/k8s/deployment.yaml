@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shopvn-ecom
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopvn-backend
+  namespace: shopvn-ecom
+  labels:
+    app: shopvn-backend
+spec:
+  replicas: 3 # Rolling update with 3 replicas for high availability
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: shopvn-backend
+  template:
+    metadata:
+      labels:
+        app: shopvn-backend
+    spec:
+      containers:
+        - name: shopvn-backend
+          image: gcr.io/shopvn-ecommerce/backend:v1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secret
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe: # Liveness check - Concept: Liveness & Readiness Probes
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe: # Readiness check - Concept: Liveness & Readiness Probes
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopvn-backend-service
+  namespace: shopvn-ecom
+spec:
+  selector:
+    app: shopvn-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: ClusterIP # Internal routing, exposed via Ingress
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: shopvn-backend-hpa
+  namespace: shopvn-ecom
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: shopvn-backend
+  minReplicas: 3
+  maxReplicas: 20 # Auto scales up to 20 pods during traffic surges
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70 # Scale up when CPU exceeds 70% - Concept: Autoscaling, Horizontal Scaling
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shopvn-backend-ingress
+  namespace: shopvn-ecom
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-connections: "20"
+    nginx.ingress.kubernetes.io/limit-rps: "30" # Ingress rate limiting
+spec:
+  rules:
+    - host: api.shopvn-ecommerce.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: shopvn-backend-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - api.shopvn-ecommerce.com
+      secretName: shopvn-tls-cert

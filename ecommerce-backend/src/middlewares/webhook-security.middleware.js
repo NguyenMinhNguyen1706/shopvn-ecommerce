@@ -1,53 +1,50 @@
-/**
- * Webhook Security Middleware
- * Concepts: Webhook Hardening, IP Whitelisting, WAF
- * Validates incoming webhook requests by verifying source IP address
- */
+const warnedProviders = new Set();
 
-/**
- * Helper to match an IP address against a whitelist
- */
+const normalizeIp = value => String(value || '')
+  .trim()
+  .replace(/^::ffff:/, '');
+
 function ipMatches(clientIp, allowedIps) {
-  if (!clientIp || !allowedIps || allowedIps.length === 0) return false;
-  return allowedIps.includes(clientIp.trim());
+  const normalizedClientIp = normalizeIp(clientIp);
+  if (!normalizedClientIp || !allowedIps?.length) return false;
+  return allowedIps.some(allowedIp => normalizeIp(allowedIp) === normalizedClientIp);
 }
 
 /**
- * Require Webhook IP Whitelisting
- * @param {string} provider - 'vnpay', 'zalopay', 'momo', or 'payos'
+ * Optional IP allowlisting for payment webhooks.
+ * Provider signatures remain mandatory in each payment handler.
  */
 function requireWebhookIP(provider) {
   return (req, res, next) => {
-    // Get IP address, respecting reverse proxies/gateways
-    const forwardedFor = req.headers['x-forwarded-for'];
-    const clientIp = Array.isArray(forwardedFor)
-      ? forwardedFor[0]
-      : String(forwardedFor || req.ip || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
-
-    // Map provider to specific env variables
+    const clientIp = normalizeIp(req.ip || req.socket?.remoteAddress || 'unknown');
     const envVarName = `${provider.toUpperCase()}_ALLOWED_IPS`;
-    const allowedIpsStr = process.env[envVarName] || '';
-    const allowedIps = allowedIpsStr.split(',').map(ip => ip.trim()).filter(Boolean);
+    const allowedIps = String(process.env[envVarName] || '')
+      .split(',')
+      .map(normalizeIp)
+      .filter(Boolean);
+    const strictMode = String(process.env.REQUIRE_WEBHOOK_IP_ALLOWLIST).toLowerCase() === 'true';
 
-    // Development fallback: allow if no whitelist is configured in non-production
     if (allowedIps.length === 0) {
-      if (process.env.NODE_ENV === 'production') {
-        console.error(`[WebhookSecurity] Access Denied: Production requires whitelisted IPs for ${provider}. Env ${envVarName} is empty.`);
+      if (strictMode) {
+        console.error(`[WebhookSecurity] ${envVarName} is required in strict mode.`);
         return res.status(503).json({
           success: false,
           message: 'Webhook configuration error.'
         });
       }
-      console.warn(`[WebhookSecurity] ${provider} webhook received from ${clientIp}. No IP whitelist configured in non-production; allowing request.`);
+
+      if (!warnedProviders.has(provider)) {
+        warnedProviders.add(provider);
+        console.warn(
+          `[WebhookSecurity] ${envVarName} is empty; relying on ${provider} signature verification.`
+        );
+      }
       return next();
     }
 
-    if (ipMatches(clientIp, allowedIps)) {
-      console.log(`[WebhookSecurity] Access Allowed: Authorized ${provider} webhook from ${clientIp}`);
-      return next();
-    }
+    if (ipMatches(clientIp, allowedIps)) return next();
 
-    console.warn(`[WebhookSecurity] Access Denied: Unauthorized ${provider} webhook from ${clientIp}`);
+    console.warn(`[WebhookSecurity] Rejected ${provider} webhook from ${clientIp}.`);
     return res.status(403).json({
       success: false,
       message: 'Unauthorized source IP.'
@@ -56,5 +53,7 @@ function requireWebhookIP(provider) {
 }
 
 module.exports = {
+  ipMatches,
+  normalizeIp,
   requireWebhookIP
 };

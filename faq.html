@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Câu hỏi thường gặp — ShopVN</title>
+  <link rel="canonical" href="https://shopvn-ecommerce.vercel.app/faq" />
   <meta name="description" content="Các câu hỏi thường gặp về đơn hàng, thanh toán, vận chuyển và đổi trả tại ShopVN." />
 
   <link rel="stylesheet" href="css/variables.css" />
@@ -28,12 +29,12 @@
       </ul>
       <div class="navbar__search" role="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--c-muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
+        <input type="search" name="site-search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
                onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
       </div>
       <div class="navbar__actions">
         <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
-          ✨
+          <svg class="loyalty-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v8M9 10h4.5a2 2 0 0 1 0 4H10"></path></svg>
           <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
         </div>
         <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
@@ -72,13 +73,13 @@
   <div class="container">
 
     <!-- ========================================== -->
-    <div class="faq-cats" id="faq-cats">
-      <button class="faq-cat-btn active" data-cat="all">Tất cả</button>
-      <button class="faq-cat-btn" data-cat="don-hang"><span data-i18n="nav.orders">Đơn hàng</span></button>
-      <button class="faq-cat-btn" data-cat="thanh-toan"><span data-i18n="checkout.title">Thanh toán</span></button>
-      <button class="faq-cat-btn" data-cat="van-chuyen">Vận chuyển</button>
-      <button class="faq-cat-btn" data-cat="doi-tra">Đổi trả</button>
-      <button class="faq-cat-btn" data-cat="tai-khoan"><span data-i18n="footer.account">Tài khoản</span></button>
+    <div class="faq-cats" id="faq-cats" role="group" aria-label="Lọc câu hỏi theo chủ đề">
+      <button class="faq-cat-btn active" data-cat="all" aria-pressed="true">Tất cả</button>
+      <button class="faq-cat-btn" data-cat="don-hang" aria-pressed="false"><span data-i18n="nav.orders">Đơn hàng</span></button>
+      <button class="faq-cat-btn" data-cat="thanh-toan" aria-pressed="false"><span data-i18n="checkout.title">Thanh toán</span></button>
+      <button class="faq-cat-btn" data-cat="van-chuyen" aria-pressed="false">Vận chuyển</button>
+      <button class="faq-cat-btn" data-cat="doi-tra" aria-pressed="false">Đổi trả</button>
+      <button class="faq-cat-btn" data-cat="tai-khoan" aria-pressed="false"><span data-i18n="footer.account">Tài khoản</span></button>
     </div>
 
     <!-- ========================================== -->
@@ -221,15 +222,18 @@
       html += `
         <div class="faq-group" ${group.id ? `id="${group.id}"` : ''} data-cat="${group.cat}">
           <div class="faq-group__title">${group.title}</div>
-          ${filteredItems.map((item, idx) => `
+          ${filteredItems.map((item, idx) => {
+            const answerId = `faq-answer-${group.cat}-${idx}`;
+            return `
             <div class="faq-item" data-idx="${idx}">
-              <button class="faq-question" onclick="toggleFAQ(this)">
+              <button class="faq-question" onclick="toggleFAQ(this)" aria-expanded="false" aria-controls="${answerId}">
                 <span>${item.q}</span>
-                <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
               </button>
-              <div class="faq-answer">${item.a}</div>
+              <div class="faq-answer" id="${answerId}" aria-hidden="true">${item.a}</div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
       `;
     });
@@ -247,9 +251,15 @@
       if (targetGroup) {
         targetGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
         const firstItem = targetGroup.querySelector('.faq-item');
-        if (firstItem) firstItem.classList.add('open');
+        if (firstItem) setFAQItemOpen(firstItem, true);
       }
     }
+  }
+
+  function setFAQItemOpen(item, open) {
+    item.classList.toggle('open', open);
+    item.querySelector('.faq-question')?.setAttribute('aria-expanded', String(open));
+    item.querySelector('.faq-answer')?.setAttribute('aria-hidden', String(!open));
   }
 
   function toggleFAQ(btn) {
@@ -257,9 +267,9 @@
     const wasOpen = item.classList.contains('open');
 
     // Close all in same group
-    item.closest('.faq-group')?.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    item.closest('.faq-group')?.querySelectorAll('.faq-item').forEach(i => setFAQItemOpen(i, false));
 
-    if (!wasOpen) item.classList.add('open');
+    if (!wasOpen) setFAQItemOpen(item, true);
   }
 
   // Category buttons
@@ -267,8 +277,12 @@
     const btn = e.target.closest('.faq-cat-btn');
     if (!btn) return;
 
-    document.querySelectorAll('.faq-cat-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.faq-cat-btn').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
+    });
     btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
     activeCategory = btn.dataset.cat;
     renderFAQ(document.getElementById('faq-search-input').value.trim());
   });
@@ -288,8 +302,12 @@
     if (hash) {
       const btn = document.querySelector(`.faq-cat-btn[data-cat="${hash}"]`);
       if (btn) {
-        document.querySelectorAll('.faq-cat-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.faq-cat-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
         btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
         activeCategory = hash;
       }
     }

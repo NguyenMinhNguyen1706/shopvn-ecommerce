@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Liên hệ — ShopVN</title>
+  <link rel="canonical" href="https://shopvn-ecommerce.vercel.app/contact" />
   <meta name="description" content="Gửi yêu cầu tư vấn mua hàng hoặc hỗ trợ đơn hàng tới ShopVN." />
 
   <link rel="stylesheet" href="css/variables.css" />
@@ -28,12 +29,12 @@
       </ul>
       <div class="navbar__search" role="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--c-muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
+        <input type="search" name="site-search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
                onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
       </div>
       <div class="navbar__actions">
         <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
-          ✨
+          <svg class="loyalty-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v8M9 10h4.5a2 2 0 0 1 0 4H10"></path></svg>
           <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
         </div>
         <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
@@ -94,10 +95,10 @@
           <div>
             <label for="ct-subject">Chủ đề</label>
             <select id="ct-subject">
-              <option value="">Chuẩn chủ đề</option>
+              <option value="">Chọn chủ đề</option>
               <option value="order">Hỏi về đơn hàng</option>
               <option value="product">Hỏi về sản phẩm</option>
-              <option value="return"><span data-i18n="footer.returns">Đổi trả hàng</span></option>
+              <option value="return">Đổi trả hàng</option>
               <option value="warranty">Bảo hành</option>
               <option value="other">Khác</option>
             </select>
@@ -159,7 +160,7 @@
     <!-- ========================================== -->
     <div style="margin-bottom:var(--sp-lg)">
       <h2 style="font-family:var(--f-display);font-size:1.4rem;font-weight:700;color:var(--c-title);margin-bottom:var(--sp-lg)">
-        - Hệ thống cửa hàng
+        Hệ thống cửa hàng
       </h2>
     </div>
 

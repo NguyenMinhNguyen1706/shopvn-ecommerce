@@ -12,7 +12,7 @@ router.post  ('/',       validate(schemas.addToCart), cartController.addItem);
 router.post  ('/sync',   validate(Joi.object({
   items: Joi.array().items(
     Joi.object({
-      id: Joi.number().integer().required(),
+      id: Joi.number().integer().min(1).required(),
       quantity: Joi.number().integer().min(1).max(99).required()
     })
   ).required()

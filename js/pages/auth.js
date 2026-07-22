@@ -17,6 +17,27 @@ const Validators = {
   noSpace:  (v) => !/\s/.test(v) || 'Không được chứa khoảng trắng.',
 };
 
+const POST_AUTH_DESTINATIONS = new Set([
+  'index.html',
+  'checkout.html',
+  'orders.html',
+  'cart.html',
+  'wishlist.html',
+]);
+
+function getPostAuthDestination() {
+  const next = new URLSearchParams(window.location.search).get('next');
+  return POST_AUTH_DESTINATIONS.has(next) ? next : 'index.html';
+}
+
+function getAuthErrorMessage(error, fallback) {
+  const message = String(error?.message || '');
+  if (/failed to fetch|networkerror|network request failed/i.test(message)) {
+    return 'Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối và thử lại.';
+  }
+  return message || fallback;
+}
+
 /**
  * Validate một field và hiện/ẩn lỗi
  * @param {string} fieldId
@@ -37,11 +58,13 @@ function validateField(fieldId, rules) {
   if (errorMsg) {
     input.classList.add('error');
     input.classList.remove('success');
+    input.setAttribute('aria-invalid', 'true');
     if (errEl) { errEl.textContent = errorMsg; errEl.classList.add('show'); }
     return false;
   } else {
     input.classList.remove('error');
     input.classList.add('success');
+    input.setAttribute('aria-invalid', 'false');
     if (errEl) errEl.classList.remove('show');
     return true;
   }
@@ -52,6 +75,7 @@ function clearFieldState(fieldId) {
   const input = document.getElementById(fieldId);
   const errEl = document.getElementById(fieldId + '-err');
   input?.classList.remove('error', 'success');
+  input?.setAttribute('aria-invalid', 'false');
   errEl?.classList.remove('show');
 }
 
@@ -149,12 +173,15 @@ async function handleLogin(e) {
     }
 
     showToast('Đăng nhập thành công! Đang chuyển trang...', 'success');
-    setTimeout(() => window.location.href = 'index.html', 900);
+    setTimeout(() => window.location.href = getPostAuthDestination(), 900);
 
   } catch (err) {
-    showToast(err.message || 'Email hoặc mật khẩu không đúng.', 'error');
-    document.getElementById('email')?.classList.add('error');
-    document.getElementById('password')?.classList.add('error');
+    showToast(getAuthErrorMessage(err, 'Email hoặc mật khẩu không đúng.'), 'error');
+    ['email', 'password'].forEach(fieldId => {
+      const input = document.getElementById(fieldId);
+      input?.classList.add('error');
+      input?.setAttribute('aria-invalid', 'true');
+    });
   } finally {
     setButtonLoading(btn, false);
   }
@@ -194,10 +221,10 @@ async function handleRegister(e) {
     Auth.saveSession(data);
 
     showToast('Đăng ký thành công. Chào mừng bạn đến với ShopVN', 'success');
-    setTimeout(() => window.location.href = 'index.html', 1000);
+    setTimeout(() => window.location.href = getPostAuthDestination(), 1000);
 
   } catch (err) {
-    showToast(err.message || 'Đăng ký thất bại, vui lòng thử lại.', 'error');
+    showToast(getAuthErrorMessage(err, 'Đăng ký thất bại, vui lòng thử lại.'), 'error');
   } finally {
     setButtonLoading(btn, false);
   }
@@ -255,9 +282,9 @@ async function processSocialLogin(provider, token) {
     Auth.saveSession(data);
     
     showToast(`Đăng nhập bằng ${provider} thành công!`, 'success');
-    setTimeout(() => window.location.href = 'index.html', 900);
+    setTimeout(() => window.location.href = getPostAuthDestination(), 900);
   } catch (err) {
-    showToast(err.message || `Đăng nhập ${provider} thất bại.`, 'error');
+    showToast(getAuthErrorMessage(err, `Đăng nhập ${provider} thất bại.`), 'error');
   } finally {
     const btn = document.getElementById('submit-btn');
     if (btn) setButtonLoading(btn, false);
@@ -272,7 +299,7 @@ window.handleFacebookLogin = handleFacebookLogin;
 document.addEventListener('DOMContentLoaded', () => {
   // Redirect nếu đã đăng nhập
   if (Auth.isLoggedIn()) {
-    window.location.href = 'index.html';
+    window.location.href = getPostAuthDestination();
     return;
   }
 

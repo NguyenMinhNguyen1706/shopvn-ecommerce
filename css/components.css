@@ -1,4 +1,4 @@
-/* â”€â”€ BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- BUTTONS --------------------------------------- */
 .btn {
   display: inline-flex; align-items: center; gap: var(--sp-sm);
   font-family: var(--f-body); font-size: .9rem; font-weight: 500;
@@ -40,7 +40,7 @@
 .btn:active { transform: scale(0.97) !important; transition-duration: 80ms; }
 .btn-primary:active { box-shadow: 0 1px 4px color-mix(in srgb, var(--c-blue) 20%, transparent); }
 
-/* â”€â”€ BADGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- BADGE ----------------------------------------- */
 .badge {
   display: inline-flex; align-items: center;
   font-size: .72rem; font-weight: 500; letter-spacing: .03em;
@@ -52,7 +52,7 @@
 .badge-gray   { background: var(--c-surface); color: var(--c-muted); }
 .badge-red    { background: color-mix(in srgb, var(--c-error) 10%, transparent); color: var(--c-error); }
 
-/* â”€â”€ PRODUCT CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- PRODUCT CARD ---------------------------------- */
 .product-card {
   background: var(--c-white);
   border: 1px solid var(--c-border);
@@ -140,7 +140,7 @@
   box-shadow: 0 2px 8px rgba(244,63,94,.3);
 }
 
-/* â”€â”€ NAVBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- NAVBAR ---------------------------------------- */
 .navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 900;
   height: var(--nav-h);
@@ -263,7 +263,7 @@
   box-shadow: 0 2px 5px rgba(255, 107, 53, 0.4);
 }
 
-/* â”€â”€ ACCOUNT DROPDOWN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- ACCOUNT DROPDOWN ------------------------------ */
 .user-profile-dropdown {
   position: relative;
   display: inline-block;
@@ -420,7 +420,7 @@
   color: var(--c-error);
 }
 
-/* â”€â”€ RESPONSIVE MOBILE DRAWER & HAMBURGER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- RESPONSIVE MOBILE DRAWER & HAMBURGER ---------- */
 .mobile-menu-toggle {
   display: none;
   width: 42px;
@@ -609,7 +609,7 @@ body.drawer-open .mobile-drawer {
   }
 }
 
-/* â”€â”€ SECTION HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- SECTION HEADER -------------------------------- */
 .section-header {
   display: flex; align-items: flex-end;
   justify-content: space-between; margin-bottom: var(--sp-xl);
@@ -625,7 +625,7 @@ body.drawer-open .mobile-drawer {
   font-weight: 700; color: var(--c-title); line-height: 1.2;
 }
 
-/* â”€â”€ FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- FOOTER ---------------------------------------- */
 .footer {
   background: var(--c-navy); color: rgba(255,255,255,.65);
   padding: var(--sp-2xl) 0 var(--sp-xl);
@@ -732,7 +732,7 @@ body.drawer-open .mobile-drawer {
   color: white;
 }
 
-/* â”€â”€ TOAST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- TOAST ----------------------------------------- */
 .toast-container {
   position: fixed; bottom: 24px; right: 24px;
   display: flex; flex-direction: column; gap: 8px; z-index: 9999;
@@ -757,7 +757,7 @@ body.drawer-open .mobile-drawer {
   to   { opacity: 0; transform: translateX(20px); }
 }
 
-/* â”€â”€ SKELETON LOADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- SKELETON LOADER ------------------------------- */
 .skeleton {
   background: linear-gradient(90deg, var(--c-surface) 25%, var(--c-border) 50%, var(--c-surface) 75%);
   background-size: 200% 100%;
@@ -769,7 +769,7 @@ body.drawer-open .mobile-drawer {
   100% { background-position: -200% 0; }
 }
 
-/* â”€â”€ FADE-IN ANIMATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- FADE-IN ANIMATION ---------------------------- */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -788,7 +788,7 @@ body.drawer-open .mobile-drawer {
   transform: translateY(0);
 }
 
-/* â”€â”€ CART DRAWER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- CART DRAWER ----------------------------------- */
 .cart-drawer-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(13,27,42,.45);
@@ -913,7 +913,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   font-weight: 800; color: var(--c-title);
 }
 
-/* â”€â”€ SEARCH AUTOCOMPLETE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- SEARCH AUTOCOMPLETE --------------------------- */
 .navbar__search, .toolbar-search { position: relative; }
 .search-ac-dropdown {
   position: absolute; top: calc(100% + 8px); left: 0; right: 0;
@@ -957,7 +957,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   font-size: .88rem; color: var(--c-muted);
 }
 
-/* â”€â”€ SCROLL TO TOP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- SCROLL TO TOP --------------------------------- */
 .scroll-top-btn {
   position: fixed; bottom: 90px; right: 24px;
   width: 44px; height: 44px; border-radius: 50%;
@@ -978,7 +978,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   transform: translateY(-2px) scale(1.05);
 }
 
-/* â”€â”€ BOTTOM TAB BAR (Mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- BOTTOM TAB BAR (Mobile) ----------------------- */
 .bottom-tab-bar {
   display: none;
   position: fixed; bottom: 0; left: 0; right: 0;
@@ -1019,7 +1019,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   .scroll-top-btn { bottom: 80px; }
 }
 
-/* â”€â”€ WISHLIST BUTTON ON PRODUCT CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- WISHLIST BUTTON ON PRODUCT CARDS -------------- */
 .product-card__wish {
   position: absolute; top: 10px; right: 10px;
   width: 34px; height: 34px; border-radius: 50%;
@@ -1047,7 +1047,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   fill: var(--c-error); stroke: var(--c-error);
 }
 
-/* â”€â”€ FLASH SALE COUNTDOWN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- FLASH SALE COUNTDOWN -------------------------- */
 .flash-sale-bar {
   background: linear-gradient(135deg, var(--c-error) 0%, #FF6B35 100%);
   color: white; padding: 10px 0;
@@ -1087,7 +1087,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   50% { opacity: .1; }
 }
 
-/* â”€â”€ WISHLIST PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- WISHLIST PAGE --------------------------------- */
 .wishlist-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -1100,7 +1100,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
 .wishlist-empty__text { font-size: 1.1rem; font-weight: 600; color: var(--c-text); margin-bottom: 4px; }
 .wishlist-empty__sub { font-size: .9rem; color: var(--c-muted); margin-bottom: var(--sp-lg); }
 
-/* â”€â”€ COUPON INPUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- COUPON INPUT ---------------------------------- */
 .coupon-row {
   display: flex; gap: 8px; margin-bottom: var(--sp-md);
 }
@@ -1125,7 +1125,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   background: color-mix(in srgb, var(--c-error) 10%, transparent); color: var(--c-error); border: 1px solid color-mix(in srgb, var(--c-error) 20%, transparent);
 }
 
-/* â”€â”€ RESPONSIVE FIXES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- RESPONSIVE FIXES ------------------------------ */
 @media (max-width: 768px) {
   .footer__grid { grid-template-columns: 1fr 1fr; gap: var(--sp-xl); }
   .footer__bottom { flex-direction: column; gap: 8px; text-align: center; }
@@ -1136,7 +1136,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   .footer__grid { grid-template-columns: 1fr; }
 }
 
-/* â”€â”€ LIVE PURCHASE NOTIFICATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- LIVE PURCHASE NOTIFICATIONS ------------------- */
 .live-notif-container {
   position: fixed; bottom: 24px; left: 24px;
   display: flex; flex-direction: column; gap: 8px; z-index: 2500;
@@ -1183,7 +1183,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   .live-notif-container { bottom: 80px; left: 12px; right: 12px; max-width: none; }
 }
 
-/* â”€â”€ FREE SHIPPING PROGRESS BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- FREE SHIPPING PROGRESS BAR -------------------- */
 .free-ship-bar {
   padding: 12px 16px; border-radius: var(--r-lg);
   background: linear-gradient(135deg, #E3F2FD 0%, #F1F8E9 100%);
@@ -1224,7 +1224,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   font-size: .7rem; color: var(--c-muted);
 }
 
-/* â”€â”€ COMPARE FLOATING BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- COMPARE FLOATING BAR -------------------------- */
 .compare-float-bar {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(120%);
   background: var(--c-white); border: 1px solid var(--c-border);
@@ -1268,7 +1268,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   .compare-float-bar { bottom: 80px; padding: 8px 12px; }
 }
 
-/* â”€â”€ QUICK VIEW MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- QUICK VIEW MODAL ------------------------------ */
 .quickview-overlay {
   position: fixed; inset: 0;
   background: rgba(13,27,42,.5);
@@ -1339,7 +1339,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   .quickview-modal__img { border-radius: var(--r-xl) var(--r-xl) 0 0; aspect-ratio: 4/3; }
 }
 
-/* â”€â”€ QUICK VIEW BUTTON ON CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- QUICK VIEW BUTTON ON CARDS -------------------- */
 .product-card__quickview {
   position: absolute; bottom: 10px; left: 50%;
   transform: translateX(-50%) translateY(10px);
@@ -1360,7 +1360,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   background: var(--c-blue); color: white; border-color: var(--c-blue);
 }
 
-/* â”€â”€ STICKY ADD-TO-CART BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- STICKY ADD-TO-CART BAR ------------------------ */
 .sticky-atc-bar {
   position: fixed; bottom: 0; left: 0; right: 0;
   background: rgba(255,255,255,.92);
@@ -1400,7 +1400,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   .sticky-atc-bar__name { max-width: 120px; }
 }
 
-/* â”€â”€ URGENCY INDICATORS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- URGENCY INDICATORS ---------------------------- */
 .urgency-box {
   margin-top: var(--sp-md); padding: 12px 16px;
   border-radius: var(--r-lg);
@@ -1423,7 +1423,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   50% { opacity: .5; transform: scale(1.3); }
 }
 
-/* â”€â”€ RECENTLY VIEWED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- RECENTLY VIEWED ------------------------------- */
 .recently-viewed__scroll {
   display: flex; gap: var(--sp-md); overflow-x: auto;
   padding-bottom: var(--sp-md); scroll-snap-type: x mandatory;
@@ -1453,7 +1453,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
 }
 .recently-viewed__item-price { font-size: .78rem; font-weight: 700; color: var(--c-blue); }
 
-/* â”€â”€ LUCKY WHEEL FLOATING BUTTON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- LUCKY WHEEL FLOATING BUTTON ------------------- */
 .lucky-wheel-fab {
   position: fixed; bottom: 100px; right: 24px;
   width: 56px; height: 56px; border-radius: 50%;
@@ -1501,7 +1501,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   transform: translateY(-1px);
 }
 
-/* â”€â”€ THEME SWITCHER TOGGLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- THEME SWITCHER TOGGLE ------------------------ */
 .theme-toggle-btn {
   width: 38px;
   height: 38px;
@@ -1523,7 +1523,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   transform: translateY(-1px);
 }
 
-/* â”€â”€ DARK THEME GENERAL IMPROVEMENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- DARK THEME GENERAL IMPROVEMENTS --------------- */
 [data-theme="dark"] .navbar,
 [data-theme="dark"] .search-ac-dropdown,
 [data-theme="dark"] .compare-float-bar,
@@ -1550,7 +1550,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   color: var(--c-text);
 }
 
-/* â”€â”€ MOBILE FILTER DRAWER STYLING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- MOBILE FILTER DRAWER STYLING ----------------- */
 .filter-close-btn {
   display: none;
 }
@@ -1619,7 +1619,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   }
 }
 
-/* â”€â”€ SEARCH DROPDOWN SUGGESTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- SEARCH DROPDOWN SUGGESTIONS ------------------- */
 .search-ac-suggestions {
   padding: var(--sp-md);
   text-align: left;
@@ -1680,7 +1680,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   padding-left: 16px;
 }
 
-/* â”€â”€ DESKTOP RESPONSIVE COMPACTNESS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- DESKTOP RESPONSIVE COMPACTNESS ---------------- */
 @media (min-width: 1025px) and (max-width: 1240px) {
   .navbar__logo {
     margin-right: var(--sp-sm) !important;
@@ -1708,7 +1708,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   }
 }
 
-/* â”€â”€ FLYING CART ANIMATION & BOUNCE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- FLYING CART ANIMATION & BOUNCE ---------------- */
 .flying-cart-icon {
   position: fixed;
   z-index: 9999;
@@ -1725,7 +1725,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   50% { transform: scale(1.22); }
 }
 
-/* â”€â”€ AI SHOPPING ASSISTANT (CHATBOT) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- AI SHOPPING ASSISTANT (CHATBOT) ---------------- */
 .chatbot-fab {
   position: fixed;
   bottom: 165px;
@@ -2039,7 +2039,7 @@ body.cart-drawer-open .cart-drawer { transform: translateX(0); }
   transform: rotate(45deg) translate(-1px, 1px);
 }
 
-/* â”€â”€ DARK THEME CHATBOT OVERRIDES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- DARK THEME CHATBOT OVERRIDES ------------------ */
 [data-theme="dark"] .chatbot-window {
   background: rgba(18, 18, 18, 0.8) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;

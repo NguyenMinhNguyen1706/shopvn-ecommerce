@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ShopVN - Mua sắm thông minh</title>
   <meta name="description" content="Khám phá thiết bị điện tử với thông tin giá, tồn kho và đơn hàng rõ ràng tại ShopVN." />
+  <link rel="canonical" href="https://shopvn-ecommerce.vercel.app/" />
 
   <!-- ========================================== -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -51,7 +52,7 @@
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-          <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
+          <input type="search" name="site-search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
             onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
         </div>
 
@@ -293,7 +294,7 @@
           </svg>
         </a>
       </div>
-      <div class="featured__grid" id="featured-grid" role="list" aria-label="Sản phẩm nổi bật">
+      <div class="featured__grid" id="featured-grid">
         <!-- ========================================== -->
       </div>
     </div>
@@ -317,7 +318,7 @@
           </svg>
         </a>
       </div>
-      <div class="new-arrivals__grid" id="new-arrivals-grid" role="list" aria-label="Sản phẩm mới">
+      <div class="new-arrivals__grid" id="new-arrivals-grid">
         <!-- ========================================== -->
       </div>
     </div>
@@ -357,7 +358,7 @@
           </svg>
         </a>
       </div>
-      <div class="featured__grid" id="recommendations-grid" role="list" aria-label="Sản phẩm gợi ý">
+      <div class="featured__grid" id="recommendations-grid">
         <!-- ========================================== -->
       </div>
     </div>
@@ -385,8 +386,7 @@
             <li><a href="products.html?sort=sale" class="footer__link"><span data-i18n="footer.sale">Khuyến
                   mãi</span></a></li>
             <li><a href="products.html?sort=newest" class="footer__link">Hàng mới về</a></li>
-            <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Bán chạy
-                  nhất</span></a></li>
+            <li><a href="products.html?sort=popular" class="footer__link"><span data-i18n="footer.popular">Sản phẩm nổi bật</span></a></li>
           </ul>
         </div>
         <div>

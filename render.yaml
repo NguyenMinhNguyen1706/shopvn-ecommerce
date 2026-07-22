@@ -5,15 +5,18 @@ services:
     region: singapore
     rootDir: ecommerce-backend
     plan: free
-    buildCommand: npm install
-    startCommand: npm start
-    healthCheckPath: /health
-    autoDeployTrigger: commit
+    buildCommand: npm ci --omit=dev
+    startCommand: npm run db:migrate && npm start
+    healthCheckPath: /ready
+    maxShutdownDelaySeconds: 60
+    autoDeployTrigger: checksPass
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: shopvn-postgres
+          property: connectionString
       - key: DB_SSL
         value: "true"
       - key: REDIS_URL
@@ -32,9 +35,9 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
-        value: 7d
+        value: 15m
       - key: JWT_REFRESH_EXPIRES_IN
-        value: 30d
+        value: 7d
       - key: API_RATE_LIMIT_MAX
         value: "300"
       - key: API_RATE_LIMIT_WINDOW_SECONDS
@@ -43,14 +46,50 @@ services:
         value: 2mb
       - key: FORM_BODY_LIMIT
         value: 2mb
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_SYNC_ON_STARTUP
+        value: "false"
+      - key: SEED_ON_STARTUP
+        value: "false"
+      - key: ENSURE_INVENTORY_ON_STARTUP
+        value: "false"
+      - key: REQUIRE_WEBHOOK_IP_ALLOWLIST
+        value: "false"
       - key: WEBHOOK_SHARED_SECRET
         sync: false
-      - key: DB_SYNC_ON_STARTUP
-        value: "true"
-      - key: SEED_ON_STARTUP
-        value: "true"
-      - key: ENSURE_INVENTORY_ON_STARTUP
-        value: "true"
+      - key: VNPAY_TMN_CODE
+        sync: false
+      - key: VNPAY_HASH_SECRET
+        sync: false
+      - key: VNPAY_URL
+        sync: false
+      - key: VNPAY_RETURN_URL
+        sync: false
+      - key: VNPAY_IPN_URL
+        sync: false
+      - key: ZALOPAY_APP_ID
+        sync: false
+      - key: ZALOPAY_KEY1
+        sync: false
+      - key: ZALOPAY_KEY2
+        sync: false
+      - key: ZALOPAY_CALLBACK_URL
+        sync: false
+      - key: MOMO_PARTNER_CODE
+        sync: false
+      - key: MOMO_ACCESS_KEY
+        sync: false
+      - key: MOMO_SECRET_KEY
+        sync: false
+      - key: MOMO_IPN_URL
+        sync: false
+      - key: PAYOS_CLIENT_ID
+        sync: false
+      - key: PAYOS_API_KEY
+        sync: false
+      - key: PAYOS_CHECKSUM_KEY
+        sync: false
 
   - type: worker
     name: shopvn-worker
@@ -58,14 +97,17 @@ services:
     region: singapore
     rootDir: ecommerce-backend
     plan: starter
-    buildCommand: npm install
-    startCommand: npm run worker
-    autoDeployTrigger: commit
+    buildCommand: npm ci --omit=dev
+    startCommand: npm run db:migrate && npm run worker
+    maxShutdownDelaySeconds: 60
+    autoDeployTrigger: checksPass
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: shopvn-postgres
+          property: connectionString
       - key: DB_SSL
         value: "true"
       - key: REDIS_URL
@@ -89,13 +131,15 @@ services:
         sync: false
       - key: WORKER_CONCURRENCY
         value: "5"
+      - key: LOG_LEVEL
+        value: info
 
   - type: keyvalue
     name: shopvn-redis
     plan: free
     region: singapore
     ipAllowList: []
-    maxmemoryPolicy: allkeys-lru
+    maxmemoryPolicy: noeviction
 
 databases:
   - name: shopvn-postgres
@@ -103,3 +147,4 @@ databases:
     region: singapore
     databaseName: ecommerce_db
     user: shopvn
+    ipAllowList: []

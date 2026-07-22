@@ -2,120 +2,162 @@ const axios = require('axios');
 const crypto = require('crypto');
 const logger = console;
 
+const stripTrailingSlash = value => String(value || '').replace(/\/+$/, '');
+
+const requireSetting = (name, value) => {
+  if (!value) throw new Error(`Missing payment configuration: ${name}`);
+  return value;
+};
+
+const timingSafeEqualHex = (expected, received) => {
+  if (!/^[a-f0-9]{64}$/i.test(String(expected)) || !/^[a-f0-9]{64}$/i.test(String(received))) {
+    return false;
+  }
+  const expectedBuffer = Buffer.from(String(expected), 'hex');
+  const receivedBuffer = Buffer.from(String(received), 'hex');
+  return expectedBuffer.length === receivedBuffer.length
+    && crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+};
+
+const sortNestedValue = value => {
+  if (Array.isArray(value)) return value.map(sortNestedValue);
+  if (value && typeof value === 'object') {
+    return Object.keys(value).sort().reduce((result, key) => {
+      result[key] = sortNestedValue(value[key]);
+      return result;
+    }, {});
+  }
+  return value;
+};
+
+const stringifySignatureValue = value => {
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value) || typeof value === 'object') {
+    return JSON.stringify(sortNestedValue(value));
+  }
+  return String(value);
+};
+
+const buildCanonicalData = data => Object.keys(data || {})
+  .sort()
+  .map(key => `${key}=${stringifySignatureValue(data[key])}`)
+  .join('&');
+
+const signData = (data, checksumKey) => crypto
+  .createHmac('sha256', requireSetting('PAYOS_CHECKSUM_KEY', checksumKey))
+  .update(buildCanonicalData(data), 'utf8')
+  .digest('hex');
+
+const paymentHeaders = service => ({
+  'x-client-id': requireSetting('PAYOS_CLIENT_ID', service.CLIENT_ID),
+  'x-api-key': requireSetting('PAYOS_API_KEY', service.API_KEY),
+  'Content-Type': 'application/json'
+});
+
 /**
  * PayOS Service
- * Handles VietQR code generation and payment reconciliation
- * Supports auto-reconciliation via webhook
+ * Protocol reference: https://payos.vn/docs/api/
  */
 const payosService = {
-  API_BASE_URL: process.env.PAYOS_API_URL || 'https://api.payos.vn/v1',
+  API_BASE_URL: stripTrailingSlash(process.env.PAYOS_API_URL || 'https://api-merchant.payos.vn/v2'),
   CLIENT_ID: process.env.PAYOS_CLIENT_ID,
   API_KEY: process.env.PAYOS_API_KEY,
   CHECKSUM_KEY: process.env.PAYOS_CHECKSUM_KEY,
 
-  /**
-   * Create VietQR code request
-   * @param {Object} paymentData - { orderId, amount, description, returnUrl, expiredAt }
-   */
-  createPaymentRequest: async (paymentData) => {
+  createPaymentRequest: async paymentData => {
+    const {
+      orderId,
+      amount,
+      description,
+      returnUrl,
+      cancelUrl,
+      expiredAt,
+      buyerName,
+      buyerEmail,
+      buyerPhone
+    } = paymentData;
+    const orderCode = Number(orderId);
+    const vndAmount = Math.round(Number(amount));
+    if (!Number.isSafeInteger(orderCode) || orderCode <= 0) {
+      throw new Error('PayOS orderCode must be a positive integer.');
+    }
+    if (!Number.isSafeInteger(vndAmount) || vndAmount <= 0) {
+      throw new Error('PayOS amount must be a positive VND integer.');
+    }
+
+    const frontendUrl = stripTrailingSlash(requireSetting('FRONTEND_URL', process.env.FRONTEND_URL));
+    const normalizedDescription = String(description || `DH${orderCode}`).slice(0, 25);
+    const signatureData = {
+      amount: vndAmount,
+      cancelUrl: cancelUrl || `${frontendUrl}/orders.html?payment=cancelled&orderId=${orderCode}`,
+      description: normalizedDescription,
+      orderCode,
+      returnUrl: returnUrl || `${frontendUrl}/orders.html?payment=success&orderId=${orderCode}`
+    };
+    const payload = {
+      orderCode,
+      amount: vndAmount,
+      description: normalizedDescription,
+      cancelUrl: signatureData.cancelUrl,
+      returnUrl: signatureData.returnUrl,
+      expiredAt: expiredAt || Math.floor(Date.now() / 1000) + 3600,
+      signature: signData(signatureData, payosService.CHECKSUM_KEY)
+    };
+    if (buyerName) payload.buyerName = buyerName;
+    if (buyerEmail) payload.buyerEmail = buyerEmail;
+    if (buyerPhone) payload.buyerPhone = buyerPhone;
+
     try {
-      const {
-        orderId,
-        amount,
-        description,
-        returnUrl,
-        expiredAt,
-        buyerName,
-        buyerEmail,
-        buyerPhone
-      } = paymentData;
-
-      const payload = {
-        orderCode: orderId,
-        amount: Math.round(amount), // Amount in VND
-        description: description || `Payment for order ${orderId}`,
-        returnUrl: returnUrl || `${process.env.FRONTEND_URL}/orders/${orderId}`,
-        expiredAt: expiredAt || Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
-        buyerName: buyerName,
-        buyerEmail: buyerEmail,
-        buyerPhone: buyerPhone
-      };
-
-      // Call PayOS API with authentication
       const response = await axios.post(
         `${payosService.API_BASE_URL}/payment-requests`,
         payload,
-        {
-          headers: {
-            'x-client-id': payosService.CLIENT_ID,
-            'x-api-key': payosService.API_KEY,
-            'Content-Type': 'application/json'
-          }
-        }
+        { headers: paymentHeaders(payosService) }
       );
 
-      if (response.data.data) {
-        const { id, qrCode, checkoutUrl } = response.data.data;
-        logger.info(`✓ PayOS QR code generated: ${id}`);
-
-        return {
-          success: true,
-          paymentId: id,
-          qrCode: qrCode, // Data URL for QR code image
-          checkoutUrl: checkoutUrl, // Web checkout link
-          amount: amount,
-          orderId: orderId
-        };
-      } else {
-        throw new Error(`PayOS API error: ${response.data.message}`);
+      if (String(response.data.code) !== '00' || !response.data.data?.checkoutUrl) {
+        throw new Error(`PayOS rejected the request: ${response.data.desc || 'unknown error'}`);
       }
+
+      const { paymentLinkId, id, qrCode, checkoutUrl } = response.data.data;
+      logger.info(`PayOS QR code generated: ${paymentLinkId || id}`);
+      return {
+        success: true,
+        paymentId: paymentLinkId || id,
+        qrCode,
+        checkoutUrl,
+        amount: vndAmount,
+        orderId: orderCode
+      };
     } catch (error) {
       logger.error('PayOS createPaymentRequest error:', error.message);
       throw error;
     }
   },
 
-  /**
-   * Verify webhook signature (checksum)
-   * CRITICAL: Prevent spoofing attacks by verifying webhook authenticity
-   */
-  verifyWebhookSignature: (webhookData) => {
+  verifyWebhookSignature: webhookData => {
     try {
-      const { data, signature } = webhookData;
-
-      // Create HMAC-SHA256 signature
-      const computedSignature = crypto
-        .createHmac('sha256', payosService.CHECKSUM_KEY)
-        .update(JSON.stringify(data))
-        .digest('hex');
-
-      if (computedSignature !== signature) {
+      const { data, signature } = webhookData || {};
+      if (!data || typeof data !== 'object' || typeof signature !== 'string') {
+        return { valid: false, reason: 'Missing webhook data or signature' };
+      }
+      const computedSignature = signData(data, payosService.CHECKSUM_KEY);
+      if (!timingSafeEqualHex(computedSignature, signature)) {
         logger.warn('PayOS webhook signature verification failed');
         return { valid: false, reason: 'Invalid signature' };
       }
-
-      return { valid: true, data: data };
+      return { valid: true, data };
     } catch (error) {
       logger.error('PayOS signature verification error:', error.message);
-      return { valid: false, reason: error.message };
+      return { valid: false, reason: 'Invalid webhook payload' };
     }
   },
 
-  /**
-   * Get payment request details
-   */
-  getPaymentRequest: async (paymentId) => {
+  getPaymentRequest: async paymentId => {
     try {
       const response = await axios.get(
-        `${payosService.API_BASE_URL}/payment-requests/${paymentId}`,
-        {
-          headers: {
-            'x-client-id': payosService.CLIENT_ID,
-            'x-api-key': payosService.API_KEY
-          }
-        }
+        `${payosService.API_BASE_URL}/payment-requests/${encodeURIComponent(paymentId)}`,
+        { headers: paymentHeaders(payosService) }
       );
-
       return response.data.data;
     } catch (error) {
       logger.error('PayOS getPaymentRequest error:', error.message);
@@ -123,23 +165,14 @@ const payosService = {
     }
   },
 
-  /**
-   * Cancel payment request
-   */
-  cancelPaymentRequest: async (paymentId) => {
+  cancelPaymentRequest: async (paymentId, cancellationReason = 'User requested cancellation') => {
     try {
       const response = await axios.post(
-        `${payosService.API_BASE_URL}/payment-requests/${paymentId}/cancel`,
-        {},
-        {
-          headers: {
-            'x-client-id': payosService.CLIENT_ID,
-            'x-api-key': payosService.API_KEY
-          }
-        }
+        `${payosService.API_BASE_URL}/payment-requests/${encodeURIComponent(paymentId)}/cancel`,
+        { cancellationReason },
+        { headers: paymentHeaders(payosService) }
       );
-
-      logger.info(`✓ PayOS payment cancelled: ${paymentId}`);
+      logger.info(`PayOS payment cancelled: ${paymentId}`);
       return response.data.data;
     } catch (error) {
       logger.error('PayOS cancelPaymentRequest error:', error.message);
@@ -147,26 +180,25 @@ const payosService = {
     }
   },
 
-  /**
-   * Webhook notification payload structure
-   * This is received when customer completes bank transfer
-   */
-  parseWebhookNotification: (webhookPayload) => {
-    const { data } = webhookPayload;
-
+  parseWebhookNotification: webhookPayload => {
+    const { data = {} } = webhookPayload || {};
     return {
-      paymentId: data.id,
+      paymentId: data.paymentLinkId,
       orderId: data.orderCode,
-      amount: data.amount,
-      transactionId: data.transactionId,
-      status: data.status, // "PAID", "PENDING", "CANCELLED", "EXPIRED"
-      paidAt: data.paidAt,
-      reference: data.reference // Bank transfer reference number
+      amount: Number(data.amount),
+      transactionId: data.reference,
+      status: String(data.code) === '00' ? 'PAID' : 'FAILED',
+      paidAt: data.transactionDateTime,
+      reference: data.reference
     };
   }
 };
 
 module.exports = {
-  payosService
+  payosService,
+  payosServiceInternals: {
+    buildCanonicalData,
+    signData,
+    timingSafeEqualHex
+  }
 };
-

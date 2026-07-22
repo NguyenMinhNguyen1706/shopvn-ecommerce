@@ -1,127 +1,118 @@
+require('dotenv').config();
+
 const fs = require('fs');
 const path = require('path');
 const sequelize = require('../src/config/database');
 
-// Import all models to ensure they are registered in sequelize
-const User = require('../src/models/User');
-const Product = require('../src/models/Product');
-const CartItem = require('../src/models/CartItem');
-const Order = require('../src/models/Order');
-const OrderItem = require('../src/models/OrderItem');
-const Review = require('../src/models/Review');
-const MasterInventory = require('../src/models/MasterInventory');
-const InventoryTransaction = require('../src/models/InventoryTransaction');
-const LoyaltyPoints = require('../src/models/LoyaltyPoints');
+require('../src/models/User');
+require('../src/models/Product');
+require('../src/models/CartItem');
+require('../src/models/Order');
+require('../src/models/OrderItem');
+require('../src/models/Review');
+require('../src/models/MasterInventory');
+require('../src/models/InventoryTransaction');
+require('../src/models/LoyaltyPoints');
+require('../src/models/ActionPlan');
+
+const BACKUP_SCHEMA_VERSION = 1;
+const DELETE_ORDER = [
+  'InventoryTransaction',
+  'MasterInventory',
+  'LoyaltyPoints',
+  'Review',
+  'OrderItem',
+  'Order',
+  'CartItem',
+  'ActionPlan',
+  'Product',
+  'User'
+];
+const INSERT_ORDER = [
+  'User',
+  'Product',
+  'CartItem',
+  'Order',
+  'OrderItem',
+  'Review',
+  'LoyaltyPoints',
+  'MasterInventory',
+  'InventoryTransaction',
+  'ActionPlan'
+];
+
+function validateBackup(payload) {
+  if (!payload || payload.metadata?.schemaVersion !== BACKUP_SCHEMA_VERSION) {
+    throw new Error(`File backup phải dùng schemaVersion ${BACKUP_SCHEMA_VERSION}.`);
+  }
+  if (!payload.models || typeof payload.models !== 'object') {
+    throw new Error('File backup không có trường models hợp lệ.');
+  }
+}
 
 async function restore() {
-  console.log('\n=========================================');
-  console.log('📦 SHOPVN - BẮT ĐẦU KHÔI PHỤC CƠ SỞ DỮ LIỆU');
-  console.log('=========================================\n');
+  const backupFileArg = process.argv.slice(2).find(arg => !arg.startsWith('--'));
+  const confirmed = process.argv.includes('--confirm') || process.env.RESTORE_CONFIRM === 'true';
+  const productionAllowed = process.env.RESTORE_ALLOW_PRODUCTION === 'true';
 
-  const backupFileArg = process.argv[2];
   if (!backupFileArg) {
-    console.error('❌ LỖI: Thiếu đường dẫn tới file backup JSON.');
-    console.log('\nHướng dẫn sử dụng:');
-    console.log('   npm run db:restore <đường_dẫn_file_backup>');
-    console.log('Ví dụ:');
-    console.log('   npm run db:restore backups/backup_2026-06-15_09-57-21.json\n');
+    console.error('Thiếu đường dẫn file backup.');
+    console.error('Cách dùng: npm run db:restore -- backups/backup_YYYY-MM-DD_HH-mm-ss.json --confirm');
+    process.exitCode = 1;
+    return;
+  }
+  if (!confirmed) {
+    console.error('Restore sẽ xóa dữ liệu hiện tại. Chạy lại với --confirm sau khi đã kiểm tra file backup.');
+    process.exitCode = 1;
+    return;
+  }
+  if (process.env.NODE_ENV === 'production' && !productionAllowed) {
+    console.error('Restore production bị khóa. Chỉ mở khi có runbook và RESTORE_ALLOW_PRODUCTION=true.');
+    process.exitCode = 1;
     return;
   }
 
   const filePath = path.resolve(backupFileArg);
-  if (!fs.existsSync(filePath)) {
-    console.error(`❌ LỖI: Không tìm thấy file backup tại đường dẫn: ${filePath}\n`);
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    console.error(`Không tìm thấy file backup: ${filePath}`);
+    process.exitCode = 1;
     return;
   }
 
   try {
-    // Kiểm tra kết nối
+    const payload = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    validateBackup(payload);
     await sequelize.authenticate();
-    console.log('✅ Kết nối cơ sở dữ liệu thành công.');
-    
-    // Đọc file backup
-    const backupData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    const models = sequelize.models;
 
-    // Thứ tự xóa dữ liệu (từ bảng con có nhiều FK đến bảng cha để tránh vi phạm khóa ngoại)
-    const orderOfDelete = [
-      'InventoryTransaction', 
-      'MasterInventory', 
-      'LoyaltyPoints', 
-      'Review', 
-      'OrderItem', 
-      'Order', 
-      'CartItem', 
-      'Product', 
-      'User'
-    ];
+    await sequelize.transaction(async transaction => {
+      for (const modelName of DELETE_ORDER) {
+        const model = sequelize.models[modelName];
+        if (!model) throw new Error(`Model chưa được đăng ký: ${modelName}`);
+        await model.destroy({ where: {}, transaction, cascade: true });
+      }
 
-    // Thứ tự thêm dữ liệu (từ bảng cha ít FK đến bảng con để đảm bảo ràng buộc)
-    const orderOfInsert = [
-      'User', 
-      'Product', 
-      'CartItem', 
-      'Order', 
-      'OrderItem', 
-      'Review', 
-      'LoyaltyPoints', 
-      'MasterInventory', 
-      'InventoryTransaction'
-    ];
-
-    const t = await sequelize.transaction();
-    
-    try {
-      console.log('\n🧹 Bước 1: Xóa dữ liệu cũ trong database...');
-      for (const modelName of orderOfDelete) {
-        if (models[modelName]) {
-          console.log(`   - Đang làm sạch bảng: ${models[modelName].tableName}...`);
-          // Xóa tất cả các bản ghi
-          await models[modelName].destroy({ 
-            where: {}, 
-            transaction: t, 
-            cascade: true 
+      for (const modelName of INSERT_ORDER) {
+        const model = sequelize.models[modelName];
+        const rows = payload.models[modelName];
+        if (!Array.isArray(rows)) {
+          throw new Error(`Dữ liệu model không hợp lệ: ${modelName}`);
+        }
+        if (rows.length) {
+          await model.bulkCreate(rows, {
+            transaction,
+            validate: true,
+            ignoreDuplicates: false
           });
         }
       }
+    });
 
-      console.log('\n📥 Bước 2: Khôi phục dữ liệu từ file backup...');
-      for (const modelName of orderOfInsert) {
-        const rows = backupData[modelName];
-        if (models[modelName] && rows) {
-          if (rows.length > 0) {
-            console.log(`   + Đang nạp ${rows.length} bản ghi vào bảng: ${models[modelName].tableName}...`);
-            // Chèn dữ liệu hàng loạt
-            await models[modelName].bulkCreate(rows, { 
-              transaction: t, 
-              validate: true,
-              ignoreDuplicates: false
-            });
-          } else {
-            console.log(`   + Bảng [${modelName}] trống trong file backup.`);
-          }
-        }
-      }
-
-      await t.commit();
-      
-      console.log('\n=========================================');
-      console.log('🎉 QUÁ TRÌNH KHÔI PHỤC HOÀN TẤT THÀNH CÔNG!');
-      console.log(`📄 Dữ liệu được khôi phục từ: ${filePath}`);
-      console.log('=========================================\n');
-
-    } catch (err) {
-      await t.rollback();
-      throw err;
-    }
-
+    console.log(`Khôi phục hoàn tất từ: ${filePath}`);
   } catch (error) {
-    console.error('\n❌ QUÁ TRÌNH KHÔI PHỤC THẤT BẠI:');
-    console.error(error.message);
-    console.log('\n💡 LƯU Ý:');
-    console.log('Nếu xảy ra lỗi ràng buộc khóa ngoại, hãy kiểm tra tính toàn vẹn của dữ liệu trong file backup.\n');
+    console.error(`Khôi phục thất bại: ${error.message}`);
+    process.exitCode = 1;
   } finally {
-    await sequelize.close();
+    await sequelize.close().catch(() => {});
   }
 }
 

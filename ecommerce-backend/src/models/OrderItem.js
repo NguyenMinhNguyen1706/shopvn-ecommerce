@@ -16,7 +16,7 @@ const OrderItem = sequelize.define('OrderItem', {
   },
   productId: {
     type:       DataTypes.INTEGER,
-    allowNull:  true, // null nếu sản phẩm bị xóa sau này
+    allowNull:  false,
     references: { model: 'products', key: 'id' },
   },
   // Snapshot thông tin sản phẩm tại thời điểm đặt
@@ -43,7 +43,7 @@ const OrderItem = sequelize.define('OrderItem', {
   },
 }, {
   tableName:  'order_items',
-  timestamps: false,
+  timestamps: true,
 });
 
 Order.hasMany(OrderItem,    { foreignKey: 'orderId', as: 'items' });

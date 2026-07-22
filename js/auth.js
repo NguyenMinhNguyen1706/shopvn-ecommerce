@@ -95,9 +95,13 @@ function updateNavbarAuth() {
 }
 
 async function handleLogout() {
-  Auth.clear();
   const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
-  window.location.href = prefix + 'index.html';
+  try {
+    await AuthAPI.logout();
+  } finally {
+    Auth.clear();
+    window.location.href = prefix + 'index.html';
+  }
 }
 
 function setupUserDropdown() {
@@ -161,6 +165,7 @@ function initResponsiveNavbar(prefix) {
     drawer.setAttribute('aria-modal', 'true');
     drawer.setAttribute('aria-label', 'Menu điều hướng');
     drawer.setAttribute('aria-hidden', 'true');
+    drawer.setAttribute('inert', '');
     drawer.tabIndex = -1;
     drawer.innerHTML = `
       <div class="mobile-drawer__header">
@@ -234,6 +239,7 @@ function setupMobileDrawer() {
     toggleBtn.setAttribute('aria-expanded', 'true');
     toggleBtn.setAttribute('aria-label', 'Đóng menu di động');
     drawer.setAttribute('aria-hidden', 'false');
+    drawer.removeAttribute('inert');
     closeBtn.focus();
   };
   
@@ -243,6 +249,7 @@ function setupMobileDrawer() {
     toggleBtn.setAttribute('aria-expanded', 'false');
     toggleBtn.setAttribute('aria-label', 'Mở menu di động');
     drawer.setAttribute('aria-hidden', 'true');
+    drawer.setAttribute('inert', '');
     if (restoreFocus) toggleBtn.focus();
   };
 

@@ -29,7 +29,7 @@ function renderProductCard(product, delay = 0) {
     sold ? `<span class="product-card__sold">Đã bán ${sold}</span>` : `<span class="product-card__sold">${stock ? `Còn ${stock}` : 'Hết hàng'}</span>`,
   ].filter(Boolean).join('');
   return `
-    <article class="product-card fade-up" role="listitem" style="animation-delay:${delay}s">
+    <article class="product-card fade-up" style="animation-delay:${delay}s">
       <div class="product-card__img">
         <a class="product-card__media-link" href="${detailUrl}" aria-label="Xem ${name}, ${category}">
           ${productMediaMarkup(product)}
@@ -59,7 +59,7 @@ function renderProductCard(product, delay = 0) {
           </div>
           <button class="product-card__add"
                   onclick="event.stopPropagation(); addToCart(${product.id})"
-                  aria-label="Thêm ${product.name} vào giỏ hàng">
+                  aria-label="Thêm ${name} vào giỏ hàng">
             <span>Thêm</span>
           </button>
         </div>
@@ -144,6 +144,7 @@ async function initHomePage() {
 
       const currentDayIndex = new Date().getDay();
       const adjIndex = currentDayIndex === 0 ? 6 : currentDayIndex - 1;
+      const checkIcon = '<svg class="bento-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
 
       const daysOfWeek = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
       const calendarHtml = daysOfWeek.map((day, idx) => {
@@ -159,24 +160,24 @@ async function initHomePage() {
                style="${isCurrent && !isChecked ? 'border-color:rgba(255,255,255,0.4); background:rgba(255,255,255,0.15)' : ''}"
                title="${isCurrent ? 'Hôm nay' : ''}">
             <span class="bento-checkin__day-label">${day}</span>
-            <span class="bento-checkin__day-coin">${isChecked ? '✓' : '+10'}</span>
+            <span class="bento-checkin__day-coin">${isChecked ? `${checkIcon}<span class="sr-only">Đã điểm danh</span>` : '+10'}</span>
           </div>
         `;
       }).join('');
 
       loyaltyCell.innerHTML = `
         <div class="bento-loyalty__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></div>
-        <p class="bento-loyalty__title" style="margin-bottom:var(--sp-xs)">Chào mừng, ${user.name}!</p>
+        <p class="bento-loyalty__title" style="margin-bottom:var(--sp-xs)">Chào mừng, ${escapeHtml(user.name)}!</p>
         <p class="bento-loyalty__desc" data-i18n="bento.loyalty_points" style="margin-bottom:var(--sp-xs)">ShopVN Xu tích lũy:</p>
-        <div style="font-size:1.8rem; font-weight:800; color:#FFA726; margin-bottom:var(--sp-xs); font-family:var(--f-display)" id="bento-xu-balance">
+        <div style="font-size:1.8rem; font-weight:800; color:var(--c-warning); margin-bottom:var(--sp-xs); font-family:var(--f-display)" id="bento-xu-balance">
           ${balance} Xu
         </div>
         
         <div style="display:flex; gap:6px; margin-bottom:var(--sp-sm)">
           <button class="btn btn-primary btn-sm" id="btn-bento-checkin" onclick="handleBentoCheckIn()" 
-                  style="background:#FFA726; color:#0D1B2A; border-color:#FFA726; padding: 5px 12px; font-size:0.75rem"
+                  style="padding:5px 12px; font-size:0.75rem"
                   ${hasCheckedInToday ? 'disabled' : ''}>
-            ${hasCheckedInToday ? '✓ Đã điểm danh' : 'Điểm danh (+10)'}
+            ${hasCheckedInToday ? `${checkIcon}<span>Đã điểm danh</span>` : 'Điểm danh (+10)'}
           </button>
         </div>
 

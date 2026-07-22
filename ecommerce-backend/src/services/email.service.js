@@ -2,6 +2,19 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function replaceToken(template, token, value) {
+  return template.replace(new RegExp(`{{${token}}}`, 'g'), () => String(value));
+}
+
 class EmailService {
   static getTransporter() {
     return nodemailer.createTransport({
@@ -17,73 +30,65 @@ class EmailService {
     });
   }
 
-  /**
-   * Gửi email xác nhận đơn hàng
-   */
   static async sendOrderConfirmation(userEmail, orderData) {
-    try {
-      const templatePath = path.join(__dirname, '../templates/emails/order-confirm.html');
-      let html = fs.existsSync(templatePath) 
-        ? fs.readFileSync(templatePath, 'utf8')
-        : '<h1>Cảm ơn bạn đã đặt hàng tại ShopVN!</h1><p>Mã đơn: {{orderId}}</p>';
-      
-      const formatCurrency = (val) => Number(val).toLocaleString('vi-VN') + ' đ';
+    const templatePath = path.join(__dirname, '../templates/emails/order-confirm.html');
+    let html = fs.existsSync(templatePath)
+      ? fs.readFileSync(templatePath, 'utf8')
+      : '<h1>Cảm ơn bạn đã đặt hàng tại ShopVN!</h1><p>Mã đơn: {{orderId}}</p>';
 
-      // Map Payment Method to user-friendly text
-      const paymentMethods = {
-        cod: 'Thanh toán khi nhận hàng (COD)',
-        vnpay: 'Ví VNPay / Thẻ ngân hàng',
-        momo: 'Ví điện tử MoMo',
-        zalopay: 'Ví điện tử ZaloPay',
-        bank_transfer: 'Chuyển khoản VietQR (PayOS)'
-      };
-      const paymentMethodText = paymentMethods[orderData.paymentMethod?.toLowerCase()] || orderData.paymentMethod || 'COD';
+    const formatCurrency = value => `${Number(value || 0).toLocaleString('vi-VN')} đ`;
+    const paymentMethods = {
+      cod: 'Thanh toán khi nhận hàng (COD)',
+      vnpay: 'VNPay / Thẻ ngân hàng',
+      momo: 'Ví điện tử MoMo',
+      zalopay: 'Ví điện tử ZaloPay',
+      bank_transfer: 'Chuyển khoản VietQR (PayOS)'
+    };
+    const paymentMethod = String(orderData.paymentMethod || 'cod').toLowerCase();
+    const paymentMethodText = paymentMethods[paymentMethod] || 'Không xác định';
 
-      // Build items table rows HTML
-      const itemsHTML = (orderData.items || []).map(item => `
-        <tr style="border-bottom: 1px solid #e2e8f0;">
-          <td style="padding: 12px 8px; font-size: 14px; color: #1e293b; vertical-align: middle;">
-            <span style="font-size: 18px; margin-right: 8px; vertical-align: middle;">${item.productIcon || '📦'}</span>
-            <span style="font-weight: 600; vertical-align: middle;">${item.productName}</span>
-          </td>
-          <td align="center" style="padding: 12px 8px; font-size: 14px; color: #64748b; font-weight: 500;">x${item.quantity}</td>
-          <td align="right" style="padding: 12px 8px; font-size: 14px; color: #1e293b; font-weight: 600;">${formatCurrency(item.price)}</td>
-          <td align="right" style="padding: 12px 8px; font-size: 14px; color: #1e293b; font-weight: 600;">${formatCurrency(item.subtotal)}</td>
-        </tr>
-      `).join('');
+    const itemsHTML = (orderData.items || []).map(item => `
+      <tr style="border-bottom:1px solid #e2e8f0">
+        <td style="padding:12px 8px;font-size:14px;color:#1e293b;font-weight:600">${escapeHtml(item.productName || 'Sản phẩm')}</td>
+        <td align="center" style="padding:12px 8px;font-size:14px;color:#64748b;font-weight:500">x${Number(item.quantity) || 0}</td>
+        <td align="right" style="padding:12px 8px;font-size:14px;color:#1e293b;font-weight:600">${formatCurrency(item.price)}</td>
+        <td align="right" style="padding:12px 8px;font-size:14px;color:#1e293b;font-weight:600">${formatCurrency(item.subtotal)}</td>
+      </tr>
+    `).join('');
 
-      // Replace template placeholders
-      html = html
-        .replace(/{{customerName}}/g, orderData.shippingName || 'Quý khách')
-        .replace(/{{orderId}}/g, orderData.id || 'N/A')
-        .replace(/{{paymentMethod}}/g, paymentMethodText)
-        .replace(/{{itemsHTML}}/g, itemsHTML)
-        .replace(/{{subtotal}}/g, formatCurrency(orderData.subtotal || 0))
-        .replace(/{{shippingFee}}/g, formatCurrency(orderData.shippingFee || 0))
-        .replace(/{{discount}}/g, formatCurrency(orderData.discount || 0))
-        .replace(/{{total}}/g, formatCurrency(orderData.total || 0))
-        .replace(/{{shippingName}}/g, orderData.shippingName || '')
-        .replace(/{{shippingPhone}}/g, orderData.shippingPhone || '')
-        .replace(/{{shippingAddress}}/g, orderData.shippingAddress || '')
-        .replace(/{{note}}/g, orderData.note || 'Không có')
-        .replace(/{{frontendUrl}}/g, process.env.FRONTEND_URL || 'http://localhost:5500');
+    const safeNote = escapeHtml(orderData.note || 'Không có').replace(/\r?\n/g, '<br>');
+    const replacements = {
+      customerName: escapeHtml(orderData.shippingName || 'Quý khách'),
+      orderId: escapeHtml(orderData.id || 'N/A'),
+      paymentMethod: escapeHtml(paymentMethodText),
+      itemsHTML,
+      subtotal: formatCurrency(orderData.subtotal),
+      shippingFee: formatCurrency(orderData.shippingFee),
+      discount: formatCurrency(orderData.discount),
+      total: formatCurrency(orderData.total),
+      shippingName: escapeHtml(orderData.shippingName),
+      shippingPhone: escapeHtml(orderData.shippingPhone),
+      shippingAddress: escapeHtml(orderData.shippingAddress),
+      note: safeNote,
+      frontendUrl: escapeHtml(process.env.FRONTEND_URL || 'http://localhost:5500')
+    };
 
-      const transporter = this.getTransporter();
-      const info = await transporter.sendMail({
-        from: process.env.EMAIL_FROM || '"ShopVN" <noreply@shopvn.com>',
-        to: userEmail,
-        subject: `[ShopVN] Xác nhận đơn hàng #${orderData.id || 'N/A'}`,
-        html: html,
-        disableFileAccess: true,
-        disableUrlAccess: true
-      });
+    Object.entries(replacements).forEach(([token, value]) => {
+      html = replaceToken(html, token, value);
+    });
 
-      console.log('Email sent: %s', info.messageId);
-      return info;
-    } catch (error) {
-      console.error('[Email Service Error]', error);
-    }
+    const safeOrderId = String(orderData.id || 'N/A').replace(/[\r\n]/g, '');
+    const transporter = this.getTransporter();
+    return transporter.sendMail({
+      from: process.env.EMAIL_FROM || '"ShopVN" <noreply@shopvn.com>',
+      to: userEmail,
+      subject: `[ShopVN] Xác nhận đơn hàng #${safeOrderId}`,
+      html,
+      disableFileAccess: true,
+      disableUrlAccess: true
+    });
   }
 }
 
 module.exports = EmailService;
+module.exports.escapeHtml = escapeHtml;

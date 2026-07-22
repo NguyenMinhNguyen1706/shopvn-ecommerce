@@ -6,7 +6,7 @@ const MasterInventory = require('../models/MasterInventory');
 async function getAll({ q, category, sort, minPrice, maxPrice, rating, page, limit }) {
   const where = {};
   const andConditions = [];
-  const avgRatingSql = '(SELECT COALESCE(AVG("rating"), 5) FROM "reviews" WHERE "reviews"."productId" = "Product"."id")';
+  const avgRatingSql = '(SELECT COALESCE(AVG("rating"), 0) FROM "reviews" WHERE "reviews"."productId" = "Product"."id")';
   const totalReviewsSql = '(SELECT COUNT(*) FROM "reviews" WHERE "reviews"."productId" = "Product"."id")';
   const avgRatingExpr = literal(avgRatingSql);
   const totalReviewsExpr = literal(totalReviewsSql);
@@ -74,7 +74,7 @@ async function getAll({ q, category, sort, minPrice, maxPrice, rating, page, lim
 
   const products = rows.map((product) => {
     const data = product.toJSON();
-    data.avgRating = Number(data.avgRating || 5);
+    data.avgRating = Number(data.avgRating || 0);
     data.totalReviews = Number(data.totalReviews || 0);
     return data;
   });

@@ -9,7 +9,6 @@ const state = {
   product:  null,
   quantity: 1,
   activeTab: 'desc',
-  wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]'),
 };
 
 const getProducts = () => {
@@ -26,23 +25,18 @@ function getProductIdFromURL() {
 }
 
 function isInWishlist(id) {
-  return state.wishlist.includes(id);
+  return LocalWishlist.has(id);
 }
 
 function toggleWishlist(id) {
-  const idx = state.wishlist.indexOf(id);
-  if (idx === -1) {
-    state.wishlist.push(id);
-    showToast('Đã thêm vào danh sách yêu thích', 'success');
-  } else {
-    state.wishlist.splice(idx, 1);
-    showToast('Đã xóa khỏi danh sách yêu thích', 'info');
-  }
-  localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
+  if (!state.product || state.product.id !== id) return;
+  const active = LocalWishlist.toggle(state.product);
 
-  // Update button UI
   const btn = document.getElementById('btn-wishlist');
-  if (btn) btn.classList.toggle('active', isInWishlist(id));
+  if (btn) {
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-label', active ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích');
+  }
 }
 
 // ── Render ─────────────────────────────────────────────────────────────────────
@@ -148,11 +142,17 @@ function renderProduct(product) {
   `;
 
   // Wishlist button state
-  document.getElementById('btn-wishlist')
-    ?.classList.toggle('active', isInWishlist(product.id));
+  const wishlistButton = document.getElementById('btn-wishlist');
+  const wishlistActive = isInWishlist(product.id);
+  wishlistButton?.classList.toggle('active', wishlistActive);
+  wishlistButton?.setAttribute('aria-label', wishlistActive ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích');
 
   // Page title
   document.title = `${product.name} — ShopVN`;
+  const canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical) {
+    canonical.href = `https://shopvn-ecommerce.vercel.app/product-detail?id=${encodeURIComponent(product.id)}`;
+  }
 
   renderPdpShippingCard(product);
 }
@@ -244,8 +244,27 @@ function renderSpecs(product) {
   `;
 }
 
-function renderRelated(currentProduct) {
-  const allProducts = getProducts();
+async function refreshRelatedProducts(currentProduct) {
+  try {
+    const response = await ProductAPI.getAll({ sort: 'popular', page: 1, limit: 12 });
+    if (response?.fromOfflineDB || !Array.isArray(response?.items)) return;
+
+    const mergedProducts = new Map(
+      getProducts().map(product => [Number(product.id), product])
+    );
+    response.items.forEach(product => {
+      mergedProducts.set(Number(product.id), product);
+    });
+
+    const products = [...mergedProducts.values()];
+    localStorage.setItem('admin_products', JSON.stringify(products));
+    renderRelated(currentProduct, products);
+  } catch {
+    // The first local render remains visible when the catalog request fails.
+  }
+}
+
+function renderRelated(currentProduct, allProducts = getProducts()) {
 
   // Related: same category
   const related = allProducts
@@ -275,7 +294,7 @@ function renderRelated(currentProduct) {
     const category = escapeHtml(p.category || 'Sản phẩm');
     const detailUrl = `product-detail.html?id=${encodeURIComponent(p.id)}`;
     return `
-      <article class="product-card fade-up" role="listitem" style="animation-delay:${i * 0.06}s">
+      <article class="product-card fade-up" style="animation-delay:${i * 0.06}s">
         <div class="product-card__img">
           <a class="product-card__media-link" href="${detailUrl}" aria-label="Xem ${name}, ${category}">
             ${productMediaMarkup(p)}
@@ -300,7 +319,7 @@ function renderRelated(currentProduct) {
             </div>
             <button class="product-card__add"
                     onclick="event.stopPropagation(); LocalCart.add(getProducts().find(pp=>pp.id===${p.id}), 1)"
-                    aria-label="Thêm ${p.name} vào giỏ hàng">
+                    aria-label="Thêm ${name} vào giỏ hàng">
               <span>Thêm</span>
             </button>
           </div>
@@ -467,6 +486,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderProductStory(product);
   renderSpecs(product);
   renderRelated(product);
+  refreshRelatedProducts(product);
   updateQtyDisplay();
   initReviews();
   switchTab('desc');

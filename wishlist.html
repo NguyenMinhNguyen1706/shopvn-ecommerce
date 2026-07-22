@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Yêu thích — ShopVN</title>
+  <meta name="robots" content="noindex,nofollow" />
   <meta name="description" content="Danh sách sản phẩm yêu thích của bạn tại ShopVN." />
 
   <link rel="stylesheet" href="css/variables.css" />
@@ -31,12 +32,12 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--c-muted);flex-shrink:0">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
+        <input type="search" name="site-search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
                onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
       </div>
       <div class="navbar__actions">
         <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
-          ✨
+          <svg class="loyalty-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v8M9 10h4.5a2 2 0 0 1 0 4H10"></path></svg>
           <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
         </div>
         <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
@@ -70,7 +71,7 @@
   <div class="container" style="padding-top:var(--sp-xl);padding-bottom:var(--sp-2xl)">
 
     <!-- ========================================== -->
-    <nav aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
       <ol style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--c-muted);list-style:none">
         <li><a href="index.html" style="color:var(--c-muted);transition:color var(--dur)" onmouseover="this.style.color='var(--c-blue)'" onmouseout="this.style.color='var(--c-muted)'"><span data-i18n="nav.home">Trang chủ</span></a></li>
         <li aria-hidden="true">
@@ -198,7 +199,7 @@
             ${disc ? `<span class="badge badge-accent product-card__badge">-${disc}%</span>` : ''}
             <button class="product-card__wish active"
                     onclick="event.stopPropagation(); removeFromWishlist(${p.id})"
-                    aria-label="Xóa khỏi yêu thích">
+                    aria-label="Xóa ${escapeHtml(p.name)} khỏi yêu thích">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
@@ -214,7 +215,7 @@
               </div>
               <button class="product-card__add"
                       onclick="event.stopPropagation(); addToCartFromWish(${p.id})"
-                      aria-label="Thêm vào giỏ hàng">+</button>
+                      aria-label="Thêm ${escapeHtml(p.name)} vào giỏ hàng">+</button>
             </div>
           </div>
         </article>

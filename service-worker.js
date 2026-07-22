@@ -4,7 +4,7 @@
  * Implements Stale-While-Revalidate, Cache-First, and Network-First strategies.
  */
 
-const CACHE_NAME = 'shopvn-cache-v5';
+const CACHE_NAME = 'shopvn-cache-v9';
 
 // App Shell Assets - Pre-cached on install
 const ASSETS_TO_CACHE = [
@@ -87,6 +87,12 @@ self.addEventListener('activate', event => {
       );
     }).then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // ── Intercepting and Handling Requests ─────────────────────────────────────────
@@ -203,7 +209,8 @@ function networkFirst(request, timeoutMs = 3000) {
         });
       }, timeoutMs);
 
-      fetch(request).then(networkResponse => {
+      const networkRequest = new Request(request, { cache: 'no-cache' });
+      fetch(networkRequest).then(networkResponse => {
         clearTimeout(timeoutId);
         if (networkResponse && networkResponse.status === 200) {
           cache.put(request, networkResponse.clone());

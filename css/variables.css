@@ -28,6 +28,7 @@
   --c-buy-strong: #9a3412;
   --c-buy-soft: #fff2e8;
   --c-success: #15803d;
+  --c-success-strong: #11632f;
   --c-error: #b91c1c;
   --c-warning: #a16207;
   --c-good-soft: #ecfdf3;
@@ -127,6 +128,7 @@
   --c-buy-strong: #fed7aa;
   --c-buy-soft: rgba(253, 186, 116, .14);
   --c-success: #6ee7a0;
+  --c-success-strong: #86efac;
   --c-error: #fca5a5;
   --c-warning: #fcd34d;
   --c-good-soft: rgba(34, 197, 94, .12);

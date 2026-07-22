@@ -6,6 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tin tức Công nghệ &amp; Hướng dẫn — ShopVN</title>
+  <link rel="canonical" href="https://shopvn-ecommerce.vercel.app/blog" />
   <meta name="description"
     content="Khám phá các tin tức công nghệ mới nhất, hướng dẫn chọn mua laptop, điện thoại và các đánh giá thiết bị chi tiết tại ShopVN." />
 
@@ -49,7 +50,7 @@
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-          <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
+          <input type="search" name="site-search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
             onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
         </div>
 
@@ -57,7 +58,7 @@
           <div class="navbar__cart-btn" aria-label="ShopVN Xu"
             style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default"
             title="ShopVN Xu">
-            ✨
+            <svg class="loyalty-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v8M9 10h4.5a2 2 0 0 1 0 4H10"></path></svg>
             <span class="navbar__cart-count" id="xu-badge" aria-live="polite"
               style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
           </div>
@@ -119,10 +120,11 @@
         <div class="sidebar-widget">
           <h3 class="widget-title">Tìm kiếm</h3>
           <div style="display: flex; gap: 8px;">
+            <label class="sr-only" for="blog-search">Từ khóa tìm kiếm bài viết</label>
             <input type="text" id="blog-search" placeholder="Từ khóa..."
               style="flex: 1; padding: 8px 12px; border: 1px solid var(--c-border); border-radius: var(--r-sm); background: var(--c-white); color: var(--c-text); outline: none;"
               onkeydown="if(event.key==='Enter') searchPosts()" />
-            <button onclick="searchPosts()" class="btn btn-primary btn-sm" style="padding: 8px 12px;">Tìm</button>
+            <button type="button" onclick="searchPosts()" class="btn btn-primary btn-sm" style="padding: 8px 12px;">Tìm</button>
           </div>
         </div>
 
@@ -512,11 +514,9 @@
     const recentBox = document.getElementById('sidebar-recent-posts');
     recentBox.innerHTML = BLOG_POSTS.slice(0, 3).map(p => `
       <li class="widget-recent-post">
-        <div class="widget-recent-img">${p.icon}</div>
+        <div class="widget-recent-img">${articleIconMarkup(p.category)}</div>
         <div class="widget-recent-info">
-          <h4 class="widget-recent-title" onclick="window.location.hash='#post-${p.id}'">
-            ${window.i18n && window.i18n.getLang() === 'en' ? p.titleEn : p.titleVi}
-          </h4>
+          <a class="widget-recent-title" href="#post-${p.id}">${window.i18n && window.i18n.getLang() === 'en' ? p.titleEn : p.titleVi}</a>
           <span class="widget-recent-date">${formatDate(p.date)}</span>
         </div>
       </li>

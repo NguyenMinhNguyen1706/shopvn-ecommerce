@@ -1,136 +1,143 @@
 const CartItem = require('../models/CartItem');
-const Product  = require('../models/Product');
+const Product = require('../models/Product');
+const sequelize = require('../config/database');
 
-// ── Get cart của user ─────────────────────────────────────────────────────────
+const MAX_CART_QUANTITY = 99;
+
+function httpError(message, status) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
+function normalizePositiveInteger(value, label) {
+  const normalized = Number(value);
+  if (!Number.isInteger(normalized) || normalized < 1) {
+    throw httpError(`${label} không hợp lệ.`, 400);
+  }
+  return normalized;
+}
+
+function normalizeQuantity(value) {
+  const quantity = normalizePositiveInteger(value, 'Số lượng');
+  if (quantity > MAX_CART_QUANTITY) {
+    throw httpError(`Số lượng tối đa là ${MAX_CART_QUANTITY}.`, 400);
+  }
+  return quantity;
+}
+
+function ensureAvailableStock(product, quantity) {
+  const stock = Number(product.stock);
+  if (!Number.isFinite(stock) || stock < quantity) {
+    throw httpError(`Chỉ còn ${Math.max(0, stock || 0)} sản phẩm trong kho.`, 400);
+  }
+}
 
 async function getCart(userId) {
   const items = await CartItem.findAll({
-    where:   { userId },
+    where: { userId },
     include: [{ model: Product, as: 'product' }],
-    order:   [['createdAt', 'ASC']],
+    order: [['createdAt', 'ASC']]
   });
 
-  // Tính tổng tiền
   const subtotal = items.reduce((sum, item) => {
+    if (!item.product) return sum;
     return sum + Number(item.product.price) * item.quantity;
   }, 0);
 
   return { items, subtotal };
 }
 
-// ── Add item vào cart ─────────────────────────────────────────────────────────
-
 async function addItem(userId, productId, quantity = 1) {
-  // Kiểm tra sản phẩm tồn tại
-  const product = await Product.findByPk(productId);
-  if (!product) {
-    const err = new Error('Sản phẩm không tồn tại.');
-    err.status = 404;
-    throw err;
-  }
+  const normalizedProductId = normalizePositiveInteger(productId, 'Sản phẩm');
+  const normalizedQuantity = normalizeQuantity(quantity);
+  const product = await Product.findByPk(normalizedProductId);
 
-  // Kiểm tra tồn kho
-  if (product.stock < quantity) {
-    const err = new Error(`Chỉ còn ${product.stock} sản phẩm trong kho.`);
-    err.status = 400;
-    throw err;
-  }
+  if (!product) throw httpError('Sản phẩm không tồn tại.', 404);
+  ensureAvailableStock(product, normalizedQuantity);
 
-  // Nếu đã có trong cart → cộng thêm số lượng
-  const existing = await CartItem.findOne({ where: { userId, productId } });
+  const existing = await CartItem.findOne({
+    where: { userId, productId: normalizedProductId }
+  });
+
   if (existing) {
-    const newQty = existing.quantity + quantity;
-    if (newQty > product.stock) {
-      const err = new Error(`Chỉ còn ${product.stock} sản phẩm trong kho.`);
-      err.status = 400;
-      throw err;
-    }
-    await existing.update({ quantity: newQty });
+    const newQuantity = existing.quantity + normalizedQuantity;
+    normalizeQuantity(newQuantity);
+    ensureAvailableStock(product, newQuantity);
+    await existing.update({ quantity: newQuantity });
     return existing;
   }
 
-  // Chưa có → tạo mới
-  return CartItem.create({ userId, productId, quantity });
+  return CartItem.create({
+    userId,
+    productId: normalizedProductId,
+    quantity: normalizedQuantity
+  });
 }
 
-// ── Update quantity ───────────────────────────────────────────────────────────
-
 async function updateItem(userId, itemId, quantity) {
-  const item = await CartItem.findOne({ where: { id: itemId, userId } });
-  if (!item) {
-    const err = new Error('Không tìm thấy sản phẩm trong giỏ hàng.');
-    err.status = 404;
-    throw err;
-  }
+  const normalizedItemId = normalizePositiveInteger(itemId, 'Dòng giỏ hàng');
+  const normalizedQuantity = normalizeQuantity(quantity);
+  const item = await CartItem.findOne({ where: { id: normalizedItemId, userId } });
 
-  // Kiểm tra tồn kho
+  if (!item) throw httpError('Không tìm thấy sản phẩm trong giỏ hàng.', 404);
+
   const product = await Product.findByPk(item.productId);
-  if (quantity > product.stock) {
-    const err = new Error(`Chỉ còn ${product.stock} sản phẩm trong kho.`);
-    err.status = 400;
-    throw err;
-  }
+  if (!product) throw httpError('Sản phẩm không còn tồn tại.', 404);
+  ensureAvailableStock(product, normalizedQuantity);
 
-  await item.update({ quantity });
+  await item.update({ quantity: normalizedQuantity });
   return item;
 }
 
-// ── Remove item ───────────────────────────────────────────────────────────────
-
 async function removeItem(userId, itemId) {
-  const item = await CartItem.findOne({ where: { id: itemId, userId } });
-  if (!item) {
-    const err = new Error('Không tìm thấy sản phẩm trong giỏ hàng.');
-    err.status = 404;
-    throw err;
-  }
+  const normalizedItemId = normalizePositiveInteger(itemId, 'Dòng giỏ hàng');
+  const item = await CartItem.findOne({ where: { id: normalizedItemId, userId } });
+  if (!item) throw httpError('Không tìm thấy sản phẩm trong giỏ hàng.', 404);
   await item.destroy();
 }
-
-// ── Clear cart ────────────────────────────────────────────────────────────────
 
 async function clearCart(userId) {
   await CartItem.destroy({ where: { userId } });
 }
 
 async function syncCart(userId, items) {
-  // Clear cart first
-  await CartItem.destroy({ where: { userId } });
-  
-  if (!items || items.length === 0) return;
+  return sequelize.transaction(async transaction => {
+    const normalizedItems = (items || []).map(item => ({
+      id: normalizePositiveInteger(item.id, 'Sản phẩm'),
+      quantity: normalizeQuantity(item.quantity)
+    }));
+    const productIds = normalizedItems.map(item => item.id);
+    const uniqueProductIds = [...new Set(productIds)];
 
-  // Extract all product IDs and filter invalid ones
-  const productIds = items.map(item => item.id).filter(id => Number.isInteger(Number(id)));
-  if (productIds.length === 0) return;
-
-  // Bulk query all products to avoid N+1 queries
-  const products = await Product.findAll({
-    where: { id: productIds }
-  });
-
-  // Create a product map for O(1) lookups
-  const productMap = new Map(products.map(p => [p.id, p]));
-
-  // Build items list to insert
-  const itemsToCreate = [];
-  for (const item of items) {
-    const product = productMap.get(Number(item.id));
-    if (product) {
-      const qty = Math.min(item.quantity, product.stock);
-      if (qty > 0) {
-        itemsToCreate.push({
-          userId,
-          productId: item.id,
-          quantity: qty
-        });
-      }
+    if (uniqueProductIds.length !== productIds.length) {
+      throw httpError('Giỏ hàng chứa sản phẩm trùng lặp.', 400);
     }
-  }
 
-  // Bulk insert new cart items
-  if (itemsToCreate.length > 0) {
-    await CartItem.bulkCreate(itemsToCreate);
-  }
+    const products = uniqueProductIds.length
+      ? await Product.findAll({ where: { id: uniqueProductIds }, transaction })
+      : [];
+    const productMap = new Map(products.map(product => [Number(product.id), product]));
+
+    if (productMap.size !== uniqueProductIds.length) {
+      throw httpError('Một hoặc nhiều sản phẩm không còn tồn tại.', 400);
+    }
+
+    const itemsToCreate = normalizedItems.map(item => {
+      const product = productMap.get(item.id);
+      try {
+        ensureAvailableStock(product, item.quantity);
+      } catch (error) {
+        throw httpError(`Sản phẩm "${product.name}" chỉ còn ${product.stock} sản phẩm.`, 400);
+      }
+      return { userId, productId: item.id, quantity: item.quantity };
+    });
+
+    await CartItem.destroy({ where: { userId }, transaction });
+    if (itemsToCreate.length) {
+      await CartItem.bulkCreate(itemsToCreate, { transaction });
+    }
+  });
 }
 
 module.exports = { getCart, addItem, updateItem, removeItem, clearCart, syncCart };

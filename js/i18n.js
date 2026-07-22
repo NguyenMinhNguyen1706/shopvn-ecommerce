@@ -1,13 +1,15 @@
 class I18n {
   constructor() {
-    this.lang = localStorage.getItem('lang') || 'vi';
+    this.lang = localStorage.getItem('lang') === 'en' ? 'en' : 'vi';
     this.locales = window.locales || {};
+    document.documentElement.lang = this.lang;
   }
 
   setLang(lang) {
     if (this.locales[lang]) {
       this.lang = lang;
       localStorage.setItem('lang', lang);
+      document.documentElement.lang = lang;
       this.translatePage();
       this.updateSwitcher();
     }
@@ -43,6 +45,8 @@ class I18n {
   }
 
   translatePage() {
+    document.documentElement.lang = this.lang;
+
     // Translate text content
     const elements = document.querySelectorAll('[data-i18n]');
     elements.forEach(el => {

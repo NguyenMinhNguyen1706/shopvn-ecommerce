@@ -1,171 +1,131 @@
 const vnpayService = require('../services/vnpay.service');
-const Order        = require('../models/Order');
+const { zalopayService, momoService } = require('../services/payment.service');
+const { payosService } = require('../services/payos.service');
+const {
+  finalizePayment,
+  PaymentFinalizationError
+} = require('../services/payment-finalization.service');
+const Order = require('../models/Order');
+const User = require('../models/User');
+const logger = console;
 
 const asyncHandler = fn => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
-// â”€â”€ Táº¡o URL thanh toÃ¡n VNPay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const getFrontendUrl = () => {
+  const value = String(process.env.FRONTEND_URL || '').replace(/\/+$/, '');
+  if (!value) throw new Error('FRONTEND_URL is not configured.');
+  return value;
+};
+
+const ordersRedirect = params => {
+  const query = new URLSearchParams(params);
+  return `${getFrontendUrl()}/orders.html?${query.toString()}`;
+};
+
+const findOwnedOrder = (orderId, userId, options = {}) => Order.findOne({
+  where: { id: orderId, userId },
+  ...options
+});
+
+const getPayableOrderError = order => {
+  if (!order) return { status: 404, message: 'Không tìm thấy đơn hàng.' };
+  if (order.paymentStatus === 'paid') {
+    return { status: 400, message: 'Đơn hàng đã được thanh toán.' };
+  }
+  if (order.status === 'cancelled') {
+    return { status: 400, message: 'Đơn hàng đã bị hủy.' };
+  }
+  return null;
+};
+
+const sendPayableOrderError = (res, error) => res
+  .status(error.status)
+  .json({ success: false, message: error.message });
 
 const createVnpayUrl = asyncHandler(async (req, res) => {
   const { orderId, bankCode } = req.body;
-
-  if (!orderId) {
-    return res.status(400).json({ success: false, message: 'Thiáº¿u orderId.' });
-  }
-
-  // Kiá»ƒm tra order tá»“n táº¡i vÃ  thuá»™c vá» user Ä‘ang login
-  const order = await Order.findOne({
-    where: { id: orderId, userId: req.user.id },
-  });
-
-  if (!order) {
-    return res.status(404).json({ success: false, message: 'KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng.' });
-  }
-  if (order.paymentStatus === 'paid') {
-    return res.status(400).json({ success: false, message: 'ÄÆ¡n hÃ ng Ä‘Ã£ Ä‘Æ°á»£c thanh toÃ¡n.' });
-  }
-  if (order.status === 'cancelled') {
-    return res.status(400).json({ success: false, message: 'ÄÆ¡n hÃ ng Ä‘Ã£ bá»‹ há»§y.' });
-  }
+  const order = await findOwnedOrder(orderId, req.user.id);
+  const orderError = getPayableOrderError(order);
+  if (orderError) return sendPayableOrderError(res, orderError);
 
   const paymentUrl = vnpayService.createPaymentUrl(req, {
-    orderId:   order.id,
-    amount:    Number(order.total),
+    orderId: order.id,
+    amount: Number(order.total),
     orderInfo: `Thanh toan don hang #${order.id} - ShopVN`,
-    bankCode,
+    bankCode
   });
 
-  res.json({ success: true, paymentUrl });
+  return res.json({ success: true, paymentUrl });
 });
-
-// â”€â”€ Return URL â€” VNPay redirect user vá» â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const vnpayReturn = asyncHandler(async (req, res) => {
   const result = vnpayService.processReturn(req.query);
-
   if (!result.success) {
-    // Redirect vá» frontend vá»›i thÃ´ng bÃ¡o lá»—i
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/orders.html?payment=failed&message=${encodeURIComponent(result.message)}`
-    );
+    return res.redirect(ordersRedirect({ payment: 'failed' }));
   }
 
-  // Cáº­p nháº­t tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng
-  const order = await Order.findByPk(result.orderId);
-  if (order && order.paymentStatus !== 'paid') {
-    await order.update({
-      paymentStatus: 'paid',
-      status:        'processing', // tá»± Ä‘á»™ng chuyá»ƒn sang Ä‘ang xá»­ lÃ½
-      vnpayTxnRef:   result.txnRef,
-      vnpayBankCode: result.bankCode,
+  try {
+    await finalizePayment({
+      orderId: result.orderId,
+      amount: result.amount,
+      paymentMethod: 'vnpay',
+      transactionRef: result.txnRef
     });
+    return res.redirect(ordersRedirect({ payment: 'success', orderId: result.orderId }));
+  } catch (error) {
+    logger.error('VNPay return finalization failed:', error.message);
+    return res.redirect(ordersRedirect({ payment: 'failed' }));
   }
-
-  // Redirect vá» frontend trang Ä‘Æ¡n hÃ ng
-  res.redirect(
-    `${process.env.FRONTEND_URL}/orders.html?payment=success&orderId=${result.orderId}`
-  );
 });
-
-// â”€â”€ IPN URL â€” VNPay gá»i server-to-server â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const vnpayIpn = asyncHandler(async (req, res) => {
   const result = vnpayService.processIpn(req.query);
-
-  // LuÃ´n tráº£ vá» response cho VNPay trÆ°á»›c
-  // (VNPay timeout nhanh â€” khÃ´ng Ä‘Æ°á»£c delay)
-  if (!result.valid) {
-    return res.json(result.response);
-  }
+  if (!result.valid) return res.json(result.response);
+  if (!result.success) return res.json(result.response);
 
   try {
-    const order = await Order.findByPk(result.orderId);
-
-    if (!order) {
-      return res.json({ RspCode: '01', Message: 'Order not found' });
-    }
-
-    // Kiá»ƒm tra sá»‘ tiá»n khá»›p
-    if (Number(order.total) !== result.amount) {
-      return res.json({ RspCode: '04', Message: 'Invalid amount' });
-    }
-
-    // TrÃ¡nh xá»­ lÃ½ IPN trÃ¹ng láº·p
-    if (order.paymentStatus === 'paid') {
+    const finalization = await finalizePayment({
+      orderId: result.orderId,
+      amount: result.amount,
+      paymentMethod: 'vnpay',
+      transactionRef: result.txnRef
+    });
+    if (finalization.alreadyPaid) {
       return res.json({ RspCode: '02', Message: 'Order already confirmed' });
     }
-
-    if (result.success) {
-      await order.update({
-        paymentStatus: 'paid',
-        status:        'processing',
-        vnpayTxnRef:   result.txnRef,
-      });
-    } else {
-      // Thanh toÃ¡n tháº¥t báº¡i â€” giá»¯ nguyÃªn tráº¡ng thÃ¡i pending
-      console.log(`[VNPay IPN] Order #${result.orderId} payment failed`);
+    return res.json(result.response);
+  } catch (error) {
+    logger.error('VNPay IPN error:', error.message);
+    if (error instanceof PaymentFinalizationError) {
+      if (error.code === 'ORDER_NOT_FOUND') {
+        return res.json({ RspCode: '01', Message: 'Order not found' });
+      }
+      if (error.code === 'AMOUNT_MISMATCH') {
+        return res.json({ RspCode: '04', Message: 'Invalid amount' });
+      }
+      if (error.code === 'ORDER_CANCELLED') {
+        return res.json({ RspCode: '02', Message: 'Order already cancelled' });
+      }
     }
-
-    res.json(result.response);
-
-  } catch (err) {
-    console.error('[VNPay IPN Error]', err.message);
-    res.json({ RspCode: '99', Message: 'Unknown error' });
+    return res.json({ RspCode: '99', Message: 'Unknown error' });
   }
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// âœ¨ NEW 2026 PAYMENT METHODS: ZaloPay, MoMo, PayOS (Bank Transfer)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
-const { zalopayService, momoService } = require('../services/payment.service');
-const { payosService } = require('../services/payos.service');
-const OMSService = require('../services/oms.service');
-const LoyaltyService = require('../services/loyalty.service');
-const OrderItem = require('../models/OrderItem');
-const User = require('../models/User');
-const sequelize = require('../config/database');
-const logger = console;
-
-/**
- * ZaloPay - Create payment URL
- */
 const createZaloPayment = asyncHandler(async (req, res) => {
-  const { orderId, returnUrl } = req.body;
-
-  if (!orderId) {
-    return res.status(400).json({
-      success: false,
-      message: 'Missing required field: orderId'
-    });
-  }
+  const order = await findOwnedOrder(req.body.orderId, req.user.id);
+  const orderError = getPayableOrderError(order);
+  if (orderError) return sendPayableOrderError(res, orderError);
 
   try {
-    const order = await Order.findOne({
-      where: { id: orderId, userId: req.user.id },
-    });
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng'
-      });
-    }
-
-    if (order.paymentStatus === 'paid') {
-      return res.status(400).json({ success: false, message: 'Order is already paid.' });
-    }
-    if (order.status === 'cancelled') {
-      return res.status(400).json({ success: false, message: 'Order is cancelled.' });
-    }
     const paymentResult = await zalopayService.createPaymentUrl({
-      orderId: orderId,
+      orderId: order.id,
       amount: Number(order.total),
       userId: order.userId,
-      returnUrl: returnUrl || `${process.env.FRONTEND_URL}/checkout/return`,
-      description: `Thanh toÃ¡n Ä‘Æ¡n hÃ ng #${orderId}`
+      returnUrl: ordersRedirect({ payment: 'pending', orderId: order.id }),
+      description: `Thanh toán đơn hàng #${order.id}`
     });
-
-    res.json({
+    return res.json({
       success: true,
       data: {
         paymentUrl: paymentResult.paymentUrl,
@@ -175,53 +135,26 @@ const createZaloPayment = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     logger.error('ZaloPay payment creation failed:', error.message);
-    res.status(500).json({
+    return res.status(502).json({
       success: false,
-      message: 'Táº¡o yÃªu cáº§u thanh toÃ¡n tháº¥t báº¡i',
-      error: error.message
+      message: 'Không thể tạo yêu cầu thanh toán ZaloPay.'
     });
   }
 });
 
-/**
- * MoMo - Create payment URL
- */
 const createMomoPayment = asyncHandler(async (req, res) => {
-  const { orderId, returnUrl } = req.body;
-
-  if (!orderId) {
-    return res.status(400).json({
-      success: false,
-      message: 'Missing required field: orderId'
-    });
-  }
+  const order = await findOwnedOrder(req.body.orderId, req.user.id);
+  const orderError = getPayableOrderError(order);
+  if (orderError) return sendPayableOrderError(res, orderError);
 
   try {
-    const order = await Order.findOne({
-      where: { id: orderId, userId: req.user.id },
-    });
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng'
-      });
-    }
-
-    if (order.paymentStatus === 'paid') {
-      return res.status(400).json({ success: false, message: 'Order is already paid.' });
-    }
-    if (order.status === 'cancelled') {
-      return res.status(400).json({ success: false, message: 'Order is cancelled.' });
-    }
     const paymentResult = await momoService.createPaymentUrl({
-      orderId: orderId,
+      orderId: order.id,
       amount: Number(order.total),
-      userId: order.userId,
-      returnUrl: returnUrl || `${process.env.FRONTEND_URL}/checkout/return`,
-      description: `Thanh toÃ¡n Ä‘Æ¡n hÃ ng #${orderId}`
+      returnUrl: ordersRedirect({ payment: 'pending', orderId: order.id }),
+      description: `Thanh toán đơn hàng #${order.id}`
     });
-
-    res.json({
+    return res.json({
       success: true,
       data: {
         paymentUrl: paymentResult.paymentUrl,
@@ -231,277 +164,132 @@ const createMomoPayment = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     logger.error('MoMo payment creation failed:', error.message);
-    res.status(500).json({
+    return res.status(502).json({
       success: false,
-      message: 'Táº¡o yÃªu cáº§u thanh toÃ¡n tháº¥t báº¡i'
+      message: 'Không thể tạo yêu cầu thanh toán MoMo.'
     });
   }
 });
 
-/**
- * PayOS - Create VietQR payment request (Bank Transfer)
- * AUTO-RECONCILIATION: Zero-touch payment confirmation via webhook
- */
 const createBankTransferPayment = asyncHandler(async (req, res) => {
-  const { orderId, returnUrl } = req.body;
+  const order = await findOwnedOrder(req.body.orderId, req.user.id, {
+    include: [{ model: User }]
+  });
+  const orderError = getPayableOrderError(order);
+  if (orderError) return sendPayableOrderError(res, orderError);
 
   try {
-    const order = await Order.findOne({
-      where: { id: orderId, userId: req.user.id },
-      include: [{ model: User }]
-    });
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng'
-      });
-    }
-
-    if (order.paymentStatus === 'paid') {
-      return res.status(400).json({ success: false, message: 'Order is already paid.' });
-    }
-    if (order.status === 'cancelled') {
-      return res.status(400).json({ success: false, message: 'Order is cancelled.' });
-    }
     const paymentResult = await payosService.createPaymentRequest({
-      orderId: orderId,
-      amount: Math.round(Number(order.total)),
-      description: `Thanh toÃ¡n Ä‘Æ¡n hÃ ng #${orderId}`,
-      returnUrl: returnUrl || `${process.env.FRONTEND_URL}/orders/${orderId}`,
-      buyerName: order.shippingName || 'Customer',
-      buyerEmail: order.User ? order.User.email : 'customer@shopvn.com',
+      orderId: order.id,
+      amount: Number(order.total),
+      description: `DH${order.id}`,
+      returnUrl: ordersRedirect({ payment: 'pending', orderId: order.id }),
+      cancelUrl: ordersRedirect({ payment: 'cancelled', orderId: order.id }),
+      buyerName: order.shippingName,
+      buyerEmail: order.User?.email,
       buyerPhone: order.shippingPhone
     });
 
-    // Save payment reference to order
-    order.paymentMethod = 'bank_transfer';
-    order.vnpayTxnRef = String(paymentResult.paymentId);
-    await order.save();
+    await order.update({
+      paymentMethod: 'bank_transfer',
+      vnpayTxnRef: String(paymentResult.paymentId)
+    });
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         paymentId: paymentResult.paymentId,
         qrCode: paymentResult.qrCode,
         checkoutUrl: paymentResult.checkoutUrl,
         amount: paymentResult.amount,
-        orderId: orderId
+        orderId: order.id
       }
     });
   } catch (error) {
     logger.error('PayOS payment creation failed:', error.message);
-    res.status(500).json({
+    return res.status(502).json({
       success: false,
-      message: 'Táº¡o mÃ£ QR tháº¥t báº¡i'
+      message: 'Không thể tạo mã thanh toán chuyển khoản.'
     });
   }
 });
 
-/**
- * ZaloPay Webhook Callback
- */
 const zalopayWebhook = asyncHandler(async (req, res) => {
-  const t = await sequelize.transaction();
+  const verification = zalopayService.verifyWebhook(req.body);
+  if (!verification.valid) {
+    return res.json({ return_code: -1, return_message: 'invalid signature' });
+  }
+
   try {
-    const webhookData = req.body;
-    const verification = zalopayService.verifyWebhook(webhookData);
-
-    if (!verification.valid) {
-      logger.warn('Invalid ZaloPay webhook signature');
-      await t.rollback();
-      return res.status(400).json({ success: false });
-    }
-
-    const { appTransId } = verification;
-    const orderId = appTransId.split('_')[1];
-
-    const order = await Order.findByPk(orderId, {
-      include: [{ model: OrderItem, as: 'items' }],
-      transaction: t
+    await finalizePayment({
+      orderId: verification.orderId,
+      amount: verification.amount,
+      paymentMethod: 'zalopay',
+      transactionRef: verification.transactionId || verification.appTransId
     });
-
-    if (!order) {
-      logger.warn(`Order #${orderId} not found for ZaloPay webhook`);
-      await t.rollback();
-      return res.status(404).json({ success: false });
-    }
-
-    if (order.paymentStatus !== 'paid') {
-      // 1. Cáº­p nháº­t tráº¡ng thÃ¡i Order
-      await order.update({
-        paymentStatus: 'paid',
-        paymentMethod: 'zalopay',
-        status: 'processing',
-        vnpayTxnRef: appTransId
-      }, { transaction: t });
-
-      // 2. Commit Reserved Stock trong WMS
-      const items = order.items || [];
-      const omsItems = items.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity
-      }));
-      await OMSService.commitReservedStock(orderId, omsItems, t);
-
-      // 3. Cá»™ng Ä‘iá»ƒm Loyalty cho user
-      await LoyaltyService.addPointsFromOrder(order.userId, Number(order.total), t);
-
-      logger.info(`âœ“ ZaloPay payment completed for order ${orderId}`);
-    }
-
-    await t.commit();
-    res.json({ success: true });
+    return res.json({ return_code: 1, return_message: 'success' });
   } catch (error) {
-    await t.rollback();
     logger.error('ZaloPay webhook error:', error.message);
-    res.status(500).json({ success: false });
-  }
-});
-
-/**
- * MoMo Webhook Callback
- */
-const momoWebhook = asyncHandler(async (req, res) => {
-  const t = await sequelize.transaction();
-  try {
-    const webhookData = req.body;
-    const verification = momoService.verifyWebhook(webhookData);
-
-    if (!verification.valid) {
-      logger.warn('Invalid MoMo webhook signature');
-      await t.rollback();
-      return res.status(400).json({ success: false });
-    }
-
-    const { orderId, success, transId } = verification;
-
-    if (success) {
-      const order = await Order.findByPk(orderId, {
-        include: [{ model: OrderItem, as: 'items' }],
-        transaction: t
-      });
-
-      if (!order) {
-        logger.warn(`Order #${orderId} not found for MoMo webhook`);
-        await t.rollback();
-        return res.status(404).json({ success: false });
-      }
-
-      if (order.paymentStatus !== 'paid') {
-        // 1. Cáº­p nháº­t tráº¡ng thÃ¡i Order
-        await order.update({
-          paymentStatus: 'paid',
-          paymentMethod: 'momo',
-          status: 'processing',
-          vnpayTxnRef: transId
-        }, { transaction: t });
-
-        // 2. Commit Reserved Stock trong WMS
-        const items = order.items || [];
-        const omsItems = items.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity
-        }));
-        await OMSService.commitReservedStock(orderId, omsItems, t);
-
-        // 3. Cá»™ng Ä‘iá»ƒm Loyalty cho user
-        await LoyaltyService.addPointsFromOrder(order.userId, Number(order.total), t);
-
-        logger.info(`âœ“ MoMo payment completed for order ${orderId}`);
-      }
-    }
-
-    await t.commit();
-    res.json({ success: true });
-  } catch (error) {
-    await t.rollback();
-    logger.error('MoMo webhook error:', error.message);
-    res.status(500).json({ success: false });
-  }
-});
-
-/**
- * PayOS Webhook Callback - AUTO-RECONCILIATION
- * CRITICAL: Verify checksum to prevent spoofing attacks
- * This is the zero-touch automation that replaces manual reconciliation
- */
-const payosWebhook = asyncHandler(async (req, res) => {
-  const t = await sequelize.transaction();
-  try {
-    const webhookData = req.body;
-    const verification = payosService.verifyWebhookSignature(webhookData);
-
-    if (!verification.valid) {
-      logger.warn('Invalid PayOS webhook signature - POTENTIAL ATTACK');
-      await t.rollback();
-      return res.status(401).json({ success: false });
-    }
-
-    const notification = payosService.parseWebhookNotification(verification);
-    const { orderId, amount, status, transactionId, paidAt } = notification;
-
-    if (status === 'PAID') {
-      const order = await Order.findByPk(orderId, {
-        include: [{ model: OrderItem, as: 'items' }],
-        transaction: t
-      });
-
-      if (!order) {
-        logger.warn(`Order #${orderId} not found for PayOS webhook`);
-        await t.rollback();
-        return res.status(404).json({ success: false });
-      }
-
-      if (order.paymentStatus !== 'paid') {
-        // 1. Cáº­p nháº­t tráº¡ng thÃ¡i Order
-        await order.update({
-          paymentStatus: 'paid',
-          paymentMethod: 'bank_transfer',
-          status: 'processing',
-          vnpayTxnRef: transactionId
-        }, { transaction: t });
-
-        // 2. Commit Reserved Stock trong WMS
-        const items = order.items || [];
-        const omsItems = items.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity
-        }));
-        await OMSService.commitReservedStock(orderId, omsItems, t);
-
-        // 3. Cá»™ng Ä‘iá»ƒm Loyalty cho user
-        await LoyaltyService.addPointsFromOrder(order.userId, Number(order.total), t);
-
-        logger.info(`âœ“ PayOS auto-reconciled for order ${orderId} (1-3 seconds)`);
-      }
-    }
-
-    await t.commit();
-    res.json({ success: true });
-  } catch (error) {
-    await t.rollback();
-    logger.error('PayOS webhook error:', error.message);
-    res.status(500).json({ success: true }); // Still respond with success to prevent retries from PayOS
-  }
-});
-
-/**
- * Get payment status
- */
-const getPaymentStatus = asyncHandler(async (req, res) => {
-  const { orderId } = req.params;
-
-  const order = await Order.findOne({
-    where: { id: orderId, userId: req.user.id },
-  });
-  if (!order) {
-    return res.status(404).json({
-      success: false,
-      message: 'KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng'
+    const invalidData = error instanceof PaymentFinalizationError
+      && ['ORDER_NOT_FOUND', 'AMOUNT_MISMATCH', 'ORDER_CANCELLED'].includes(error.code);
+    return res.json({
+      return_code: invalidData ? -1 : 0,
+      return_message: invalidData ? 'invalid payment data' : 'temporary error'
     });
   }
+});
 
-  res.json({
+const momoWebhook = asyncHandler(async (req, res) => {
+  const verification = momoService.verifyWebhook(req.body);
+  if (!verification.valid) return res.status(400).end();
+  if (!verification.success) return res.status(204).end();
+
+  try {
+    await finalizePayment({
+      orderId: verification.orderId,
+      amount: verification.amount,
+      paymentMethod: 'momo',
+      transactionRef: verification.transId
+    });
+    return res.status(204).end();
+  } catch (error) {
+    logger.error('MoMo webhook error:', error.message);
+    if (error instanceof PaymentFinalizationError) return res.status(400).end();
+    return res.status(500).end();
+  }
+});
+
+const payosWebhook = asyncHandler(async (req, res) => {
+  const verification = payosService.verifyWebhookSignature(req.body);
+  if (!verification.valid) return res.status(401).json({ success: false });
+
+  const notification = payosService.parseWebhookNotification(verification);
+  if (notification.status !== 'PAID') return res.json({ success: true });
+
+  try {
+    await finalizePayment({
+      orderId: notification.orderId,
+      amount: notification.amount,
+      paymentMethod: 'bank_transfer',
+      transactionRef: notification.transactionId
+    });
+    return res.json({ success: true });
+  } catch (error) {
+    logger.error('PayOS webhook error:', error.message);
+    if (error instanceof PaymentFinalizationError) {
+      return res.status(400).json({ success: false });
+    }
+    return res.status(500).json({ success: false });
+  }
+});
+
+const getPaymentStatus = asyncHandler(async (req, res) => {
+  const order = await findOwnedOrder(req.params.orderId, req.user.id);
+  if (!order) {
+    return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng.' });
+  }
+
+  return res.json({
     success: true,
     data: {
       orderId: order.id,
@@ -514,12 +302,9 @@ const getPaymentStatus = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  // VNPay (existing)
   createVnpayUrl,
   vnpayReturn,
   vnpayIpn,
-
-  // New payment methods 2026
   createZaloPayment,
   createMomoPayment,
   createBankTransferPayment,
@@ -528,4 +313,3 @@ module.exports = {
   payosWebhook,
   getPaymentStatus
 };
-

@@ -1,10 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Đơn hàng — ShopVN</title>
+  <meta name="robots" content="noindex,nofollow" />
   <meta name="description" content="Xem và theo dõi đơn hàng của bạn tại ShopVN." />
 
   <!-- ========================================== -->
@@ -46,14 +47,14 @@
              style="color:var(--c-muted);flex-shrink:0">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
+        <input type="search" name="site-search" placeholder="Tìm laptop, điện thoại, phụ kiện..." aria-label="Tìm kiếm sản phẩm"
                onkeydown="if(event.key==='Enter') window.location.href='products.html?q='+this.value" />
       </div>
 
       <!-- ========================================== -->
       <div class="navbar__actions">
         <div class="navbar__cart-btn" aria-label="ShopVN Xu" style="margin-right:-4px; color:var(--c-warning); border-color:color-mix(in srgb, var(--c-warning) 20%, transparent); background:color-mix(in srgb, var(--c-warning) 10%, transparent); cursor:default" title="ShopVN Xu">
-          ✨
+          <svg class="loyalty-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v8M9 10h4.5a2 2 0 0 1 0 4H10"></path></svg>
           <span class="navbar__cart-count" id="xu-badge" aria-live="polite" style="display:none; background:var(--c-warning); border-color:var(--c-warning); color:white">0</span>
         </div>
         <a href="wishlist.html" class="navbar__cart-btn" aria-label="Yêu thích" style="margin-right:-4px">
@@ -89,7 +90,7 @@
   <div class="container">
 
     <!-- ========================================== -->
-    <nav aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="margin-bottom:var(--sp-lg)">
       <ol style="display:flex;align-items:center;gap:6px;
                  font-size:.82rem;color:var(--c-muted);list-style:none">
         <li>
@@ -122,11 +123,11 @@
       <!-- ========================================== -->
       <nav class="orders-tabs" aria-label="Lọc trạng thái đơn hàng">
         <button class="orders-tab active" data-status="all">Tất cả</button>
-        <button class="orders-tab" data-status="Chủ xác nhận">Chủ xác nhận</button>
-        <button class="orders-tab" data-status="Đang xử lý">Đang xử lý</button>
-        <button class="orders-tab" data-status="Đang giao">Đang giao</button>
-        <button class="orders-tab" data-status="Đã giao">Đã giao</button>
-        <button class="orders-tab" data-status="Đã hủy">Đã hủy</button>
+        <button class="orders-tab" data-status="pending">Chờ xác nhận</button>
+        <button class="orders-tab" data-status="processing">Đang xử lý</button>
+        <button class="orders-tab" data-status="shipping">Đang giao</button>
+        <button class="orders-tab" data-status="delivered">Đã giao</button>
+        <button class="orders-tab" data-status="cancelled">Đã hủy</button>
       </nav>
 
       <!-- ========================================== -->
@@ -151,8 +152,7 @@
       <div>
         <div class="footer__brand-name">Shop<span>VN</span></div>
         <p class="footer__desc">
-          Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị
-          thiết bị điện tử và phụ kiện công nghệ với thông tin mua hàng rõ ràng.
+          Nền tảng thương mại điện tử uy tín — chuyên cung cấp thiết bị điện tử và phụ kiện công nghệ với thông tin mua hàng rõ ràng.
         </p>
       </div>
       <div>
@@ -185,7 +185,7 @@
     </div>
 
     <div class="footer__bottom">
-      <span>© 2024 ShopVN. Bảo lưu mọi quyền.</span>
+      <span>© 2026 ShopVN. Bảo lưu mọi quyền.</span>
       <span>ShopVN, Đà Nẵng, Việt Nam</span>
     </div>
   </div>

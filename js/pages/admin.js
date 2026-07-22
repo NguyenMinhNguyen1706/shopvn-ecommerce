@@ -10,6 +10,7 @@ let products = [];
 let orders = [];
 let editingProductId = null;
 let editingBlogPostId = null;
+let adminModalReturnFocus = null;
 let actionPlanBackendHydrated = false;
 const TREND_RADAR_KEY = 'shopvn_trend_radar_weekly';
 const WEEKLY_BRIEFING_HISTORY_KEY = 'shopvn_weekly_briefings_history';
@@ -17,6 +18,34 @@ const SOURCE_CENTER_KEY = 'shopvn_source_center_snapshot';
 const SOURCE_CENTER_HISTORY_KEY = 'shopvn_source_center_history';
 const ACTION_CENTER_KEY = 'shopvn_action_center_plan';
 const ACTION_CENTER_HISTORY_KEY = 'shopvn_action_center_history';
+
+function setAdminModalOpen(overlay, open) {
+  if (!overlay) return;
+
+  if (open) {
+    adminModalReturnFocus = document.activeElement;
+    overlay.inert = false;
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.classList.add('show');
+    requestAnimationFrame(() => {
+      overlay.querySelector('input, select, textarea, button')?.focus();
+    });
+    return;
+  }
+
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden', 'true');
+  overlay.inert = true;
+  adminModalReturnFocus?.focus();
+  adminModalReturnFocus = null;
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  const openOverlay = document.querySelector('.admin-modal-overlay.show');
+  if (openOverlay?.id === 'product-modal-overlay') closeProductModal();
+  if (openOverlay?.id === 'blog-modal-overlay') closeBlogModal();
+});
 
 // ── Guard & Init ──────────────────────────────────────────────────────────────
 
@@ -298,11 +327,11 @@ function openProductModal(productId = null) {
     document.getElementById('prod-image-url').value = '';
   }
 
-  overlay.classList.add('show');
+  setAdminModalOpen(overlay, true);
 }
 
 function closeProductModal() {
-  document.getElementById('product-modal-overlay').classList.remove('show');
+  setAdminModalOpen(document.getElementById('product-modal-overlay'), false);
 }
 
 // Form submission handler
@@ -466,12 +495,11 @@ function openBlogModal(postId = null) {
     document.getElementById('blog-date').value = new Date().toISOString().substring(0, 10);
   }
 
-  overlay.classList.add('show');
+  setAdminModalOpen(overlay, true);
 }
 
 function closeBlogModal() {
-  const modal = document.getElementById('blog-modal-overlay');
-  if (modal) modal.classList.remove('show');
+  setAdminModalOpen(document.getElementById('blog-modal-overlay'), false);
 }
 
 function saveBlogPost(event) {

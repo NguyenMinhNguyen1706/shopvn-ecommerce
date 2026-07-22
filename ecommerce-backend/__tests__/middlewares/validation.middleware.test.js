@@ -22,7 +22,7 @@ describe('validation middleware', () => {
       body: {
         name: 'Nguyen Van A',
         email: 'not-an-email',
-        password: '123'
+        password: '1234567'
       }
     };
     const res = createMockResponse();
@@ -37,6 +37,27 @@ describe('validation middleware', () => {
     );
     expect(next).not.toHaveBeenCalled();
   });
+
+  test.each(['0905123456', '+84905123456'])(
+    'accepts valid Vietnamese phone number %s',
+    phone => {
+      const req = {
+        body: {
+          name: 'Nguyen Van A',
+          email: 'buyer@example.com',
+          password: 'ShopVN!2026',
+          phone
+        }
+      };
+      const res = createMockResponse();
+      const next = jest.fn();
+
+      validate(schemas.register)(req, res, next);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(res.status).not.toHaveBeenCalled();
+    }
+  );
 
   test('rejects cart quantity less than one', () => {
     const req = {
@@ -74,6 +95,26 @@ describe('validation middleware', () => {
     expect(req.body.unexpected).toBeUndefined();
     expect(req.body.paymentMethod).toBe('cod');
   });
+
+  test('rejects non-http product image URLs', () => {
+    const req = {
+      body: {
+        name: 'Laptop test',
+        price: 15000000,
+        category: 'laptop',
+        stock: 1,
+        imageUrl: 'javascript:alert(1)'
+      }
+    };
+    const res = createMockResponse();
+    const next = jest.fn();
+
+    validate(schemas.createProduct)(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.body.errors[0].field).toBe('imageUrl');
+    expect(next).not.toHaveBeenCalled();
+  });
 });
 
 describe('sanitize middleware', () => {
@@ -97,10 +138,10 @@ describe('sanitize middleware', () => {
 
     sanitize(req, res, next);
 
-    expect(req.body.shippingName).toBe('alert(1)Nguyen');
+    expect(req.body.shippingName).toBe('Nguyen');
     expect(req.body.items[0].note).toBe('safe  text');
     expect(req.query.q).toBe('Laptop');
-    expect(req.params.id).toBe('1');
+    expect(req.params.id).toBe('');
     expect(next).toHaveBeenCalledTimes(1);
   });
 
@@ -110,5 +151,27 @@ describe('sanitize middleware', () => {
       active: true,
       empty: null
     });
+  });
+
+  test('replaces an Express 5 read-only query object safely', () => {
+    const req = { body: {}, params: {} };
+    Object.defineProperty(req, 'query', {
+      value: { q: '<b>Laptop</b>' },
+      writable: false,
+      enumerable: true,
+      configurable: true
+    });
+    const next = jest.fn();
+
+    sanitize(req, createMockResponse(), next);
+
+    expect(req.query).toEqual({ q: 'Laptop' });
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  test('drops prototype-pollution keys while sanitizing objects', () => {
+    const payload = JSON.parse('{"safe":"ok","constructor":"blocked","prototype":"blocked"}');
+
+    expect(sanitizeValue(payload)).toEqual({ safe: 'ok' });
   });
 });

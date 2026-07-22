@@ -1,4 +1,4 @@
-/* â”€â”€ PAGE LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- PAGE LAYOUT ----------------------------------- */
 .checkout-page {
   padding-top: calc(var(--nav-h) + var(--sp-xl));
   padding-bottom: var(--sp-2xl);
@@ -12,7 +12,7 @@
   align-items: start;
 }
 
-/* â”€â”€ CHECKOUT FORM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- CHECKOUT FORM --------------------------------- */
 .checkout-card {
   background: var(--c-white);
   border: 1px solid var(--c-border);
@@ -103,7 +103,7 @@ textarea.form-control {
   min-height: 80px;
 }
 
-/* â”€â”€ PAYMENT METHODS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- PAYMENT METHODS ------------------------------- */
 .payment-methods {
   display: flex;
   flex-direction: column;
@@ -221,7 +221,7 @@ textarea.form-control {
   user-select: all;
 }
 
-/* â”€â”€ ORDER SUMMARY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- ORDER SUMMARY --------------------------------- */
 .checkout-summary {
   background: var(--c-white);
   border: 1px solid var(--c-border);
@@ -318,7 +318,7 @@ textarea.form-control {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- RESPONSIVE ------------------------------------ */
 @media (max-width: 900px) {
   .checkout-layout {
     grid-template-columns: 1fr;
@@ -588,7 +588,7 @@ textarea.form-control {
   margin-left: 6px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--c-success) 12%, var(--c-white));
-  color: var(--c-success);
+  color: var(--c-success-strong);
   font-size: .68rem;
   font-weight: 800;
   padding: 2px 7px;

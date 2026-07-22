@@ -144,6 +144,8 @@ const BASE_URL = (runtimeConfig.backendApiUrl
   || settingsConfig.backendApiUrl
   || DEFAULT_BACKEND_API_URL).replace(/\/$/, '');
 const USE_BACKEND_API = runtimeConfig.useBackendApi !== false && settingsConfig.useBackendApi !== false;
+const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
+const PRODUCT_REQUEST_TIMEOUT_MS = 5000;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -152,7 +154,23 @@ function getAuthHeaders() {
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
-async function request(method, path, body = null) {
+async function fetchWithTimeout(url, options, timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Yêu cầu mất quá nhiều thời gian. Vui lòng thử lại.');
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
+async function request(method, path, body = null, options = {}) {
   const opts = {
     method,
     headers: {
@@ -162,16 +180,29 @@ async function request(method, path, body = null) {
   };
   if (body) opts.body = JSON.stringify(body);
 
-  const res = await fetch(`${BASE_URL}${path}`, opts);
+  const res = await fetchWithTimeout(
+    `${BASE_URL}${path}`,
+    opts,
+    options.timeoutMs || DEFAULT_REQUEST_TIMEOUT_MS
+  );
 
   // 401 → token hết hạn, thử refresh
-  if (res.status === 401) {
+  if (res.status === 401 && !path.startsWith('/auth/')) {
     const refreshed = await AuthAPI.refresh();
     if (refreshed) {
       opts.headers = { ...opts.headers, ...getAuthHeaders() };
-      return fetch(`${BASE_URL}${path}`, opts).then(r => r.json());
+      const retryResponse = await fetchWithTimeout(
+        `${BASE_URL}${path}`,
+        opts,
+        options.timeoutMs || DEFAULT_REQUEST_TIMEOUT_MS
+      );
+      if (!retryResponse.ok) {
+        const retryError = await retryResponse.json().catch(() => ({ message: 'L?i kh?ng x?c ??nh' }));
+        throw new Error(retryError.message || `HTTP ${retryResponse.status}`);
+      }
+      return retryResponse.json();
     } else {
-      AuthAPI.logout();
+      await AuthAPI.logout();
       const prefix = window.location.pathname.includes('/admin/') ? '../' : '';
       window.location.href = prefix + 'login.html';
       return;
@@ -188,33 +219,63 @@ async function request(method, path, body = null) {
 
 // ── Auth API ──────────────────────────────────────────────────────────────────
 
+let refreshPromise = null;
+
 const AuthAPI = {
   register: (data) => request('POST', '/auth/register', data),
   login: (data) => request('POST', '/auth/login', data),
   socialLogin: (data) => request('POST', '/auth/social', data),
 
   async refresh() {
+    if (refreshPromise) return refreshPromise;
+
     const rToken = localStorage.getItem('refreshToken');
     if (!rToken) return false;
-    try {
-      const res = await fetch(`${BASE_URL}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: rToken }),
-      });
-      if (!res.ok) return false;
-      const data = await res.json();
-      localStorage.setItem('accessToken', data.accessToken);
-      return true;
-    } catch {
-      return false;
-    }
+
+    refreshPromise = (async () => {
+      try {
+        const res = await fetchWithTimeout(`${BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: rToken }),
+        });
+        if (!res.ok) return false;
+
+        const data = await res.json();
+        if (!data.accessToken || !data.refreshToken) return false;
+
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        return true;
+      } catch {
+        return false;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+
+    return refreshPromise;
   },
 
-  logout() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+  async logout() {
+    const accessToken = localStorage.getItem('accessToken');
+    try {
+      if (accessToken) {
+        await fetchWithTimeout(`${BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        });
+      }
+    } catch {
+      // Logout c?c b? v?n ph?i ho?n t?t khi backend ?ang m?t k?t n?i.
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+    }
   },
 
   isLoggedIn() { return !!localStorage.getItem('accessToken'); },
@@ -254,7 +315,12 @@ const ProductAPI = {
       if (!USE_BACKEND_API) {
         throw new Error('Backend API is not configured; using local product data.');
       }
-      const data = await request('GET', `/products${qs ? '?' + qs : ''}`);
+      const data = await request(
+        'GET',
+        `/products${qs ? '?' + qs : ''}`,
+        null,
+        { timeoutMs: PRODUCT_REQUEST_TIMEOUT_MS }
+      );
       if (data && data.items) {
         // Save database records to local disk (IndexedDB)
         LocalDB.put('products', data.items);
@@ -310,7 +376,12 @@ const ProductAPI = {
       if (!USE_BACKEND_API) {
         throw new Error('Backend API is not configured; using local product data.');
       }
-      const data = await request('GET', `/products/${id}`);
+      const data = await request(
+        'GET',
+        `/products/${id}`,
+        null,
+        { timeoutMs: PRODUCT_REQUEST_TIMEOUT_MS }
+      );
       if (data && data.product) {
         LocalDB.put('products', data.product);
         MemoryCache.set(cacheKey, data);
@@ -343,7 +414,12 @@ const ProductAPI = {
       if (!USE_BACKEND_API) {
         throw new Error('Backend API is not configured; using local product data.');
       }
-      const data = await request('GET', '/products?featured=true&limit=8');
+      const data = await request(
+        'GET',
+        '/products?featured=true&limit=8',
+        null,
+        { timeoutMs: PRODUCT_REQUEST_TIMEOUT_MS }
+      );
       if (data && data.items) {
         LocalDB.put('products', data.items);
         MemoryCache.set(cacheKey, data);
@@ -372,7 +448,12 @@ const ProductAPI = {
       if (!USE_BACKEND_API) {
         throw new Error('Backend API is not configured; using local product data.');
       }
-      const data = await request('GET', '/products?sort=newest&limit=4');
+      const data = await request(
+        'GET',
+        '/products?sort=newest&limit=4',
+        null,
+        { timeoutMs: PRODUCT_REQUEST_TIMEOUT_MS }
+      );
       if (data && data.items) {
         LocalDB.put('products', data.items);
         MemoryCache.set(cacheKey, data);
@@ -403,6 +484,7 @@ const OrderAPI = {
   create: (data) => request('POST', '/orders', data),
   getAll: () => request('GET', '/orders'),
   getById: (id) => request('GET', `/orders/${id}`),
+  cancel: (id) => request('PATCH', `/orders/${id}/cancel`),
 };
 
 // ── Admin API ─────────────────────────────────────────────────────────────────
@@ -490,22 +572,22 @@ const ReviewAPI = {
 
 const MOCK = {
   products: [
-    { id: 1, name: 'Laptop ABC Pro 2024', price: 15990000, oldPrice: 18500000, category: 'Laptop', stock: 12, featured: true, isNew: false, icon: '💻' },
-    { id: 2, name: 'Phone XYZ 15 Pro', price: 8490000, oldPrice: null, category: 'Điện thoại', stock: 8, featured: true, isNew: true, icon: '📱' },
-    { id: 3, name: 'Tai nghe K Pro Max', price: 1290000, oldPrice: 1590000, category: 'Phụ kiện', stock: 25, featured: true, isNew: false, icon: '🎧' },
-    { id: 4, name: 'Bàn phím Mech TKL', price: 890000, oldPrice: null, category: 'Phụ kiện', stock: 30, featured: true, isNew: true, icon: '⌨️' },
-    { id: 5, name: 'Màn hình 4K 27"', price: 6490000, oldPrice: 7200000, category: 'Màn hình', stock: 6, featured: true, isNew: false, icon: '🖥️' },
-    { id: 6, name: 'Chuột G Pro X', price: 690000, oldPrice: null, category: 'Phụ kiện', stock: 45, featured: true, isNew: true, icon: '🖱️' },
-    { id: 7, name: 'Tablet S8 Ultra', price: 12900000, oldPrice: 14500000, category: 'Tablet', stock: 4, featured: false, isNew: true, icon: '📟' },
-    { id: 8, name: 'Đồng hồ Watch 4', price: 3290000, oldPrice: null, category: 'Wearable', stock: 15, featured: false, isNew: true, icon: '⌚' },
+    { id: 1, name: 'Laptop ABC Pro 2024', price: 15990000, oldPrice: 18500000, category: 'Laptop', stock: 12, featured: true, isNew: false, icon: 'laptop' },
+    { id: 2, name: 'Phone XYZ 15 Pro', price: 8490000, oldPrice: null, category: 'Điện thoại', stock: 8, featured: true, isNew: true, icon: 'phone' },
+    { id: 3, name: 'Tai nghe K Pro Max', price: 1290000, oldPrice: 1590000, category: 'Phụ kiện', stock: 25, featured: true, isNew: false, icon: 'headphones' },
+    { id: 4, name: 'Bàn phím Mech TKL', price: 890000, oldPrice: null, category: 'Phụ kiện', stock: 30, featured: true, isNew: true, icon: 'keyboard' },
+    { id: 5, name: 'Màn hình 4K 27"', price: 6490000, oldPrice: 7200000, category: 'Màn hình', stock: 6, featured: true, isNew: false, icon: 'monitor' },
+    { id: 6, name: 'Chuột G Pro X', price: 690000, oldPrice: null, category: 'Phụ kiện', stock: 45, featured: true, isNew: true, icon: 'mouse' },
+    { id: 7, name: 'Tablet S8 Ultra', price: 12900000, oldPrice: 14500000, category: 'Tablet', stock: 4, featured: false, isNew: true, icon: 'tablet' },
+    { id: 8, name: 'Đồng hồ Watch 4', price: 3290000, oldPrice: null, category: 'Wearable', stock: 15, featured: false, isNew: true, icon: 'watch' },
   ],
 
   categories: [
-    { name: 'Laptop', icon: '💻', count: 48 },
-    { name: 'Điện thoại', icon: '📱', count: 126 },
-    { name: 'Phụ kiện', icon: '🎧', count: 312 },
-    { name: 'Màn hình', icon: '🖥️', count: 54 },
-    { name: 'Wearable', icon: '⌚', count: 33 },
+    { name: 'Laptop', icon: 'laptop', count: 48 },
+    { name: 'Điện thoại', icon: 'phone', count: 126 },
+    { name: 'Phụ kiện', icon: 'headphones', count: 312 },
+    { name: 'Màn hình', icon: 'monitor', count: 54 },
+    { name: 'Wearable', icon: 'watch', count: 33 },
   ],
 };
 

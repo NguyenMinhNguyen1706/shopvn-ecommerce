@@ -6,10 +6,13 @@ const options = {
     info: {
       title:       'ShopVN API',
       version:     '1.0.0',
-      description: 'E-Commerce Backend API — Node.js + Express + PostgreSQL',
+      description: 'ShopVN REST API - Node.js, Express, PostgreSQL',
     },
     servers: [
-      { url: 'http://localhost:3000', description: 'Development' },
+      {
+        url: process.env.BACKEND_URL || 'http://127.0.0.1:3000',
+        description: process.env.NODE_ENV === 'production' ? 'Production' : 'Local development'
+      },
     ],
     components: {
       securitySchemes: {

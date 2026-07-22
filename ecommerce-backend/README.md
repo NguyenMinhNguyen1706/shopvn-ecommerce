@@ -1,94 +1,105 @@
-# ShopVN — E-Commerce Backend
+# ShopVN Backend
 
-Node.js + Express + PostgreSQL REST API cho hệ thống thương mại điện tử.
+REST API cho ShopVN, chạy trên Node.js 20, Express 5, PostgreSQL/Sequelize và Redis. API chính dùng prefix `/api/v1`; `/api/*` chỉ là lớp tương thích có cảnh báo deprecation.
 
-## Tech Stack
+## Kiến trúc
 
-| Layer      | Technology                        |
-|------------|-----------------------------------|
-| Runtime    | Node.js 20 + Express 5            |
-| Database   | PostgreSQL 15 + Sequelize ORM     |
-| Auth       | JWT Access Token + Refresh Token  |
-| Cache      | Redis                             |
-| Jobs       | BullMQ + Redis                    |
-| Storage    | Cloudinary                        |
-| Protection | Route auth + rate limits          |
-| Docs       | Swagger UI (OpenAPI 3.0)          |
-| Deploy     | Docker + Docker Compose           |
+```text
+Request
+  -> security/rate-limit/auth/validation middleware
+  -> controller
+  -> service transaction/business rules
+  -> Sequelize model/PostgreSQL
+  -> JSON response/error handler
+```
 
-## Quick Start
+BullMQ worker xử lý background jobs trên Redis. Ảnh được đưa qua storage adapter; database chỉ lưu metadata/URL.
 
-### Chạy local
+## Chạy local
 
-```bash
-# 1. Clone và cài dependencies
-npm install
+```powershell
+Copy-Item .env.example .env
+npm ci
+npm run db:migrate
+npm run db:seed
+npm start
+```
 
-# 2. Tạo file .env từ template
-cp .env.example .env
-# Điền thông tin DB và JWT secret vào .env
+Chạy worker ở terminal riêng:
 
-# 3. Tạo database PostgreSQL
-createdb ecommerce_db
-
-# 4. Chạy dev server
-npm run dev
-
-# 5. Chay worker job nen (terminal rieng, can Redis)
+```powershell
 npm run worker
 ```
 
-### Chạy với Docker
+Yêu cầu tối thiểu: Node.js 20+, PostgreSQL 15+, Redis 7+. `db:seed` là thao tác tùy chọn cho local/demo, không tự động chạy production.
 
-```bash
-docker compose up -d
-```
+## Endpoint chính
 
-## API Endpoints
+| Method | Endpoint | Access | Mục đích |
+|---|---|---|---|
+| POST | `/api/v1/auth/register` | Public | Đăng ký |
+| POST | `/api/v1/auth/login` | Public | Đăng nhập |
+| POST | `/api/v1/auth/refresh` | Public + refresh token | Rotate token |
+| POST | `/api/v1/auth/logout` | User | Thu hồi phiên |
+| GET | `/api/v1/auth/me` | User | Hồ sơ hiện tại |
+| GET | `/api/v1/products` | Public | Danh sách/search/filter/sort |
+| GET | `/api/v1/products/:id` | Public | Chi tiết sản phẩm |
+| GET/POST | `/api/v1/cart` | User | Xem/thêm giỏ hàng |
+| POST | `/api/v1/cart/sync` | User | Đồng bộ giỏ atomically |
+| PUT/DELETE | `/api/v1/cart/:id` | User | Sửa/xóa dòng giỏ |
+| POST/GET | `/api/v1/orders` | User | Tạo/xem đơn của mình |
+| GET | `/api/v1/orders/:id` | User | Chi tiết đơn thuộc user |
+| PATCH | `/api/v1/orders/:id/cancel` | User | Hủy đơn hợp lệ |
+| POST | `/api/v1/payment/:provider/create` | User | Tạo yêu cầu thanh toán |
+| POST/GET | `/api/v1/payment/webhooks/*` | Provider | Callback có xác minh chữ ký |
+| GET | `/api/v1/admin/*` | Admin | Dashboard và quản trị |
+| POST | `/api/v1/webhooks/shopee` | Shared secret | Webhook marketplace giả lập |
+| POST | `/api/v1/webhooks/tiktok` | Shared secret | Webhook marketplace giả lập |
 
-| Method | Endpoint                      | Auth    | Mô tả                    |
-|--------|-------------------------------|---------|--------------------------|
-| POST   | /api/auth/register            | ❌      | Đăng ký                  |
-| POST   | /api/auth/login               | ❌      | Đăng nhập                |
-| POST   | /api/auth/refresh             | ❌      | Refresh access token     |
-| POST   | /api/auth/logout              | ✅ User | Đăng xuất                |
-| GET    | /api/auth/me                  | ✅ User | Thông tin cá nhân        |
-| GET    | /api/products                 | ❌      | Danh sách sản phẩm       |
-| GET    | /api/products/:id             | ❌      | Chi tiết sản phẩm        |
-| GET    | /api/cart                     | ✅ User | Xem giỏ hàng             |
-| POST   | /api/cart                     | ✅ User | Thêm vào giỏ             |
-| PUT    | /api/cart/:id                 | ✅ User | Cập nhật số lượng        |
-| DELETE | /api/cart/:id                 | ✅ User | Xóa khỏi giỏ             |
-| POST   | /api/orders                   | ✅ User | Tạo đơn hàng             |
-| GET    | /api/orders                   | ✅ User | Lịch sử đơn hàng         |
-| PATCH  | /api/orders/:id/cancel        | ✅ User | Hủy đơn hàng             |
-| GET    | /api/admin/stats              | ✅ Admin| Dashboard thống kê       |
-| GET    | /api/admin/orders             | ✅ Admin| Quản lý đơn hàng         |
-| PATCH  | /api/admin/orders/:id/status  | ✅ Admin| Cập nhật trạng thái      |
-| GET    | /api/admin/products           | ✅ Admin| Quản lý sản phẩm         |
-| POST   | /api/admin/products           | ✅ Admin| Thêm sản phẩm            |
-| PUT    | /api/admin/products/:id       | ✅ Admin| Sửa sản phẩm             |
-| DELETE | /api/admin/products/:id       | ✅ Admin| Xóa sản phẩm             |
+Swagger UI: `http://127.0.0.1:3000/api-docs`. Health: `/health`; readiness: `/ready`.
 
-## Swagger Docs
+## Script
 
-Truy cập sau khi chạy server: http://localhost:3000/api-docs
+| Script | Mục đích |
+|---|---|
+| `npm run test:ci` | Chạy Jest tuần tự cho CI |
+| `npm run test:coverage` | Tạo coverage report |
+| `npm run db:migrate` | Migration có PostgreSQL advisory lock |
+| `npm run db:migrate:status` | Kiểm tra trạng thái migration |
+| `npm run db:seed` | Nạp dữ liệu local/demo |
+| `npm run db:backup` | Logical JSON backup cho local/demo |
+| `npm run db:restore -- <file> --confirm` | Restore có xác nhận phá hủy |
+| `npm run worker` | Chạy BullMQ worker |
 
-## Kiến trúc thiết kế
+## Security contract
 
-```
-Request → Route → Middleware (Auth/RBAC) → Controller → Service → Model → DB
-                                                ↓
-                                         Error Handler
-```
+- `JWT_SECRET` và `JWT_REFRESH_SECRET` bắt buộc, khác nhau; production yêu cầu tối thiểu 32 ký tự.
+- `WEBHOOK_SHARED_SECRET` bắt buộc và tối thiểu 32 ký tự trong production.
+- Cart/order/admin routes dùng authentication; admin routes dùng RBAC.
+- Joi validation và recursive sanitization chạy sau body parser.
+- Server tự tính giá/discount/total; không nhận tổng tiền từ frontend.
+- Payment callback phải đạt chữ ký provider, amount match và idempotent finalization.
+- Nodemailer chặn file/URL access; backup và log không được commit dữ liệu nhạy cảm.
 
-**Quyết định thiết kế quan trọng:**
-- JWT Access Token (15 phút) + Refresh Token (7 ngày, lưu DB) — revocable
-- DB Transaction khi tạo đơn hàng — đảm bảo atomicity
-- Snapshot giá sản phẩm vào OrderItem — lịch sử không bị ảnh hưởng khi đổi giá
-- defaultScope loại bỏ password khỏi mọi query User
+## Database và migration
 
-Additional scalable-backend notes:
-- Redis cache cho product/shipping data, co invalidation khi admin/review/upload thay doi san pham
-- BullMQ worker xu ly email xac nhan don hang voi retry/backoff
-- Webhook Shopee/TikTok mock duoc bao ve bang `WEBHOOK_SHARED_SECRET`
+Không dùng `sequelize.sync()` trong production. Mọi thay đổi schema phải có migration mới; không sửa migration đã chạy. Trước release, chạy migration trên database mới và staging clone, sau đó kiểm tra `SequelizeMeta` và `/ready`.
+
+Backup JSON loại bỏ refresh token nhưng vẫn có PII và password hash. Production nên dùng managed snapshot hoặc `pg_dump` được mã hóa, rồi diễn tập restore trên database cách ly.
+
+## Deployment
+
+- `render.yaml`: web, worker, PostgreSQL và Redis.
+- `Dockerfile`: Node 20 Alpine, non-root runtime, healthcheck.
+- `docker-compose.yml`: local stack; secret bắt buộc lấy từ environment.
+- `.github/workflows/backend-ci.yml`: dependency audit, migration, Jest và config checks.
+
+Các biến `sync: false` trong Render phải được nhập trên dashboard. Không commit `.env`, token, payment key, SMTP credential hoặc database URL.
+
+## Tài liệu liên quan
+
+- [Hồ sơ đồ án](../docs/capstone/README.md)
+- [API/data dictionary](../docs/capstone/04-DATA-AND-API.md)
+- [Test/security plan](../docs/capstone/06-TEST-SECURITY-PLAN.md)
+- [Deployment runbook](../docs/capstone/07-DEPLOYMENT-RUNBOOK.md)
+- [Traceability](../docs/capstone/TRACEABILITY.md)

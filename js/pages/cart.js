@@ -25,7 +25,7 @@ function renderCartItems() {
         <div class="cart-empty__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h7.84a2 2 0 0 0 2-1.61L20.2 7H5.12"/></svg>
         </div>
-        <h2 class="cart-empty__title">Giỏ hàng đang trống</h2>
+        <h1 class="cart-empty__title">Giỏ hàng đang trống</h1>
         <p class="cart-empty__desc">
           Khám phá laptop, điện thoại và phụ kiện công nghệ trước khi quay lại thanh toán.
         </p>
@@ -224,9 +224,9 @@ function goToCheckout() {
     return;
   }
   if (!Auth.isLoggedIn()) {
-    showToast('Thanh toán dưới vai trò Khách. Đăng nhập để tích xu thành viên!', 'info');
+    showToast('Vui lòng đăng nhập để đặt hàng và theo dõi trạng thái giao hàng.', 'info');
     setTimeout(() => {
-      window.location.href = 'checkout.html';
+      window.location.href = 'login.html?next=checkout.html';
     }, 1000);
     return;
   }

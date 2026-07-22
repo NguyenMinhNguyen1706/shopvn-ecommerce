@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Tạo giao diện Trigger & Modal
     const wheelHTML = `
       <!-- Trigger Button -->
-      <button class="lucky-wheel-trigger" id="wheel-trigger" title="Vòng quay may mắn">
-        🎁
+      <button class="lucky-wheel-trigger" id="wheel-trigger" type="button" title="Ưu đãi thành viên" aria-label="Mở ưu đãi thành viên">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5A2.5 2.5 0 1 1 10 4.5C10 6 12 7 12 7Z"/><path d="M12 7h4.5A2.5 2.5 0 1 0 14 4.5C14 6 12 7 12 7Z"/></svg>
       </button>
 
       <!-- Modal Overlay -->
@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </svg>
           </button>
           
-          <h2 class="lucky-wheel-title">Vòng Quay May Mắn</h2>
-          <p class="lucky-wheel-subtitle">Cơ hội nhận ngàn ưu đãi 2024</p>
+          <h2 class="lucky-wheel-title">Ưu đãi thành viên</h2>
+          <p class="lucky-wheel-subtitle">Chương trình được cập nhật theo từng thời điểm</p>
           
           <div class="wheel-container">
             <div class="wheel-pointer"></div>
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (wonPrize === 'Chúc bạn may mắn') {
           alert('Rất tiếc! Chúc bạn may mắn lần sau nhé.');
         } else {
-          alert(`🎉 CHÚC MỪNG! Bạn đã trúng: ${wonPrize} 🎉\nVui lòng kiểm tra email để nhận mã giảm giá.`);
+          alert(`CHÚC MỪNG! Bạn đã trúng: ${wonPrize}\nVui lòng kiểm tra email để nhận mã giảm giá.`);
         }
       }, 4000);
     });

@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ✨ NEW 2026: Validate critical secrets at startup
@@ -62,24 +62,18 @@ app.use(compression()); // GZIP compression
 // Security Headers (CSP, XSS, HSTS)
 app.use(securityHeaders());
 
-// XSS Sanitizer for all inputs
-app.use(sanitize);
-
 // ── CORS ──────────────────────────────────────────────────────────────────────
 const allowedOrigins = getAllowedOrigins();
 app.use(cors({
   origin(origin, callback) {
-    // Rigid CORS check to prevent origin reflection attacks
-    if (!origin) {
-      if (process.env.NODE_ENV === 'production') {
-        return callback(new Error('CORS blocked: request lacks Origin header.'));
-      }
-      return callback(null, true);
-    }
+    // CORS is a browser policy; health checks, webhooks and server clients may omit Origin.
+    if (!origin) return callback(null, true);
     if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error(`CORS blocked origin: ${origin}`));
+    const error = new Error('Origin is not allowed by CORS.');
+    error.status = 403;
+    return callback(error);
   },
   credentials: true,
 }));
@@ -96,6 +90,7 @@ app.use(morgan(morganFormat, {
 // ── Body Parsing & Idempotency ────────────────────────────────────────────────
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: process.env.FORM_BODY_LIMIT || '2mb' }));
+app.use(sanitize); // Body/query/params are available only after parsers run.
 app.use(idempotency()); // Idempotency keys for mutations
 
 // ── Swagger Docs ──────────────────────────────────────────────────────────────
@@ -162,16 +157,26 @@ app.get('/health', (req, res) => {
 app.get('/ready', async (req, res) => {
   try {
     await sequelize.authenticate();
-    const isRedisReady = redisClient.isReady();
+    const isRedisReady = redisClient.isReady === true;
     if (!startupDatabaseReady) {
       return res.status(503).json({
         status: 'starting',
         database: 'connected',
         redis: isRedisReady ? 'connected' : 'disconnected',
-        message: startupDatabaseError ? startupDatabaseError.message : 'Database initialization is still running',
+        message: startupDatabaseError ? 'Database initialization failed' : 'Database initialization is still running',
         timestamp: new Date().toISOString(),
       });
     }
+    if (!isRedisReady) {
+      return res.status(503).json({
+        status: 'not_ready',
+        database: 'connected',
+        redis: 'disconnected',
+        message: 'Redis readiness check failed',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
 
     res.json({
       status: 'ready',
@@ -183,19 +188,31 @@ app.get('/ready', async (req, res) => {
     res.status(503).json({
       status: 'not_ready',
       database: 'disconnected',
-      message: err.message,
+      message: 'Database readiness check failed',
       timestamp: new Date().toISOString(),
     });
   }
 });
 
-// ── Global error handler ──────────────────────────────────────────────────────
-app.use((err, req, res, next) => {
-  // Use structured logger instead of console.error
-  logger.error({ err, path: req.path, requestId: req.requestId }, 'Request processing error');
-  res.status(err.status || 500).json({
+// ── 404 & Global error handlers ───────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({
     success: false,
-    message: err.message || 'Internal Server Error',
+    message: 'Không tìm thấy tài nguyên.',
+    requestId: req.requestId
+  });
+});
+app.use((err, req, res, next) => {
+  logger.error({ err, path: req.path, requestId: req.requestId }, 'Request processing error');
+
+  const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 600
+    ? err.status
+    : 500;
+  const exposeMessage = status < 500 || process.env.NODE_ENV !== 'production';
+
+  res.status(status).json({
+    success: false,
+    message: exposeMessage ? (err.message || 'Internal Server Error') : 'Đã xảy ra lỗi máy chủ.',
     requestId: req.requestId
   });
 });
@@ -255,22 +272,22 @@ async function runDatabaseBootstrap() {
 async function initializeDatabase() {
   try {
     await sequelize.authenticate();
-    logger.info('✅ Database connected');
+    logger.info('[DB] Connected');
 
     await runDatabaseBootstrap();
 
     startupDatabaseReady = true;
     startupDatabaseError = null;
-    logger.info('✅ Database initialization complete');
+    logger.info('[DB] Initialization complete');
   } catch (err) {
     startupDatabaseReady = false;
     startupDatabaseError = err;
-    logger.error({ err }, '❌ Cannot connect to database');
+    logger.error({ err }, '[DB] Initialization failed');
   }
 }
 
 const server = app.listen(PORT, () => {
-  logger.info(`🚀 Server running → http://localhost:${PORT}`);
+  logger.info(`[App] Server running at http://localhost:${PORT}`);
   initializeDatabase();
 });
 

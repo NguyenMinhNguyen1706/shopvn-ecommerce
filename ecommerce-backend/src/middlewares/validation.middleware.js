@@ -5,7 +5,9 @@ const Joi = require('joi');
  */
 const sanitizeString = (value) => {
   if (typeof value !== 'string') return value;
-  return value.replace(/<[^>]*>/g, '');
+  return value
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<[^>]*>/g, '');
 };
 
 const sanitizeValue = (value) => {
@@ -18,8 +20,11 @@ const sanitizeValue = (value) => {
   }
 
   if (value && typeof value === 'object') {
+    const blockedKeys = new Set(['__proto__', 'prototype', 'constructor']);
     return Object.fromEntries(
-      Object.entries(value).map(([key, nestedValue]) => [key, sanitizeValue(nestedValue)])
+      Object.entries(value)
+        .filter(([key]) => !blockedKeys.has(key))
+        .map(([key, nestedValue]) => [key, sanitizeValue(nestedValue)])
     );
   }
 
@@ -29,16 +34,19 @@ const sanitizeValue = (value) => {
 /**
  * Sanitize middleware to clean body, query, and params
  */
+const setRequestValue = (req, key, value) => {
+  Object.defineProperty(req, key, {
+    value,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+};
+
 const sanitize = (req, res, next) => {
-  if (req.body) {
-    req.body = sanitizeValue(req.body);
-  }
-  if (req.query) {
-    req.query = sanitizeValue(req.query);
-  }
-  if (req.params) {
-    req.params = sanitizeValue(req.params);
-  }
+  ['body', 'query', 'params'].forEach(key => {
+    if (req[key]) setRequestValue(req, key, sanitizeValue(req[key]));
+  });
   next();
 };
 
@@ -69,7 +77,7 @@ const validate = (schema, source = 'body') => {
     }
 
     // Replace the request data with the validated/cast values
-    req[source] = value;
+    setRequestValue(req, source, value);
     next();
   };
 };
@@ -86,11 +94,12 @@ const schemas = {
       'any.required': 'Email là bắt buộc.',
       'string.email': 'Định dạng email không hợp lệ.'
     }),
-    password: Joi.string().min(6).required().messages({
+    password: Joi.string().min(8).max(128).required().messages({
       'any.required': 'Mật khẩu là bắt buộc.',
-      'string.min': 'Mật khẩu phải có ít nhất {#limit} ký tự.'
+      'string.min': 'Mật khẩu phải có ít nhất {#limit} ký tự.',
+      'string.max': 'Mật khẩu không được vượt quá {#limit} ký tự.'
     }),
-    phone: Joi.string().pattern(/^[0-9]{10,11}$/).optional().messages({
+    phone: Joi.string().pattern(/^(0|\+84)[3-9]\d{8}$/).optional().messages({
       'string.pattern.base': 'Số điện thoại không hợp lệ.'
     })
   }),
@@ -116,7 +125,7 @@ const schemas = {
     description: Joi.string().optional().allow(''),
     category: Joi.string().required(),
     stock: Joi.number().integer().min(0).default(0),
-    imageUrl: Joi.string().uri().optional().allow(''),
+    imageUrl: Joi.string().uri({ scheme: ['http', 'https'] }).optional().allow(''),
     icon: Joi.string().optional().allow(''),
     featured: Joi.boolean().default(false),
     isNew: Joi.boolean().default(true)
@@ -129,14 +138,14 @@ const schemas = {
     description: Joi.string().optional().allow(''),
     category: Joi.string().optional(),
     stock: Joi.number().integer().min(0).optional(),
-    imageUrl: Joi.string().uri().optional().allow(''),
+    imageUrl: Joi.string().uri({ scheme: ['http', 'https'] }).optional().allow(''),
     icon: Joi.string().optional().allow(''),
     featured: Joi.boolean().optional(),
     isNew: Joi.boolean().optional()
   }),
 
   addToCart: Joi.object({
-    productId: Joi.number().integer().required(),
+    productId: Joi.number().integer().min(1).required(),
     quantity: Joi.number().integer().min(1).max(99).required()
   }),
 
@@ -150,7 +159,7 @@ const schemas = {
   }),
 
   createPayment: Joi.object({
-    orderId: Joi.number().integer().required(),
+    orderId: Joi.number().integer().min(1).required(),
     method: Joi.string().valid('vnpay', 'zalopay', 'momo', 'bank_transfer').required()
   }),
 
@@ -166,7 +175,7 @@ const schemas = {
     weight: Joi.number().integer().min(1).default(1000), // grams
     items: Joi.array().items(
       Joi.object({
-        productId: Joi.number().integer().required(),
+        productId: Joi.number().integer().min(1).required(),
         quantity: Joi.number().integer().min(1).required()
       })
     ).optional()
@@ -177,7 +186,7 @@ const schemas = {
   }),
 
   updateOrderStatus: Joi.object({
-    status: Joi.string().valid('pending', 'confirmed', 'processing', 'shipping', 'delivered', 'cancelled').required()
+    status: Joi.string().valid('pending', 'processing', 'shipping', 'delivered', 'cancelled').required()
   }),
 
   paginationQuery: Joi.object({
@@ -196,5 +205,6 @@ module.exports = {
   sanitize,
   sanitizeString,
   sanitizeValue,
+  setRequestValue,
   schemas
 };
