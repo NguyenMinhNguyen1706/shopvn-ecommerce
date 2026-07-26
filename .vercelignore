@@ -1,0 +1,14 @@
+ecommerce-backend/
+docs/
+.git/
+.github/
+.vscode/
+.agents/
+.codex-screenshots/
+.tmp/
+tmp/
+CHATGPT_WEB_CONTEXT.md
+DEPLOYMENT.md
+QA_REPORT.md
+QA_TEST_CHECKLIST.md
+README.md

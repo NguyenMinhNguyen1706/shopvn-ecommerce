@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap&subset=vietnamese');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Space+Grotesk:wght@500;600;700&display=swap&subset=vietnamese');
 
 *,
 *::before,
@@ -11,29 +11,29 @@
 :root {
   color-scheme: light;
 
-  /* Clean Technology Store palette */
-  --c-page: #f5f7fa;
+  /* Neo Circuit Commerce palette */
+  --c-page: #f3f3f7;
   --c-panel: #ffffff;
-  --c-panel-soft: #f8fafc;
-  --c-ink: #111827;
-  --c-ink-2: #1f2937;
-  --c-body: #475569;
-  --c-subtle: #5f6f83;
-  --c-line: #d7dee8;
-  --c-line-strong: #b8c3d1;
-  --c-brand: #1d4ed8;
-  --c-brand-strong: #163fae;
-  --c-brand-soft: #eaf1ff;
-  --c-buy: #c2410c;
-  --c-buy-strong: #9a3412;
-  --c-buy-soft: #fff2e8;
-  --c-success: #15803d;
-  --c-success-strong: #11632f;
-  --c-error: #b91c1c;
-  --c-warning: #a16207;
-  --c-good-soft: #ecfdf3;
-  --c-danger-soft: #fef2f2;
-  --c-warn-soft: #fffbeb;
+  --c-panel-soft: #f8f7fc;
+  --c-ink: #12131a;
+  --c-ink-2: #242532;
+  --c-body: #515261;
+  --c-subtle: #656674;
+  --c-line: #dddce7;
+  --c-line-strong: #bdb9ce;
+  --c-brand: #6847ff;
+  --c-brand-strong: #4b2ee6;
+  --c-brand-soft: #eeeaff;
+  --c-buy: #b8e629;
+  --c-buy-strong: #99c413;
+  --c-buy-soft: #f1facf;
+  --c-success: #178b5c;
+  --c-success-strong: #0f6f49;
+  --c-error: #c33b56;
+  --c-warning: #8d6800;
+  --c-good-soft: #eaf9f1;
+  --c-danger-soft: #fff0f3;
+  --c-warn-soft: #fff8d8;
 
   /* Compatibility aliases used by existing page styles */
   --c-navy: var(--c-ink);
@@ -47,50 +47,76 @@
   --c-text: var(--c-body);
   --c-muted: var(--c-subtle);
   --c-blue: var(--c-brand);
-  --c-blue-mid: #2563eb;
+  --c-blue-mid: #8068ff;
   --c-blue-light: var(--c-brand-soft);
   --c-accent: var(--c-buy);
   --c-accent-dim: var(--c-buy-soft);
-  --c-cyan: #0e7490;
-  --c-violet: #6d28d9;
+  --c-cyan: #078f9d;
+  --c-violet: #8b5cf6;
 
-  --f-display: 'Outfit', 'Inter', sans-serif;
-  --f-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --f-display: 'Space Grotesk', 'Be Vietnam Pro', sans-serif;
+  --f-body: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
 
-  --fs-xs: .75rem;
-  --fs-sm: .875rem;
-  --fs-base: 1rem;
-  --fs-lg: 1.125rem;
-  --fs-xl: 1.375rem;
-  --fs-2xl: 1.75rem;
-  --fs-3xl: 2.25rem;
-  --fs-4xl: 3rem;
+  --fs-xs: .75rem;     /* 12px - Small/Meta */
+  --fs-sm: .875rem;    /* 14px - Small/Body-sub */
+  --fs-base: 1rem;     /* 16px - Body text */
+  --fs-lg: 1.125rem;   /* 18px - H4 / Subtitle */
+  --fs-xl: 1.375rem;   /* 22px - H3 / Card title */
+  --fs-2xl: 1.75rem;   /* 28px - H2 / Section title */
+  --fs-3xl: 2.25rem;   /* 36px - H1 / Hero title */
+  --fs-4xl: 3rem;      /* 48px - H1 Display */
 
-  --sp-2xs: 4px;
-  --sp-xs: 8px;
-  --sp-sm: 12px;
-  --sp-md: 16px;
-  --sp-lg: 24px;
-  --sp-xl: 32px;
-  --sp-2xl: 48px;
-  --sp-3xl: 72px;
+  /* Typography Line Heights according to Design Web Infographic 03 */
+  --lh-heading: 1.3;   /* Headings H1-H4: 1.2 - 1.4 */
+  --lh-body: 1.6;      /* Body text: 1.5 - 1.7 */
 
-  --r-xs: 4px;
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 8px;
-  --r-xl: 8px;
-  --r-2xl: 8px;
+  /* 8-Point Spacing Scale according to Design Web Infographic 05: 4, 8, 12, 16, 24, 32, 48, 64, 80, 96px */
+  --sp-2xs: 4px;       /* 4px - Micro gap */
+  --sp-xs: 8px;        /* 8px - Item gap min */
+  --sp-sm: 12px;       /* 12px - Small gap */
+  --sp-md: 16px;       /* 16px - Item gap max / Card padding mobile */
+  --sp-lg: 24px;       /* 24px - Card padding desktop / Section spacing min */
+  --sp-xl: 32px;       /* 32px - Medium section spacing */
+  --sp-2xl: 48px;      /* 48px - Section spacing max */
+  --sp-3xl: 64px;      /* 64px - Large section gap */
+  --sp-4xl: 80px;      /* 80px - Banner padding */
+  --sp-5xl: 96px;      /* 96px - Hero vertical padding */
+
+  /* Standard Application Tips from Infographic 05 */
+  --card-padding-mobile: var(--sp-md); /* 16px */
+  --card-padding-desktop: var(--sp-lg); /* 24px */
+  --section-spacing: var(--sp-2xl);    /* 48px */
+  /* Touch target min for mobile accessibility according to Design Web Infographic 08 */
+  --touch-target-min: 44px;
+
+  /* Standard Responsive Breakpoints (Infographic 08) */
+  --bp-sm: 576px;   /* Mobile threshold */
+  --bp-md: 768px;   /* Tablet portrait */
+  --bp-lg: 1024px;  /* Tablet landscape / Laptop min */
+  --bp-xl: 1440px;  /* Desktop large */
+
+  /* Layout & grid: 12 columns desktop, 8 tablet, fluid mobile. (Infographic 04) */
+  --layout-columns: 12;
+  --layout-gap: var(--sp-lg);
+  --section-rhythm: var(--sp-2xl);
+
+  --r-xs: 5px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-2xl: 28px;
   --r-pill: 999px;
 
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, .06);
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05), 0 8px 20px rgba(15, 23, 42, .05);
-  --shadow-md: 0 2px 4px rgba(15, 23, 42, .05), 0 16px 36px rgba(15, 23, 42, .08);
-  --shadow-lg: 0 4px 8px rgba(15, 23, 42, .06), 0 24px 56px rgba(15, 23, 42, .12);
+  --shadow-xs: 0 1px 2px rgba(18, 19, 26, .06);
+  --shadow-sm: 0 1px 2px rgba(18, 19, 26, .06), 0 10px 26px rgba(53, 34, 133, .06);
+  --shadow-md: 0 2px 4px rgba(18, 19, 26, .05), 0 18px 42px rgba(53, 34, 133, .1);
+  --shadow-lg: 0 8px 18px rgba(18, 19, 26, .08), 0 30px 70px rgba(53, 34, 133, .14);
   --surface-outline: rgba(0, 0, 0, .1);
   --surface-outline-strong: rgba(0, 0, 0, .16);
-  --ring: 0 0 0 3px rgba(29, 78, 216, .2);
-  --ring-accent: 0 0 0 3px rgba(194, 65, 12, .18);
+  --ring: 0 0 0 3px rgba(104, 71, 255, .22);
+  --ring-accent: 0 0 0 3px rgba(184, 230, 41, .28);
 
   --ease: cubic-bezier(.2, 0, 0, 1);
   --ease-out: cubic-bezier(.16, 1, .3, 1);
@@ -98,8 +124,8 @@
   --dur: 220ms;
   --press-scale: .96;
 
-  --max-w: 1200px;
-  --nav-h: 68px;
+  --max-w: 1240px;
+  --nav-h: 72px;
 
   --primary-color: var(--c-brand);
   --bg-color: var(--c-page);
@@ -112,31 +138,31 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --c-page: #0b0f16;
-  --c-panel: #121824;
-  --c-panel-soft: #182131;
-  --c-ink: #f8fafc;
-  --c-ink-2: #e2e8f0;
-  --c-body: #cbd5e1;
-  --c-subtle: #a8b3c7;
-  --c-line: #2b3648;
-  --c-line-strong: #435169;
-  --c-brand: #78a9ff;
-  --c-brand-strong: #a8c7ff;
-  --c-brand-soft: rgba(120, 169, 255, .14);
-  --c-buy: #fdba74;
-  --c-buy-strong: #fed7aa;
-  --c-buy-soft: rgba(253, 186, 116, .14);
-  --c-success: #6ee7a0;
-  --c-success-strong: #86efac;
-  --c-error: #fca5a5;
-  --c-warning: #fcd34d;
+  --c-page: #0c0d13;
+  --c-panel: #151620;
+  --c-panel-soft: #1c1d29;
+  --c-ink: #f7f5ff;
+  --c-ink-2: #e8e5f2;
+  --c-body: #c5c1d2;
+  --c-subtle: #9c98ad;
+  --c-line: #302e41;
+  --c-line-strong: #514c69;
+  --c-brand: #9b86ff;
+  --c-brand-strong: #b7a7ff;
+  --c-brand-soft: rgba(155, 134, 255, .15);
+  --c-buy: #c7f53d;
+  --c-buy-strong: #d8ff67;
+  --c-buy-soft: rgba(199, 245, 61, .13);
+  --c-success: #66dfa7;
+  --c-success-strong: #85efbc;
+  --c-error: #ff91a6;
+  --c-warning: #f1d36d;
   --c-good-soft: rgba(34, 197, 94, .12);
   --c-danger-soft: rgba(248, 113, 113, .12);
   --c-warn-soft: rgba(250, 204, 21, .1);
 
-  --c-navy: #080c12;
-  --c-navy-soft: #101722;
+  --c-navy: #090a10;
+  --c-navy-soft: #12131b;
   --c-white: var(--c-panel);
   --c-off: var(--c-page);
   --c-surface: var(--c-panel-soft);
@@ -146,7 +172,7 @@
   --c-text: var(--c-body);
   --c-muted: var(--c-subtle);
   --c-blue: var(--c-brand);
-  --c-blue-mid: #9bc0ff;
+  --c-blue-mid: #b3a5ff;
   --c-blue-light: var(--c-brand-soft);
   --c-accent: var(--c-buy);
   --c-accent-dim: var(--c-buy-soft);
@@ -159,8 +185,8 @@
   --shadow-lg: 0 0 0 1px rgba(255, 255, 255, .1), 0 26px 60px rgba(0, 0, 0, .36);
   --surface-outline: rgba(255, 255, 255, .1);
   --surface-outline-strong: rgba(255, 255, 255, .18);
-  --ring: 0 0 0 3px rgba(120, 169, 255, .28);
-  --ring-accent: 0 0 0 3px rgba(253, 186, 116, .22);
+  --ring: 0 0 0 3px rgba(155, 134, 255, .3);
+  --ring-accent: 0 0 0 3px rgba(199, 245, 61, .24);
 
   --primary-color: var(--c-brand);
   --bg-color: var(--c-page);
@@ -247,6 +273,7 @@ textarea {
 h1,
 h2,
 h3,
+h4,
 .section-title,
 .hero__title,
 .products-hero__title,
@@ -255,6 +282,7 @@ h3,
 .admin-card__title {
   color: var(--c-title);
   font-family: var(--f-display);
+  line-height: var(--lh-heading);
   letter-spacing: 0;
   text-wrap: balance;
 }
@@ -269,6 +297,7 @@ dd,
 .empty-state,
 .error-state,
 .toast {
+  line-height: var(--lh-body);
   text-wrap: pretty;
 }
 

@@ -1,36 +1,36 @@
 
 /* =========================================
-   CHATBOT WIDGET
+   CHATBOT WIDGET (Aligned with Web Design Infographics)
    ========================================= */
 .chatbot-trigger {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
+  bottom: var(--sp-xl);
+  right: var(--sp-xl);
   width: 60px;
   height: 60px;
-  border-radius: 50%;
-  background: var(--primary-color);
-  color: white;
-  font-size: 24px;
+  border-radius: var(--r-pill);
+  background: var(--c-brand);
+  color: #ffffff;
+  font-size: var(--fs-xl);
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-lg);
   z-index: 1000;
-  transition: transform 0.3s ease;
+  transition: transform var(--dur-fast) var(--ease), background-color var(--dur) var(--ease);
 }
 .chatbot-trigger:hover {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .chatbot-container {
   position: fixed;
-  bottom: 100px;
-  right: 30px;
-  width: 350px;
-  height: 500px;
-  background: var(--bg-color);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  bottom: 96px;
+  right: var(--sp-xl);
+  width: 360px;
+  height: 520px;
+  background: var(--c-panel);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   z-index: 999;
@@ -38,8 +38,8 @@
   opacity: 0;
   pointer-events: none;
   transform: translateY(20px);
-  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
-  border: 1px solid var(--border-color);
+  transition: color var(--dur) var(--ease), background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  border: 1px solid var(--c-line);
 }
 .chatbot-container.open {
   opacity: 1;
@@ -48,71 +48,77 @@
 }
 
 .chatbot-header {
-  background: var(--primary-color);
-  color: white;
-  padding: 15px 20px;
+  background: var(--c-brand);
+  color: #ffffff;
+  padding: var(--sp-md) var(--sp-lg);
   cursor: pointer;
 }
 .chatbot-title {
-  font-weight: bold;
-  font-size: 1.1rem;
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  line-height: var(--lh-heading);
 }
 .chatbot-status {
-  font-size: 0.8rem;
-  opacity: 0.8;
+  font-size: var(--fs-xs);
+  opacity: 0.85;
 }
 
 .chatbot-body {
   flex: 1;
-  padding: 15px;
+  padding: var(--sp-md);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-sm);
 }
 
 .chat-message {
-  max-width: 80%;
-  padding: 10px 15px;
-  border-radius: 15px;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  max-width: 82%;
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-lg);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-body);
 }
 .chat-message.bot {
   align-self: flex-start;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  border-bottom-left-radius: 5px;
+  background: var(--c-panel-soft);
+  border: 1px solid var(--c-line);
+  color: var(--c-text);
+  border-bottom-left-radius: var(--r-xs);
 }
 .chat-message.user {
   align-self: flex-end;
-  background: var(--primary-color);
-  color: white;
-  border-bottom-right-radius: 5px;
+  background: var(--c-brand);
+  color: #ffffff;
+  border-bottom-right-radius: var(--r-xs);
 }
 
 .chatbot-input {
-  padding: 15px;
-  border-top: 1px solid var(--border-color);
+  padding: var(--sp-md);
+  border-top: 1px solid var(--c-line);
   display: flex;
-  gap: 10px;
+  gap: var(--sp-xs);
 }
 .chatbot-input input {
   flex: 1;
-  padding: 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  background: var(--input-bg);
-  color: var(--text-color);
+  padding: var(--sp-sm) var(--sp-md);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-panel-soft);
+  color: var(--c-text);
   outline: none;
 }
 .chatbot-input button {
-  padding: 0 20px;
-  background: var(--primary-color);
-  color: white;
+  padding: 0 var(--sp-lg);
+  background: var(--c-brand);
+  color: #ffffff;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--r-pill);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.chatbot-input button:hover {
+  background: var(--c-brand-strong);
 }

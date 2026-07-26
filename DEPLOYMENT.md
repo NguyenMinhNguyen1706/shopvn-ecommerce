@@ -1,138 +1,67 @@
-# ShopVN Production Deployment Checklist
+# 🚀 SHOPVN - MÔ HÌNH TRIỂN KHAI 0 ĐỒNG (ZERO-COST ARCHITECTURE)
 
-This project should be deployed as two public services:
+Tài liệu hướng dẫn triển khai toàn bộ ứng dụng Web E-Commerce lên Internet với **chi phí 0 VNĐ/tháng**, không cần quản lý máy chủ hay cài đặt OS.
 
-- Frontend static site: Vercel
-- Backend API: a Node.js host such as Render, Railway, Fly.io, or a VPS
-- Backend worker: a background Node.js process for BullMQ jobs
-- Database: managed PostgreSQL
-- Cache and queue broker: managed Redis
+---
 
-## 1. Deploy Backend First
+### 🏗️ KIẾN TRÚC TỔNG THỂ (STACK 0 ĐỒNG)
 
-Deploy `ecommerce-backend` as a Node/Docker web service.
+| Thành phần | Công nghệ / Nền tảng | Hạn mức gói Free (0$) | Vai trò |
+| :--- | :--- | :--- | :--- |
+| **Mã nguồn & CI/CD** | **GitHub** | Vô thời hạn | Lưu trữ code, kích hoạt tự động Build/Deploy |
+| **Hosting Frontend** | **Vercel** | Unlimited Sites, 100GB Bandwidth | Tự động triển khai web khi Push code |
+| **Database & Backend API** | **Supabase** | 500MB DB, 50k Active Users | PostgreSQL, Xác thực Google/FB, Auto REST API |
+| **Lưu trữ Media** | **Cloudflare R2** | 10GB Lưu trữ, **0$ Băng thông (Egress)** | Lưu trữ ảnh sản phẩm, video chất lượng cao |
 
-Required environment variables:
+---
 
-```env
-NODE_ENV=production
-PORT=3000
-DATABASE_URL=postgres://...
-DB_SSL=true
-FRONTEND_URL=https://your-vercel-site.vercel.app
-BACKEND_URL=https://your-backend-domain.example.com
-CORS_ORIGINS=https://your-vercel-site.vercel.app
-JWT_SECRET=generate-a-long-random-secret
-JWT_REFRESH_SECRET=generate-another-long-random-secret
-WEBHOOK_SHARED_SECRET=generate-a-long-random-secret
-API_RATE_LIMIT_MAX=300
-API_RATE_LIMIT_WINDOW_SECONDS=60
-JSON_BODY_LIMIT=2mb
-FORM_BODY_LIMIT=2mb
-DB_SYNC_ON_STARTUP=true
-SEED_ON_STARTUP=true
-ENSURE_INVENTORY_ON_STARTUP=true
-```
+### 📋 HƯỚNG DẪN TỪNG BƯỚC TRIỂN KHAI
 
-Health checks:
+#### BƯỚC 1: ĐƯA MÃ NGUỒN LÊN GITHUB
+1. Tạo một repository mới trên GitHub (ví dụ: `shopvn-ecommerce`).
+2. Đẩy mã nguồn dự án hiện tại lên:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit - ShopVN Zero-Cost Architecture"
+   git branch -M main
+   git remote add origin https://github.com/your-username/shopvn-ecommerce.git
+   git push -u origin main
+   ```
 
-- `/health`: app process is alive
-- `/ready`: app can connect to PostgreSQL
+#### BƯỚC 2: KHỞI TẠO CƠ SỞ DỮ LIỆU CỦA SUPABASE
+1. Truy cập [supabase.com](https://supabase.com) và tạo tài khoản Free.
+2. Tạo **New Project** đặt tên là `shopvn-db`.
+3. Mở mục **SQL Editor** trong Dashboard của Supabase, dán toàn bộ nội dung tệp [supabase/schema.sql](file:///d:/E-Commerce%20Website/supabase/schema.sql) và nhấn **Run**.
+4. Vào mục **Project Settings -> API** để lấy:
+   - `Project URL`
+   - `anon / public API Key`
+5. Vào **Authentication -> URL Configuration** thêm domain Vercel vào danh sách `Redirect URLs`.
 
-Run the worker as a separate process:
+#### BƯỚC 3: CẤU HÌNH LƯU TRỮ ẢNH VỚI CLOUDFLARE R2
+1. Truy cập [dash.cloudflare.com](https://dash.cloudflare.com), vào mục **R2 Object Storage**.
+2. Tạo một Bucket tên là `shopvn-media`.
+3. Bật tính năng **Public Development URL** (hoặc gắn Custom Domain free) để lấy đường dẫn xem ảnh public.
+4. Mọi ảnh sản phẩm/video tải lên sẽ lưu dạng URL: `https://pub-xxx.r2.dev/products/laptop.jpg`.
 
-```bash
-npm run worker
-```
+#### BƯỚC 4: KẾT NỐI VỚI VERCEL HỐ TRỢ TỰ ĐỘNG DEPLOY
+1. Truy cập [vercel.com](https://vercel.com) và đăng nhập bằng tài khoản GitHub.
+2. Chọn **Add New -> Project**, chọn repository `shopvn-ecommerce` từ GitHub.
+3. Trong mục **Environment Variables**, điền các biến môi trường:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   NEXT_PUBLIC_R2_DOMAIN=https://pub-your-id.r2.dev
+   ```
+4. Nhấn **Deploy**. Chỉ sau vài giây, Vercel sẽ cung cấp cho bạn một domain HTTPS chạy trực tuyến (ví dụ: `https://shopvn-ecommerce.vercel.app`).
 
-On Render this is represented by the `shopvn-worker` service in `render.yaml`.
-Render does not support the `free` instance type for background workers, so the worker uses `starter`.
+---
 
-## 2. Configure Payment Sandbox Webhooks
-
-Use your public backend URL, not localhost.
-
-VNPay:
-
-```env
-VNPAY_TMN_CODE=...
-VNPAY_HASH_SECRET=...
-VNPAY_URL=https://sandbox.vnpayment.vn/paygate/pay.html
-VNPAY_RETURN_URL=https://your-backend-domain.example.com/api/payment/vnpay/return
-VNPAY_IPN_URL=https://your-backend-domain.example.com/api/payment/vnpay/ipn
-```
-
-MoMo:
-
-```env
-MOMO_PARTNER_CODE=...
-MOMO_ACCESS_KEY=...
-MOMO_SECRET_KEY=...
-MOMO_API_URL=https://test-payment.momo.vn/v3/gateway/api
-MOMO_IPN_URL=https://your-backend-domain.example.com/api/payment/webhooks/momo/callback
-```
-
-PayOS:
-
-```env
-PAYOS_CLIENT_ID=...
-PAYOS_API_KEY=...
-PAYOS_CHECKSUM_KEY=...
-PAYOS_API_URL=https://api.payos.vn/v1
-```
-
-Webhook target:
-
-```text
-https://your-backend-domain.example.com/api/payment/webhooks/payos/callback
-```
-
-Mock marketplace webhooks:
-
-- `POST /api/webhooks/shopee`
-- `POST /api/webhooks/tiktok`
-
-Send either `x-webhook-secret: <WEBHOOK_SHARED_SECRET>` or
-`x-webhook-signature: sha256=<hmac_sha256_json_body>`.
-
-## 3. Deploy Frontend To Vercel
-
-Set the frontend backend URL in:
-
-```text
-js/config.js
-```
-
-Example:
-
-```js
-window.SHOPVN_CONFIG = {
-  backendApiUrl: 'https://your-backend-domain.example.com/api'
-};
-```
-
-Then deploy the repository root to Vercel as a static site.
-
-## 4. Smoke Test After Deploy
-
-Run these manually after both services are public:
-
-1. Open the Vercel frontend.
-2. Register a new user.
-3. Login.
-4. Add product to cart.
-5. Checkout with COD.
-6. Checkout with VNPay sandbox.
-7. Checkout with MoMo sandbox.
-8. Checkout with PayOS sandbox and confirm webhook updates the order to paid.
-9. Open `/ready` on backend and confirm `database: connected`.
-10. Confirm browser console has no CORS or mixed-content errors.
-
-## 5. Next Production Steps
-
-After deploy is stable:
-
-- Add automated load tests for product list, login, cart sync, and order creation.
-- Add email notification delivery checks.
-- Add request/error monitoring with alerts.
-- Add CI checks for backend tests and frontend Selenium smoke tests.
+### 🔄 QUY TRÌNH TỰ ĐỘNG CẬP NHẬT TRONG TƯƠNG LAI
+- Mỗi khi bạn sửa code trên máy tính, chỉ cần gõ:
+  ```bash
+  git add .
+  git commit -m "Cập nhật tính năng mới"
+  git push
+  ```
+- **Vercel sẽ tự động cập nhật Website trên Internet chỉ sau vài phút** mà bạn không cần phải làm thêm bất kỳ thao tác nào!

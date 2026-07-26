@@ -40,7 +40,7 @@ const InventoryTransaction = sequelize.define('InventoryTransaction', {
 }, {
   tableName:  'inventory_transactions',
   timestamps: true,
-  updatedAt:  false, // Audit log thường chỉ cần createdAt
+  updatedAt:  true, // Must be true to avoid null violation in database constraint
 });
 
 const Product = require('./Product');
