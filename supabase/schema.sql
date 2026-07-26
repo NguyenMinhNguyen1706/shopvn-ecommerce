@@ -5,9 +5,23 @@
 -- 1. ENUMS & EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE user_role AS ENUM ('customer', 'admin', 'staff');
-CREATE TYPE order_status AS ENUM ('pending', 'processing', 'shipping', 'delivered', 'cancelled');
-CREATE TYPE payment_status AS ENUM ('unpaid', 'paid', 'refunded');
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('customer', 'admin', 'staff');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE order_status AS ENUM ('pending', 'processing', 'shipping', 'delivered', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE payment_status AS ENUM ('unpaid', 'paid', 'refunded');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 2. PROFILES (Extends Supabase Auth users)
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -83,6 +97,14 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if re-running
+DROP POLICY IF EXISTS "Public categories read" ON public.categories;
+DROP POLICY IF EXISTS "Public products read" ON public.products;
+DROP POLICY IF EXISTS "User view own profile" ON public.profiles;
+DROP POLICY IF EXISTS "User update own profile" ON public.profiles;
+DROP POLICY IF EXISTS "User view own orders" ON public.orders;
+DROP POLICY IF EXISTS "User insert own orders" ON public.orders;
+
 -- Read policies (Public readable)
 CREATE POLICY "Public categories read" ON public.categories FOR SELECT USING (true);
 CREATE POLICY "Public products read" ON public.products FOR SELECT USING (true);
@@ -109,6 +131,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE TRIGGER on_auth_user_created
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
